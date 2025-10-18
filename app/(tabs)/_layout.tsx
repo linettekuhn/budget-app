@@ -1,11 +1,11 @@
-import { Tabs } from "expo-router";
-import React from "react";
-import { View, StyleSheet } from "react-native";
 import { HapticTab } from "@/components/haptic-tab";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
-import Octicons from "@expo/vector-icons/Octicons";
 import Entypo from "@expo/vector-icons/Entypo";
+import Octicons from "@expo/vector-icons/Octicons";
+import { Tabs } from "expo-router";
+import React from "react";
+import { StyleSheet, View } from "react-native";
 
 const TabIcon = (props: any) => {
   const IconComponent = props.IconComponent;
@@ -76,14 +76,14 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="reward"
+        name="rewards"
         options={{
           title: "Rewards",
           tabBarIcon: ({ focused, color }) => (
             <TabIcon
               IconComponent={Octicons}
               name="trophy"
-              size={24}
+              size={23}
               color={color}
               focused={focused}
             />
