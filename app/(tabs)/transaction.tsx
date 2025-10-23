@@ -4,9 +4,12 @@ import CapsuleButton from "@/components/ui/capsule-button";
 import CapsuleInput from "@/components/ui/capsule-input-box";
 import CapsuleToggle from "@/components/ui/capsule-toggle";
 import { Colors } from "@/constants/theme";
+import { TransactionType } from "@/types";
 import Octicons from "@expo/vector-icons/Octicons";
+import { useSQLiteContext } from "expo-sqlite";
 import { useState } from "react";
 import {
+  Alert,
   ScrollView,
   StyleSheet,
   TextInput,
@@ -17,8 +20,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function Transaction() {
   const colorScheme = useColorScheme();
   const textColor = Colors[colorScheme ?? "light"].text;
-
-  // TODO: update amount
+  const db = useSQLiteContext();
   const [amount, setAmount] = useState("");
   const [transactionName, setTransactionName] = useState("");
   const [typeSelected, setType] = useState("");
@@ -26,7 +28,49 @@ export default function Transaction() {
 
   // TODO: match focus bg colors to category colors
   // TODO: add transaction button
-  const handleTransaction = () => {};
+  const handleTransaction = async () => {
+    try {
+      if (!amount || !transactionName || !typeSelected || !categorySelected) {
+        throw new Error("All fields are required");
+      }
+      // TODO: fill transaction object with form values
+      const transaction: TransactionType = {
+        name: transactionName.trim(),
+        amount: parseFloat((Number(amount) / 100).toFixed(2)),
+        type: typeSelected.toLowerCase() as "income" | "expense",
+        // TODO: category id
+        categoryId: categorySelected,
+        date: new Date(),
+      };
+
+      await db.runAsync(
+        `
+          INSERT INTO transactions (name, amount, type, categoryId, date) 
+          VALUES (?, ?, ?, ?, ?);
+          `,
+        [
+          transaction.name,
+          transaction.amount,
+          transaction.type,
+          transaction.categoryId,
+          transaction.date.toISOString(),
+        ]
+      );
+
+      Alert.alert("Success", "Transaction added successfully");
+
+      setTransactionName("");
+      setAmount("");
+      setType("");
+      setCategory("");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        Alert.alert("Error", error.message);
+      } else {
+        Alert.alert("An error ocurred saving transaction");
+      }
+    }
+  };
 
   const formatInput = (value: string): string => {
     const numericOnly = value.replace(/[^0-9]/g, "");

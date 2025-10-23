@@ -1,5 +1,5 @@
-export type Transaction = {
-  id: string;
+export type TransactionType = {
+  id?: string;
   name: string;
   amount: number;
   type: "income" | "expense";
