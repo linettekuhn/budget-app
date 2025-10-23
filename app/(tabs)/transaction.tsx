@@ -7,9 +7,10 @@ import { Colors } from "@/constants/theme";
 import { TransactionType } from "@/types";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useSQLiteContext } from "expo-sqlite";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   Alert,
+  Pressable,
   ScrollView,
   StyleSheet,
   TextInput,
@@ -21,22 +22,27 @@ export default function Transaction() {
   const colorScheme = useColorScheme();
   const textColor = Colors[colorScheme ?? "light"].text;
   const db = useSQLiteContext();
-  const [amount, setAmount] = useState("");
+  const [rawAmount, setRawAmount] = useState("0");
+  const [displayAmount, setDisplayAmount] = useState("0.00");
   const [transactionName, setTransactionName] = useState("");
   const [typeSelected, setType] = useState("");
   const [categorySelected, setCategory] = useState("");
+  const inputRef = useRef<TextInput>(null);
 
   // TODO: match focus bg colors to category colors
-  // TODO: add transaction button
   const handleTransaction = async () => {
     try {
-      if (!amount || !transactionName || !typeSelected || !categorySelected) {
+      if (
+        !rawAmount ||
+        !transactionName ||
+        !typeSelected ||
+        !categorySelected
+      ) {
         throw new Error("All fields are required");
       }
-      // TODO: fill transaction object with form values
       const transaction: TransactionType = {
         name: transactionName.trim(),
-        amount: parseFloat((Number(amount) / 100).toFixed(2)),
+        amount: parseFloat((Number(rawAmount) / 100).toFixed(2)),
         type: typeSelected.toLowerCase() as "income" | "expense",
         // TODO: category id
         categoryId: categorySelected,
@@ -60,7 +66,7 @@ export default function Transaction() {
       Alert.alert("Success", "Transaction added successfully");
 
       setTransactionName("");
-      setAmount("");
+      setRawAmount("");
       setType("");
       setCategory("");
     } catch (error: unknown) {
@@ -72,13 +78,15 @@ export default function Transaction() {
     }
   };
 
-  const formatInput = (value: string): string => {
-    const numericOnly = value.replace(/[^0-9]/g, "");
-    return numericOnly;
+  const handleAmountChange = (text: string) => {
+    const numeric = text.replace(/[^0-9]/g, "");
+    setRawAmount(numeric);
+    const formatted = formatDisplay(numeric);
+    setDisplayAmount(formatted);
   };
 
   const formatDisplay = (numericOnly: string): string => {
-    if (numericOnly === "") return numericOnly;
+    if (numericOnly === "" || numericOnly === "000") return "0.00";
 
     // pad the number to be at least 3 digits with 0 in the start
     const padded = numericOnly.padStart(3, "0");
@@ -102,14 +110,23 @@ export default function Transaction() {
       <ScrollView contentContainerStyle={styles.container}>
         <ThemedView style={styles.main}>
           <ThemedView style={styles.amountWrapper}>
-            <ThemedText style={styles.dollarSign} type="displayLarge">
-              $
-            </ThemedText>
+            <Pressable onPress={() => inputRef.current?.focus()}>
+              <ThemedText
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.4}
+                type="displayLarge"
+                style={[styles.amountInput, { color: textColor }]}
+              >
+                ${displayAmount}
+              </ThemedText>
+            </Pressable>
             <TextInput
-              style={[styles.amountInput, { color: textColor }]}
-              value={formatDisplay(amount)}
-              onChangeText={(text) => setAmount(formatInput(text))}
+              ref={inputRef}
+              value={rawAmount}
+              onChangeText={handleAmountChange}
               keyboardType="numeric"
+              style={{ position: "absolute", opacity: 0, height: 0, width: 0 }}
             />
           </ThemedView>
 
@@ -215,16 +232,6 @@ const styles = StyleSheet.create({
     padding: 0,
     margin: 0,
     zIndex: 1,
-    fontFamily: "BricolageGrotesque-ExtraBold",
-    fontSize: 64,
-    lineHeight: 70,
-    letterSpacing: 0.015,
-    marginBottom: -6,
-  },
-
-  dollarSign: {
-    lineHeight: 70,
-    fontSize: 64,
   },
 
   heading: {
