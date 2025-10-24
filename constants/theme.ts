@@ -19,6 +19,7 @@ export const Colors = {
     capsuleButtonDefault: "#C6C6C6",
     tabsColor: "#4C4C4C",
     secondary1: "#F9A5A5",
+    backgroundLight: "#3A3A3A",
   },
   dark: {
     text: "#ECEDEE",
@@ -30,6 +31,7 @@ export const Colors = {
     capsuleButtonDefault: "#595959",
     tabsColor: "#B4B4B4",
     secondary1: "#B73684",
+    backgroundLight: "#C5C5C5",
   },
 };
 

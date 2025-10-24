@@ -21,7 +21,7 @@ export default function Budget() {
         <ThemedView style={styles.main}>
           <CapsuleButton
             text="MONTHLY TRANSACTIONS"
-            onPress={() => router.push("/_routes/monthly-transactions")}
+            onPress={() => router.push("/monthly-transactions")}
             bgFocused={btnColor}
           />
         </ThemedView>

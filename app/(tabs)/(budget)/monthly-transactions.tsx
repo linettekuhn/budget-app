@@ -17,6 +17,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function MonthlyTransactions() {
   const db = useSQLiteContext();
   const colorScheme = useColorScheme();
+  const bgLight = Colors[colorScheme ?? "light"].backgroundLight;
+  const bgColor = Colors[colorScheme ?? "light"].background;
 
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<TransactionType[]>([]);
@@ -56,16 +58,15 @@ export default function MonthlyTransactions() {
   if (loading) {
     return <ActivityIndicator size="large" />;
   }
+  // TODO: show all months with headers for each month
   return (
-    <SafeAreaView
-      style={[
-        styles.safeArea,
-        { backgroundColor: Colors[colorScheme ?? "light"].background },
-      ]}
-    >
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
       <ThemedView style={styles.container}>
+        <ThemedText type="displayMedium" style={styles.header}>
+          {new Date().toLocaleDateString("en-US", { month: "long" })}{" "}
+          Transactions
+        </ThemedText>
         <FlatList
-          contentContainerStyle={styles.main}
           data={transactions}
           keyExtractor={(item) => String(item.id)}
           refreshControl={
@@ -73,11 +74,26 @@ export default function MonthlyTransactions() {
           }
           renderItem={({ item }) => {
             const date = new Date(item.date);
+            const typeColor = item.type === "income" ? "#2EA64E" : "#CF3D3D";
             return (
-              <ThemedView>
-                <ThemedText>{item.name}</ThemedText>
-                <ThemedText>{item.amount}</ThemedText>
-                <ThemedText>{date.toDateString()}</ThemedText>
+              <ThemedView
+                style={[
+                  styles.transactionWrapper,
+                  { backgroundColor: bgLight },
+                ]}
+              >
+                <ThemedView style={{ backgroundColor: bgLight }}>
+                  <ThemedText style={{ color: bgColor }}>
+                    {item.name}
+                  </ThemedText>
+                  <ThemedText type="caption" style={{ color: bgColor }}>
+                    {date.toLocaleDateString()}
+                  </ThemedText>
+                </ThemedView>
+                <ThemedText
+                  style={[styles.transactionAmount, { color: typeColor }]}
+                  type="bodyLarge"
+                >{`$${item.amount.toFixed(2)}`}</ThemedText>
               </ThemedView>
             );
           }}
@@ -99,9 +115,22 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
 
-  main: {
-    paddingVertical: 30,
-    flex: 1,
-    gap: 20,
+  header: {
+    marginBottom: 20,
+  },
+
+  transactionWrapper: {
+    flexDirection: "row",
+    width: "100%",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 25,
+    paddingVertical: 10,
+    borderRadius: 25,
+    marginVertical: 10,
+  },
+
+  transactionAmount: {
+    fontFamily: "BricolageGrotesque-SemiBold",
   },
 });

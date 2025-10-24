@@ -133,7 +133,7 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="budget"
+          name="(budget)"
           options={{
             title: "Budget",
             tabBarIcon: ({ focused, color }) => (
@@ -160,12 +160,6 @@ export default function TabLayout() {
                 focused={focused}
               />
             ),
-          }}
-        />
-        <Tabs.Screen
-          name="_routes/monthly-transactions"
-          options={{
-            href: null,
           }}
         />
       </Tabs>
