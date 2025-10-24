@@ -4,7 +4,6 @@ import CapsuleButton from "@/components/ui/capsule-button";
 import CapsuleInput from "@/components/ui/capsule-input-box";
 import CapsuleToggle from "@/components/ui/capsule-toggle";
 import { Colors } from "@/constants/theme";
-import { TransactionType } from "@/types";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useSQLiteContext } from "expo-sqlite";
 import { useRef, useState } from "react";
@@ -40,16 +39,16 @@ export default function Transaction() {
       ) {
         throw new Error("All fields are required");
       }
-      const transaction: TransactionType = {
+      const transaction = {
         name: transactionName.trim(),
         amount: parseFloat((Number(rawAmount) / 100).toFixed(2)),
         type: typeSelected.toLowerCase() as "income" | "expense",
         // TODO: category id
         categoryId: categorySelected,
-        date: new Date(),
+        date: new Date().toISOString(),
       };
 
-      await db.runAsync(
+      const result = await db.runAsync(
         `
           INSERT INTO transactions (name, amount, type, categoryId, date) 
           VALUES (?, ?, ?, ?, ?);
@@ -59,14 +58,14 @@ export default function Transaction() {
           transaction.amount,
           transaction.type,
           transaction.categoryId,
-          transaction.date.toISOString(),
+          transaction.date,
         ]
       );
-
       Alert.alert("Success", "Transaction added successfully");
 
       setTransactionName("");
       setRawAmount("");
+      setDisplayAmount("0.00");
       setType("");
       setCategory("");
     } catch (error: unknown) {

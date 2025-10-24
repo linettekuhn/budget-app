@@ -1,3 +1,89 @@
+import { ThemedView } from "@/components/themed-view";
+import CapsuleButton from "@/components/ui/capsule-button";
+import { Colors } from "@/constants/theme";
+import { useSQLiteContext } from "expo-sqlite";
+import { Alert, ScrollView, StyleSheet, useColorScheme } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 export default function Profile() {
-  return <></>;
+  const colorScheme = useColorScheme();
+  const db = useSQLiteContext();
+
+  const resetDatabase = async () => {
+    await db.runAsync("DELETE FROM transactions");
+    Alert.alert("database cleared!");
+  };
+  return (
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        { backgroundColor: Colors[colorScheme ?? "light"].background },
+      ]}
+    >
+      <ScrollView contentContainerStyle={styles.container}>
+        <ThemedView style={styles.main}>
+          <CapsuleButton
+            text="RESET DATABASE"
+            onPress={resetDatabase}
+            bgFocused={Colors[colorScheme ?? "light"].secondary1}
+          />
+        </ThemedView>
+      </ScrollView>
+    </SafeAreaView>
+  );
 }
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
+
+  container: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+
+  main: {
+    paddingVertical: 30,
+    flex: 1,
+    gap: 20,
+  },
+
+  amountWrapper: {
+    width: "100%",
+    height: 100,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "flex-end",
+    position: "relative",
+  },
+
+  amountDisplay: {
+    height: 80,
+    justifyContent: "center",
+    textAlign: "center",
+  },
+
+  amountInput: {
+    textAlign: "center",
+    padding: 0,
+    margin: 0,
+    zIndex: 1,
+  },
+
+  heading: {
+    marginVertical: 10,
+  },
+
+  options: {
+    flexDirection: "column",
+    alignItems: "center",
+  },
+
+  horizontalContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+});

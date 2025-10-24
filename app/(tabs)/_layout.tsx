@@ -30,7 +30,6 @@ export default function TabLayout() {
 
   const createDatabase = useCallback(async (db: SQLiteDatabase) => {
     try {
-      console.log("initalizing database...");
       await db.execAsync(`
         CREATE TABLE IF NOT EXISTS transactions (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -41,7 +40,6 @@ export default function TabLayout() {
           date TEXT DEFAULT (datetime('now'))
           );
           `);
-      console.log("created database!");
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.log(error.message);
@@ -162,6 +160,12 @@ export default function TabLayout() {
                 focused={focused}
               />
             ),
+          }}
+        />
+        <Tabs.Screen
+          name="_routes/monthly-transactions"
+          options={{
+            href: null,
           }}
         />
       </Tabs>
