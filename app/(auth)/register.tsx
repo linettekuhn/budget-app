@@ -32,6 +32,7 @@ export default function Register() {
   const handleRegister = async () => {
     try {
       await createUserWithEmailAndPassword(auth, email, password);
+      router.replace("/(tabs)");
     } catch (err) {
       console.log(err);
     }

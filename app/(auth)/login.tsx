@@ -5,6 +5,7 @@ import CapsuleInput from "@/components/ui/capsule-input-box";
 import { Colors } from "@/constants/theme";
 import { auth } from "@/firebase/firebaseConfig";
 import Octicons from "@expo/vector-icons/Octicons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { useState } from "react";
@@ -30,11 +31,20 @@ export default function Login() {
   const handleLogin = async () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      router.replace("/(tabs)");
     } catch (err) {
       console.log(err);
     }
   };
 
+  const handleOffline = async () => {
+    try {
+      await AsyncStorage.setItem("offlineMode", "true");
+      router.replace("/(tabs)");
+    } catch (err) {
+      console.log(err);
+    }
+  };
   return (
     <SafeAreaView
       style={[
@@ -85,6 +95,9 @@ export default function Login() {
                 <ThemedText type="link">Sign up</ThemedText>
               </Pressable>
             </ThemedView>
+            <Pressable onPress={handleOffline}>
+              <ThemedText type="link">Continue Offline</ThemedText>
+            </Pressable>
           </ThemedView>
         </ThemedView>
       </ScrollView>

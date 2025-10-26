@@ -1,5 +1,6 @@
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAuth } from "@/hooks/useAuth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   DarkTheme,
   DefaultTheme,
@@ -7,14 +8,14 @@ import {
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import { Stack, router } from "expo-router";
+import { SQLiteDatabase, SQLiteProvider } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { useCallback, useEffect, useRef, useState } from "react";
 import "react-native-reanimated";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
+  const [fontsLoaded] = useFonts({
     "BricolageGrotesque-ExtraBold": require("../assets/fonts/BricolageGrotesque-ExtraBold.ttf"),
     "BricolageGrotesque-Bold": require("../assets/fonts/BricolageGrotesque-Bold.ttf"),
     "BricolageGrotesque-SemiBold": require("../assets/fonts/BricolageGrotesque-SemiBold.ttf"),
@@ -24,32 +25,111 @@ export default function RootLayout() {
     "BricolageGrotesque-ExtraLight": require("../assets/fonts/BricolageGrotesque-ExtraLight.ttf"),
   });
 
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const [dbReady, setDbReady] = useState<boolean>(false);
+  const initialCheckDone = useRef(false);
+
+  const createDatabase = useCallback(async (db: SQLiteDatabase) => {
+    try {
+      await db.execAsync(`
+        CREATE TABLE IF NOT EXISTS categories (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          color TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS transactions (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          amount DECIMAL(13, 2) NOT NULL,
+          type TEXT NOT NULL,
+          date TEXT DEFAULT (datetime('now')),
+          categoryId INTEGER,
+          FOREIGN KEY (categoryId) REFERENCES categories(id)
+          );
+      `);
+
+      type CountResult = { count: number };
+      const existingCategories = await db.getAllAsync<CountResult>(
+        "SELECT COUNT(*) as count FROM categories"
+      );
+      // TODO: dark and light mode category colors
+      if (existingCategories[0].count === 0) {
+        await db.execAsync(`
+          INSERT INTO categories (name, color) VALUES
+            ('Food', '#FF6B6B'),
+            ('Transport', '#4ECDC4'),
+            ('Entertainment', '#FFD93D'),
+            ('Bills', '#6A4C93');
+        `);
+      }
+      setDbReady(true);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.log(error.message);
+      } else {
+        console.log("error creating database");
+      }
+    }
+  }, []);
 
   useEffect(() => {
-    if (!loaded || loading) return;
+    if (!fontsLoaded || !dbReady || authLoading || initialCheckDone.current)
+      return;
 
-    if (user) {
-      router.replace("/(tabs)");
-    } else {
-      router.replace("/(auth)/login");
-    }
-  }, [loaded, loading, user]);
+    const routeUser = async () => {
+      try {
+        initialCheckDone.current = true;
 
-  if (!loaded || loading)
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
+        // check if user has completed onboarding
+        const hasCompleted = await AsyncStorage.getItem("completedOnboarding");
+        console.log("Onboarding complete:", hasCompleted);
+        if (hasCompleted !== "true") {
+          if (hasCompleted === null) {
+            await AsyncStorage.setItem("completedOnboarding", "false");
+          }
+          console.log("Navigating to onboarding");
+          router.replace("/(onboarding)/welcome");
+          console.log("Navigated to onboarding");
+          return;
+        }
+
+        // after onboarding is complete check if user is logged in
+        if (user) {
+          router.replace("/(tabs)");
+          return;
+        }
+
+        // if user is not logged in check for offline mode
+        const offlineMode = await AsyncStorage.getItem("offlineMode");
+        console.log("Offline mode:", offlineMode);
+        if (offlineMode === null) {
+          await AsyncStorage.setItem("offlineMode", "false");
+        }
+        if (offlineMode === "true") {
+          router.replace("/(tabs)");
+          return;
+        }
+
+        // not logged in, not offline mode: try to authenticate user
+        router.replace("/(auth)/login");
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    routeUser();
+  }, [fontsLoaded, authLoading, user, dbReady]);
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <SQLiteProvider databaseName="transactions.db" onInit={createDatabase}>
+      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(onboarding)" />
+        </Stack>
+        <StatusBar style="auto" />
+      </ThemeProvider>
+    </SQLiteProvider>
   );
 }

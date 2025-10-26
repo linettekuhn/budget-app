@@ -1,0 +1,125 @@
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import AmountDisplay from "@/components/ui/amount-display";
+import CapsuleButton from "@/components/ui/capsule-button";
+import { Colors } from "@/constants/theme";
+import { useCategories } from "@/hooks/useCategories";
+import { formatAmountDisplay } from "@/utils/formatAmountDisplay";
+import Octicons from "@expo/vector-icons/Octicons";
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  useColorScheme,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+export default function BudgetOnboarding() {
+  const colorScheme = useColorScheme();
+  const btnColor = Colors[colorScheme ?? "light"].secondary1;
+  const router = useRouter();
+
+  const [categoryAmounts, setCategoryAmounts] = useState<{
+    [key: number]: { raw: string; display: string };
+  }>({});
+
+  const { loading, categories } = useCategories();
+
+  const handleAmountChange = (categoryId: number, text: string) => {
+    const numeric = text.replace(/[^0-9]/g, "");
+    const formatted = formatAmountDisplay(numeric);
+
+    setCategoryAmounts((prev) => ({
+      ...prev,
+      [categoryId]: { raw: numeric, display: formatted },
+    }));
+  };
+
+  if (loading) {
+    return <ActivityIndicator size="large" />;
+  }
+
+  return (
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        { backgroundColor: Colors[colorScheme ?? "light"].background },
+      ]}
+    >
+      <ThemedView style={styles.container}>
+        <ThemedView style={styles.main}>
+          <ThemedText type="h1" style={{ textAlign: "center" }}>
+            Set Your Monthly Budgets
+          </ThemedText>
+          <ThemedText type="h3">
+            Decide how much you want to spend in each category.
+          </ThemedText>
+
+          <ScrollView contentContainerStyle={styles.categoriesWrapper}>
+            {categories.map((category) => (
+              <ThemedView
+                style={[styles.categoryBudget, { borderColor: category.color }]}
+                key={category.id}
+              >
+                <ThemedText type="bodyLarge">{category.name}</ThemedText>
+                <AmountDisplay
+                  displayAmount={
+                    categoryAmounts[category.id]?.display || "0.00"
+                  }
+                  rawAmount={categoryAmounts[category.id]?.raw || "0"}
+                  onChangeText={(text) => handleAmountChange(category.id, text)}
+                  textType="bodyLarge"
+                />
+              </ThemedView>
+            ))}
+          </ScrollView>
+
+          <CapsuleButton
+            text="Next"
+            iconName="arrow-right"
+            IconComponent={Octicons}
+            bgFocused={btnColor}
+            onPress={() => router.push("/salary")}
+          />
+        </ThemedView>
+      </ThemedView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
+
+  container: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    flex: 1,
+    justifyContent: "center",
+  },
+
+  main: {
+    paddingVertical: 30,
+    flex: 1,
+    gap: 20,
+  },
+
+  categoriesWrapper: {
+    justifyContent: "center",
+    gap: 10,
+  },
+
+  categoryBudget: {
+    flexDirection: "row",
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderRadius: 25,
+    borderWidth: 1,
+    width: "100%",
+  },
+});
