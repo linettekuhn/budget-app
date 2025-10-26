@@ -4,10 +4,12 @@ import CapsuleButton from "@/components/ui/capsule-button";
 import CapsuleInput from "@/components/ui/capsule-input-box";
 import CapsuleToggle from "@/components/ui/capsule-toggle";
 import { Colors } from "@/constants/theme";
+import { CategoryType } from "@/types";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useSQLiteContext } from "expo-sqlite";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Pressable,
   ScrollView,
@@ -21,12 +23,46 @@ export default function Transaction() {
   const colorScheme = useColorScheme();
   const textColor = Colors[colorScheme ?? "light"].text;
   const db = useSQLiteContext();
+
+  const [loading, setLoading] = useState(true);
   const [rawAmount, setRawAmount] = useState("0");
   const [displayAmount, setDisplayAmount] = useState("0.00");
   const [transactionName, setTransactionName] = useState("");
   const [typeSelected, setType] = useState("");
-  const [categorySelected, setCategory] = useState("");
+  const [categorySelected, setCategory] = useState<CategoryType | null>(null);
+  const [categories, setCategories] = useState<CategoryType[]>([]);
   const inputRef = useRef<TextInput>(null);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const data = await db.getAllAsync<CategoryType>(
+          "SELECT * FROM categories"
+        );
+
+        const savedCategories = data.map((row) => {
+          const category: CategoryType = {
+            id: row.id,
+            name: row.name,
+            color: row.color,
+          };
+          return category;
+        });
+
+        setCategories(savedCategories);
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          Alert.alert("Error", error.message);
+        } else {
+          Alert.alert("An error ocurred loading transactions");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCategories();
+  }, []);
 
   // TODO: match focus bg colors to category colors
   const handleTransaction = async () => {
@@ -44,11 +80,11 @@ export default function Transaction() {
         amount: parseFloat((Number(rawAmount) / 100).toFixed(2)),
         type: typeSelected.toLowerCase() as "income" | "expense",
         // TODO: category id
-        categoryId: categorySelected,
+        categoryId: categorySelected.id,
         date: new Date().toISOString(),
       };
 
-      const result = await db.runAsync(
+      await db.runAsync(
         `
           INSERT INTO transactions (name, amount, type, categoryId, date) 
           VALUES (?, ?, ?, ?, ?);
@@ -67,7 +103,7 @@ export default function Transaction() {
       setRawAmount("");
       setDisplayAmount("0.00");
       setType("");
-      setCategory("");
+      setCategory(null);
     } catch (error: unknown) {
       if (error instanceof Error) {
         Alert.alert("Error", error.message);
@@ -98,6 +134,10 @@ export default function Transaction() {
 
     return `${integer}.${decimal}`;
   };
+
+  if (loading) {
+    return <ActivityIndicator size="large" />;
+  }
 
   return (
     <SafeAreaView
@@ -170,17 +210,15 @@ export default function Transaction() {
               Category
             </ThemedText>
             <ThemedView style={styles.horizontalContainer}>
-              {["Food", "Groceries", "Bills", "Transport", "Shopping"].map(
-                (category) => (
-                  <CapsuleToggle
-                    key={category}
-                    text={category}
-                    bgFocused="#2EA64E"
-                    selected={categorySelected === category}
-                    onPress={() => setCategory(category)}
-                  />
-                )
-              )}
+              {categories.map((category) => (
+                <CapsuleToggle
+                  key={category.id}
+                  text={category.name}
+                  bgFocused={category.color}
+                  selected={categorySelected?.id === category.id}
+                  onPress={() => setCategory(category)}
+                />
+              ))}
             </ThemedView>
           </ThemedView>
 

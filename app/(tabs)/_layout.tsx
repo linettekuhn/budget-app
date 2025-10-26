@@ -31,15 +31,35 @@ export default function TabLayout() {
   const createDatabase = useCallback(async (db: SQLiteDatabase) => {
     try {
       await db.execAsync(`
+        CREATE TABLE IF NOT EXISTS categories (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          color TEXT NOT NULL
+        );
         CREATE TABLE IF NOT EXISTS transactions (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           name TEXT NOT NULL,
           amount DECIMAL(13, 2) NOT NULL,
           type TEXT NOT NULL,
-          categoryId TEXT,
-          date TEXT DEFAULT (datetime('now'))
+          date TEXT DEFAULT (datetime('now')),
+          categoryId INTEGER,
+          FOREIGN KEY (categoryId) REFERENCES categories(id)
           );
-          `);
+      `);
+
+      type CountResult = { count: number };
+      const existingCategories = await db.getAllAsync<CountResult>(
+        "SELECT COUNT(*) as count FROM categories"
+      );
+      if (existingCategories[0].count === 0) {
+        await db.execAsync(`
+          INSERT INTO categories (name, color) VALUES
+            ('Food', '#FF6B6B'),
+            ('Transport', '#4ECDC4'),
+            ('Entertainment', '#FFD93D'),
+            ('Bills', '#6A4C93');
+        `);
+      }
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.log(error.message);
