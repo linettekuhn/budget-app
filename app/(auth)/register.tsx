@@ -29,7 +29,7 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
 
-  const handleLogin = async () => {
+  const handleRegister = async () => {
     try {
       await createUserWithEmailAndPassword(auth, email, password);
     } catch (err) {
@@ -81,7 +81,7 @@ export default function Register() {
             </CapsuleInput>
             <CapsuleButton
               text="SIGN UP"
-              onPress={handleLogin}
+              onPress={handleRegister}
               bgFocused={btnColor}
             />
             <ThemedView style={styles.loginPrompt}>
