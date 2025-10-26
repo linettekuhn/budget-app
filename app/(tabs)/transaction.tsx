@@ -1,31 +1,29 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import AmountDisplay from "@/components/ui/amount-display";
 import CapsuleButton from "@/components/ui/capsule-button";
 import CapsuleInput from "@/components/ui/capsule-input-box";
 import CapsuleToggle from "@/components/ui/capsule-toggle";
 import { Colors } from "@/constants/theme";
 import { useCategories } from "@/hooks/useCategories";
 import { CategoryType } from "@/types";
+import { formatAmountDisplay } from "@/utils/formatAmountDisplay";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useSQLiteContext } from "expo-sqlite";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Pressable,
   ScrollView,
   StyleSheet,
-  TextInput,
   useColorScheme,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Transaction() {
   const colorScheme = useColorScheme();
-  const textColor = Colors[colorScheme ?? "light"].text;
   const db = useSQLiteContext();
 
-  const inputRef = useRef<TextInput>(null);
   const [rawAmount, setRawAmount] = useState("0");
   const [displayAmount, setDisplayAmount] = useState("0.00");
   const [transactionName, setTransactionName] = useState("");
@@ -34,6 +32,7 @@ export default function Transaction() {
 
   const { categories, loading } = useCategories();
 
+  // TODO: customize date (default current date)
   const handleTransaction = async () => {
     try {
       if (
@@ -84,23 +83,8 @@ export default function Transaction() {
   const handleAmountChange = (text: string) => {
     const numeric = text.replace(/[^0-9]/g, "");
     setRawAmount(numeric);
-    const formatted = formatDisplay(numeric);
+    const formatted = formatAmountDisplay(numeric);
     setDisplayAmount(formatted);
-  };
-
-  const formatDisplay = (numericOnly: string): string => {
-    if (numericOnly === "" || numericOnly === "000") return "0.00";
-
-    // pad the number to be at least 3 digits with 0 in the start
-    const padded = numericOnly.padStart(3, "0");
-    let integer = padded.slice(0, -2);
-    const decimal = padded.slice(-2);
-    // parse integer part and turn back to string to remove extra leading zeroes
-    integer = String(parseInt(integer));
-    // add a coma every 3 digits in the integer
-    integer = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-
-    return `${integer}.${decimal}`;
   };
 
   if (loading) {
@@ -116,26 +100,12 @@ export default function Transaction() {
     >
       <ScrollView contentContainerStyle={styles.container}>
         <ThemedView style={styles.main}>
-          <ThemedView style={styles.amountWrapper}>
-            <Pressable onPress={() => inputRef.current?.focus()}>
-              <ThemedText
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                minimumFontScale={0.4}
-                type="displayLarge"
-                style={[styles.amountInput, { color: textColor }]}
-              >
-                ${displayAmount}
-              </ThemedText>
-            </Pressable>
-            <TextInput
-              ref={inputRef}
-              value={rawAmount}
-              onChangeText={handleAmountChange}
-              keyboardType="numeric"
-              style={{ position: "absolute", opacity: 0, height: 0, width: 0 }}
-            />
-          </ThemedView>
+          <AmountDisplay
+            displayAmount={displayAmount}
+            rawAmount={rawAmount}
+            onChangeText={handleAmountChange}
+            textType="displayLarge"
+          />
 
           <ThemedView style={styles.options}>
             <ThemedText style={styles.heading} type="h1">
@@ -224,12 +194,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "flex-end",
     position: "relative",
-  },
-
-  amountDisplay: {
-    height: 80,
-    justifyContent: "center",
-    textAlign: "center",
   },
 
   amountInput: {
