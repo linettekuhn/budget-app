@@ -7,6 +7,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { CategoryType } from "@/types";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useRouter } from "expo-router";
+import { useSQLiteContext } from "expo-sqlite";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -23,6 +24,7 @@ export default function CategoriesOnboarding() {
   const [selectedCategories, setSelectedCategories] = useState<CategoryType[]>(
     []
   );
+  const db = useSQLiteContext();
 
   const toggleCategory = (category: CategoryType) => {
     setSelectedCategories((prev) => {
@@ -36,6 +38,32 @@ export default function CategoriesOnboarding() {
         return [...prev, category];
       }
     });
+  };
+
+  const saveSelectedCategories = async () => {
+    if (!selectedCategories.length) {
+      return;
+    }
+
+    // (?, ?) for each category
+    const placeholders = selectedCategories.map(() => "(?, ?)").join(", ");
+
+    // values to fill up parameter placeholders
+    const values: string[] = [];
+    selectedCategories.forEach((cat) => {
+      values.push(cat.name, cat.color);
+    });
+
+    const query = `INSERT INTO categories (name, color) VALUES ${placeholders}`;
+
+    try {
+      await db.runAsync("DELETE FROM categories");
+      await db.runAsync(query, values);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      router.push("/budget");
+    }
   };
 
   const { loading, categories } = useCategories();
@@ -83,8 +111,7 @@ export default function CategoriesOnboarding() {
             iconName="arrow-right"
             IconComponent={Octicons}
             bgFocused={btnColor}
-            // TODO: store in sql selected before moving on
-            onPress={() => router.push("/budget")}
+            onPress={saveSelectedCategories}
           />
         </ThemedView>
       </ScrollView>
