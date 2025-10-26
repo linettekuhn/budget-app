@@ -3,6 +3,8 @@ export type TransactionType = {
   name: string;
   amount: number;
   type: "income" | "expense";
-  categoryId: number;
   date: string;
+  categoryId: number;
+  categoryColor?: string;
+  categoryName?: string;
 };

@@ -4,10 +4,11 @@ import CapsuleButton from "@/components/ui/capsule-button";
 import CapsuleInput from "@/components/ui/capsule-input-box";
 import CapsuleToggle from "@/components/ui/capsule-toggle";
 import { Colors } from "@/constants/theme";
+import { useCategories } from "@/hooks/useCategories";
 import { CategoryType } from "@/types";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useSQLiteContext } from "expo-sqlite";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -24,47 +25,15 @@ export default function Transaction() {
   const textColor = Colors[colorScheme ?? "light"].text;
   const db = useSQLiteContext();
 
-  const [loading, setLoading] = useState(true);
+  const inputRef = useRef<TextInput>(null);
   const [rawAmount, setRawAmount] = useState("0");
   const [displayAmount, setDisplayAmount] = useState("0.00");
   const [transactionName, setTransactionName] = useState("");
   const [typeSelected, setType] = useState("");
   const [categorySelected, setCategory] = useState<CategoryType | null>(null);
-  const [categories, setCategories] = useState<CategoryType[]>([]);
-  const inputRef = useRef<TextInput>(null);
 
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        const data = await db.getAllAsync<CategoryType>(
-          "SELECT * FROM categories"
-        );
+  const { categories, loading } = useCategories();
 
-        const savedCategories = data.map((row) => {
-          const category: CategoryType = {
-            id: row.id,
-            name: row.name,
-            color: row.color,
-          };
-          return category;
-        });
-
-        setCategories(savedCategories);
-      } catch (error: unknown) {
-        if (error instanceof Error) {
-          Alert.alert("Error", error.message);
-        } else {
-          Alert.alert("An error ocurred loading transactions");
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadCategories();
-  }, []);
-
-  // TODO: match focus bg colors to category colors
   const handleTransaction = async () => {
     try {
       if (
@@ -79,7 +48,6 @@ export default function Transaction() {
         name: transactionName.trim(),
         amount: parseFloat((Number(rawAmount) / 100).toFixed(2)),
         type: typeSelected.toLowerCase() as "income" | "expense",
-        // TODO: category id
         categoryId: categorySelected.id,
         date: new Date().toISOString(),
       };

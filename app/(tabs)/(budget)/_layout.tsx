@@ -8,6 +8,10 @@ export default function BudgetStackLayout() {
         name="monthly-transactions"
         options={{ headerShown: false }}
       />
+      <Stack.Screen
+        name="category-transactions"
+        options={{ headerShown: false }}
+      />
     </Stack>
   );
 }
