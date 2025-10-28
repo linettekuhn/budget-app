@@ -121,7 +121,7 @@ export default function RootLayout() {
   }, [fontsLoaded, authLoading, user, dbReady]);
 
   return (
-    <SQLiteProvider databaseName="transactions.db" onInit={createDatabase}>
+    <SQLiteProvider databaseName="app.db" onInit={createDatabase}>
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" />

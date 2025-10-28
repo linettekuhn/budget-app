@@ -43,6 +43,9 @@ export default function Transaction() {
       ) {
         throw new Error("All fields are required");
       }
+
+      if (parseFloat(rawAmount) === 0) throw new Error("Amount cannot be 0");
+
       const transaction = {
         name: transactionName.trim(),
         amount: parseFloat((Number(rawAmount) / 100).toFixed(2)),
@@ -100,13 +103,6 @@ export default function Transaction() {
     >
       <ScrollView contentContainerStyle={styles.container}>
         <ThemedView style={styles.main}>
-          <AmountDisplay
-            displayAmount={displayAmount}
-            rawAmount={rawAmount}
-            onChangeText={handleAmountChange}
-            textType="displayLarge"
-          />
-
           <ThemedView style={styles.options}>
             <ThemedText style={styles.heading} type="h1">
               Name
@@ -118,6 +114,12 @@ export default function Transaction() {
               keyboardType="default"
             />
           </ThemedView>
+          <AmountDisplay
+            displayAmount={displayAmount}
+            rawAmount={rawAmount}
+            onChangeText={handleAmountChange}
+            textType="displayLarge"
+          />
 
           <ThemedView style={styles.options}>
             <ThemedText style={styles.heading} type="h1">
@@ -184,7 +186,7 @@ const styles = StyleSheet.create({
   main: {
     paddingVertical: 30,
     flex: 1,
-    gap: 20,
+    gap: 15,
   },
 
   amountWrapper: {

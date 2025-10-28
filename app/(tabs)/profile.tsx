@@ -2,6 +2,7 @@ import { ThemedView } from "@/components/themed-view";
 import CapsuleButton from "@/components/ui/capsule-button";
 import { Colors } from "@/constants/theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SQLite from "expo-sqlite";
 import { useSQLiteContext } from "expo-sqlite";
 import { Alert, ScrollView, StyleSheet, useColorScheme } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -20,6 +21,20 @@ export default function Profile() {
     await AsyncStorage.setItem("completedOnboarding", "false");
     Alert.alert("onboarding reset!");
   };
+
+  const resetApp = async () => {
+    try {
+      await AsyncStorage.clear();
+
+      const db = await SQLite.openDatabaseAsync("app.db");
+      await db.execAsync("DROP TABLE IF EXISTS transactions");
+      await db.execAsync("DROP TABLE IF EXISTS categories");
+
+      console.log("App data cleared successfully!");
+    } catch (error) {
+      console.error("Error clearing app data:", error);
+    }
+  };
   return (
     <SafeAreaView
       style={[
@@ -37,6 +52,11 @@ export default function Profile() {
           <CapsuleButton
             text="RESET ONBOARDING"
             onPress={resetOnboarding}
+            bgFocused={Colors[colorScheme ?? "light"].secondary1}
+          />
+          <CapsuleButton
+            text="RESET APP"
+            onPress={resetApp}
             bgFocused={Colors[colorScheme ?? "light"].secondary1}
           />
         </ThemedView>
