@@ -1,3 +1,4 @@
+import { ModalProvider } from "@/components/ui/modal/modal-provider";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAuth } from "@/hooks/useAuth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -10,11 +11,15 @@ import { useFonts } from "expo-font";
 import { Stack, router } from "expo-router";
 import { SQLiteDatabase, SQLiteProvider } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "react-native-reanimated";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const theme = useMemo(
+    () => (colorScheme === "dark" ? DarkTheme : DefaultTheme),
+    [colorScheme]
+  );
   const [fontsLoaded] = useFonts({
     "BricolageGrotesque-ExtraBold": require("../assets/fonts/BricolageGrotesque-ExtraBold.ttf"),
     "BricolageGrotesque-Bold": require("../assets/fonts/BricolageGrotesque-Bold.ttf"),
@@ -122,13 +127,15 @@ export default function RootLayout() {
 
   return (
     <SQLiteProvider databaseName="app.db" onInit={createDatabase}>
-      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(onboarding)" />
-        </Stack>
-        <StatusBar style="auto" />
+      <ThemeProvider value={theme}>
+        <ModalProvider>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(onboarding)" />
+          </Stack>
+          <StatusBar style="auto" />
+        </ModalProvider>
       </ThemeProvider>
     </SQLiteProvider>
   );

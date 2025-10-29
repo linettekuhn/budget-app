@@ -6,6 +6,7 @@ import CapsuleInput from "@/components/ui/capsule-input-box";
 import CapsuleToggle from "@/components/ui/capsule-toggle";
 import { Colors } from "@/constants/theme";
 import { useCategories } from "@/hooks/useCategories";
+import { useModal } from "@/hooks/useModal";
 import { CategoryType } from "@/types";
 import { formatAmountDisplay } from "@/utils/formatAmountDisplay";
 import Octicons from "@expo/vector-icons/Octicons";
@@ -30,7 +31,20 @@ export default function Transaction() {
   const [typeSelected, setType] = useState("");
   const [categorySelected, setCategory] = useState<CategoryType | null>(null);
 
+  const { openModal, closeModal } = useModal();
   const { categories, loading } = useCategories();
+
+  const handleOpen = () => {
+    openModal(
+      <ThemedView style={styles.main}>
+        <CapsuleButton
+          text="close modal"
+          onPress={closeModal}
+          bgFocused={Colors[colorScheme ?? "light"].secondary1}
+        />
+      </ThemedView>
+    );
+  };
 
   // TODO: customize date (default current date)
   const handleTransaction = async () => {
@@ -159,6 +173,11 @@ export default function Transaction() {
                   onPress={() => setCategory(category)}
                 />
               ))}
+              <CapsuleButton
+                onPress={handleOpen}
+                text="+"
+                bgFocused={Colors[colorScheme ?? "light"].secondary1}
+              />
             </ThemedView>
           </ThemedView>
 
