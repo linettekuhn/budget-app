@@ -40,7 +40,8 @@ export default function RootLayout() {
         CREATE TABLE IF NOT EXISTS categories (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           name TEXT NOT NULL UNIQUE,
-          color TEXT NOT NULL
+          color TEXT NOT NULL,
+          budget DECIMAL(13, 2)
         );
         CREATE TABLE IF NOT EXISTS transactions (
           id INTEGER PRIMARY KEY AUTOINCREMENT,

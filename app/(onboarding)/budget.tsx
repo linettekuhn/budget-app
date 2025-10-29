@@ -7,9 +7,11 @@ import { useCategories } from "@/hooks/useCategories";
 import { formatAmountDisplay } from "@/utils/formatAmountDisplay";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useSQLiteContext } from "expo-sqlite";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   useColorScheme,
@@ -20,12 +22,21 @@ export default function BudgetOnboarding() {
   const colorScheme = useColorScheme();
   const btnColor = Colors[colorScheme ?? "light"].secondary1;
   const router = useRouter();
+  const db = useSQLiteContext();
+
+  const { loading, categories } = useCategories();
 
   const [categoryAmounts, setCategoryAmounts] = useState<{
     [key: number]: { raw: string; display: string };
   }>({});
 
-  const { loading, categories } = useCategories();
+  useEffect(() => {
+    const initial: { [key: number]: { raw: string; display: string } } = {};
+    categories.forEach((cat) => {
+      initial[cat.id] = { raw: "0", display: "0.00" };
+    });
+    setCategoryAmounts(initial);
+  }, [categories]);
 
   const handleAmountChange = (categoryId: number, text: string) => {
     const numeric = text.replace(/[^0-9]/g, "");
@@ -35,6 +46,43 @@ export default function BudgetOnboarding() {
       ...prev,
       [categoryId]: { raw: numeric, display: formatted },
     }));
+  };
+
+  const saveBudgets = async () => {
+    await db.execAsync("BEGIN TRANSACTION");
+
+    try {
+      const updates = Object.entries(categoryAmounts).map(async (cat) => {
+        const id = parseInt(cat[0]);
+        const rawAmount = cat[1].raw;
+
+        console.log(rawAmount);
+
+        if (parseFloat(rawAmount) === 0) {
+          throw new Error("Budgets cannot be 0");
+        }
+
+        await db.runAsync(
+          `
+          UPDATE categories
+          SET budget = ?
+          WHERE id = ?
+          `,
+          [parseFloat((Number(rawAmount) / 100).toFixed(2)), id]
+        );
+      });
+
+      await Promise.all(updates);
+      await db.execAsync("COMMIT");
+      router.push("/salary");
+    } catch (error: unknown) {
+      await db.execAsync("ROLLBACK");
+      if (error instanceof Error) {
+        Alert.alert("Error", error.message);
+      } else {
+        Alert.alert("An error ocurred saving budgets");
+      }
+    }
   };
 
   if (loading) {
@@ -81,7 +129,7 @@ export default function BudgetOnboarding() {
             iconName="arrow-right"
             IconComponent={Octicons}
             bgFocused={btnColor}
-            onPress={() => router.push("/salary")}
+            onPress={saveBudgets}
           />
         </ThemedView>
       </ThemedView>

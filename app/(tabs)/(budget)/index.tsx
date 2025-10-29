@@ -1,3 +1,4 @@
+import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import CapsuleButton from "@/components/ui/capsule-button";
 import { Colors } from "@/constants/theme";
@@ -6,6 +7,7 @@ import { useRouter } from "expo-router";
 import { useEffect } from "react";
 import {
   ActivityIndicator,
+  Pressable,
   ScrollView,
   StyleSheet,
   useColorScheme,
@@ -43,20 +45,23 @@ export default function Budget() {
           />
           {categories.map((category) => {
             return (
-              <CapsuleButton
+              <Pressable
                 key={category.id}
-                text={category.name
-                  .split(" ")
-                  .map((word) => word[0].toUpperCase() + word.slice(1))
-                  .join(" ")}
                 onPress={() =>
                   router.push({
                     pathname: "/category-transactions",
                     params: { category: JSON.stringify(category) },
                   })
                 }
-                bgFocused={category.color}
-              />
+              >
+                <ThemedText type="bodyLarge">
+                  {category.name
+                    .split(" ")
+                    .map((word) => word[0].toUpperCase() + word.slice(1))
+                    .join(" ")}
+                </ThemedText>
+                <ThemedText type="body">{category.budget}</ThemedText>
+              </Pressable>
             );
           })}
         </ThemedView>
