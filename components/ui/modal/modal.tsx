@@ -1,34 +1,44 @@
 import { ThemedView } from "@/components/themed-view";
-import { Modal, Pressable, StyleSheet } from "react-native";
-
+import { Dimensions, Pressable, StyleSheet } from "react-native";
+import Modal from "react-native-modal";
 type Props = {
   onClose: () => void;
   visible: boolean;
   children: React.ReactNode;
 };
 
+const { width, height } = Dimensions.get("window");
+
 export default function AppModal({ onClose, visible, children }: Props) {
   return (
-    <Modal transparent visible={visible} onRequestClose={onClose}>
-      <Pressable style={styles.background} onPress={onClose}>
-        <Pressable onPress={(e) => e.stopPropagation()}>
-          <ThemedView style={styles.contentWrapper}>{children}</ThemedView>
-        </Pressable>
+    <Modal
+      isVisible={visible}
+      onBackdropPress={onClose}
+      animationIn="slideInUp"
+      animationOut="slideOutDown"
+      animationInTiming={300}
+      backdropOpacity={0.5}
+      style={styles.modalContainer}
+    >
+      <Pressable onPress={(e) => e.stopPropagation()}>
+        <ThemedView style={styles.contentWrapper}>{children}</ThemedView>
       </Pressable>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  background: {
+  modalContainer: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: "flex-end",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    margin: 0,
   },
   contentWrapper: {
+    height: height * 0.85,
+    width: width,
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
     padding: 20,
-    borderRadius: 12,
-    minWidth: 300,
   },
 });

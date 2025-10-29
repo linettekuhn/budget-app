@@ -1,0 +1,175 @@
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { useSQLiteContext } from "expo-sqlite";
+import { useState } from "react";
+import { Alert, StyleSheet, View } from "react-native";
+import ColorPicker, {
+  BrightnessSlider,
+  ColorFormatsObject,
+  Panel3,
+  Swatches,
+} from "reanimated-color-picker";
+import CapsuleButton from "../capsule-button";
+import CapsuleInput from "../capsule-input-box";
+
+export default function CustomCategory({
+  onComplete,
+}: {
+  onComplete: () => void;
+}) {
+  const db = useSQLiteContext();
+
+  const [categoryName, setCategoryName] = useState("");
+  const [categoryColor, setCategoryColor] = useState("#ff3be8");
+
+  const handleColorChange = (colors: ColorFormatsObject) => {
+    try {
+      const color = colors?.hex;
+      setCategoryColor(color);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.log("Error in handleColorChange:", error.message);
+      }
+    }
+  };
+
+  const handleAddCategory = async () => {
+    try {
+      if (!categoryName || !categoryColor) {
+        throw new Error("All fields are required");
+      }
+
+      const name = categoryName.trim();
+      if (!name) {
+        throw new Error("Category name cannot be empty");
+      }
+      type CountResult = { count: number };
+      const existing = await db.getAllAsync<CountResult>(
+        "SELECT COUNT(*) as count FROM categories WHERE name = ?",
+        [name]
+      );
+
+      if (existing[0].count !== 0) {
+        throw new Error("Category name already exists");
+      }
+
+      await db.runAsync(`INSERT INTO categories (name, color) VALUES (?, ?)`, [
+        name,
+        categoryColor,
+      ]);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        Alert.alert("Error", error.message);
+      } else {
+        Alert.alert("An error occurred saving category");
+      }
+    } finally {
+      onComplete();
+    }
+  };
+
+  return (
+    <ThemedView style={styles.categoryForm}>
+      <ThemedText style={styles.heading} type="h1">
+        Create a Category
+      </ThemedText>
+      <ThemedView style={styles.options}>
+        <ThemedText style={styles.heading} type="h2">
+          Name
+        </ThemedText>
+        <CapsuleInput
+          value={categoryName}
+          onChangeText={setCategoryName}
+          placeholder="Enter category name"
+          keyboardType="default"
+        />
+      </ThemedView>
+      <ThemedView style={styles.options}>
+        <ColorPicker
+          style={styles.colorPicker}
+          value={categoryColor}
+          onChangeJS={handleColorChange}
+        >
+          <ThemedView style={styles.colorPreviewWrapper}>
+            <ThemedText type="h2">Color</ThemedText>
+            <View
+              style={[styles.colorPreview, { backgroundColor: categoryColor }]}
+            ></View>
+          </ThemedView>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 25,
+            }}
+          >
+            <Panel3
+              centerChannel="saturation"
+              style={{ maxHeight: 150, maxWidth: 150, flex: 1 }}
+            />
+            <BrightnessSlider vertical />
+          </View>
+          <Swatches
+            colors={[
+              "#F44336",
+              "#E91E63",
+              "#9C27B0",
+              "#3F51B5",
+              "#00BCD4",
+              "#009688",
+              "#8BC34A",
+              "#CDDC39",
+            ]}
+          />
+        </ColorPicker>
+      </ThemedView>
+      <CapsuleButton
+        text="ADD CATEGORY"
+        onPress={handleAddCategory}
+        bgFocused={categoryColor}
+      />
+      <CapsuleButton
+        text="Cancel"
+        onPress={onComplete}
+        bgFocused={categoryColor}
+      />
+    </ThemedView>
+  );
+}
+
+const styles = StyleSheet.create({
+  heading: {
+    marginVertical: 10,
+    marginHorizontal: "auto",
+  },
+
+  options: {
+    flexDirection: "column",
+    alignItems: "center",
+  },
+
+  colorPreviewWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 25,
+  },
+
+  colorPreview: {
+    flex: 1,
+    height: 20,
+    borderRadius: 25,
+  },
+
+  categoryForm: {
+    justifyContent: "space-evenly",
+    gap: 10,
+    paddingHorizontal: 20,
+  },
+
+  colorPicker: {
+    gap: 20,
+    maxWidth: "60%",
+  },
+});

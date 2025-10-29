@@ -4,6 +4,7 @@ import AmountDisplay from "@/components/ui/amount-display";
 import CapsuleButton from "@/components/ui/capsule-button";
 import CapsuleInput from "@/components/ui/capsule-input-box";
 import CapsuleToggle from "@/components/ui/capsule-toggle";
+import CustomCategory from "@/components/ui/modal/category-modal";
 import { Colors } from "@/constants/theme";
 import { useCategories } from "@/hooks/useCategories";
 import { useModal } from "@/hooks/useModal";
@@ -11,7 +12,7 @@ import { CategoryType } from "@/types";
 import { formatAmountDisplay } from "@/utils/formatAmountDisplay";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useSQLiteContext } from "expo-sqlite";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -32,15 +33,20 @@ export default function Transaction() {
   const [categorySelected, setCategory] = useState<CategoryType | null>(null);
 
   const { openModal, closeModal } = useModal();
-  const { categories, loading } = useCategories();
+  const { categories, loading, reload } = useCategories();
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
 
   const handleOpen = () => {
     openModal(
       <ThemedView style={styles.main}>
-        <CapsuleButton
-          text="close modal"
-          onPress={closeModal}
-          bgFocused={Colors[colorScheme ?? "light"].secondary1}
+        <CustomCategory
+          onComplete={() => {
+            closeModal();
+            reload();
+          }}
         />
       </ThemedView>
     );
@@ -226,6 +232,7 @@ const styles = StyleSheet.create({
 
   heading: {
     marginVertical: 10,
+    marginHorizontal: "auto",
   },
 
   options: {

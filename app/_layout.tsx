@@ -39,7 +39,7 @@ export default function RootLayout() {
       await db.execAsync(`
         CREATE TABLE IF NOT EXISTS categories (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT NOT NULL,
+          name TEXT NOT NULL UNIQUE,
           color TEXT NOT NULL
         );
         CREATE TABLE IF NOT EXISTS transactions (

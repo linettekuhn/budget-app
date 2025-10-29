@@ -3,6 +3,7 @@ import CapsuleButton from "@/components/ui/capsule-button";
 import { Colors } from "@/constants/theme";
 import { useCategories } from "@/hooks/useCategories";
 import { useRouter } from "expo-router";
+import { useEffect } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -16,7 +17,11 @@ export default function Budget() {
   const btnColor = Colors[colorScheme ?? "light"].secondary1;
   const router = useRouter();
 
-  const { loading, categories } = useCategories();
+  const { loading, categories, reload } = useCategories();
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
 
   if (loading) {
     return <ActivityIndicator size="large" />;

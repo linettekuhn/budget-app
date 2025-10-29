@@ -2,13 +2,15 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import CapsuleButton from "@/components/ui/capsule-button";
 import CapsuleToggle from "@/components/ui/capsule-toggle";
+import CustomCategory from "@/components/ui/modal/category-modal";
 import { Colors } from "@/constants/theme";
 import { useCategories } from "@/hooks/useCategories";
+import { useModal } from "@/hooks/useModal";
 import { CategoryType } from "@/types";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -66,7 +68,25 @@ export default function CategoriesOnboarding() {
     }
   };
 
-  const { loading, categories } = useCategories();
+  const { openModal, closeModal } = useModal();
+  const { categories, loading, reload } = useCategories();
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
+
+  const handleOpen = () => {
+    openModal(
+      <ThemedView style={styles.main}>
+        <CustomCategory
+          onComplete={() => {
+            closeModal();
+            reload();
+          }}
+        />
+      </ThemedView>
+    );
+  };
 
   if (loading) {
     return <ActivityIndicator size="large" />;
@@ -93,7 +113,6 @@ export default function CategoriesOnboarding() {
 
           <ThemedView style={styles.horizontalContainer}>
             {categories.map((category) => (
-              // TODO: add a category modal
               <CapsuleToggle
                 key={category.id}
                 text={category.name}
@@ -104,6 +123,13 @@ export default function CategoriesOnboarding() {
                 onPress={() => toggleCategory(category)}
               />
             ))}
+            <CapsuleButton
+              onPress={handleOpen}
+              text="CREATE CATEGORY"
+              bgFocused={Colors[colorScheme ?? "light"].secondary1}
+              IconComponent={Octicons}
+              iconName="plus"
+            />
           </ThemedView>
 
           <CapsuleButton
