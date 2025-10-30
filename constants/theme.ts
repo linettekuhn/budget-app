@@ -19,7 +19,7 @@ export const Colors = {
     capsuleButtonDefault: "#C6C6C6",
     tabsColor: "#4C4C4C",
     secondary1: "#F9A5A5",
-    backgroundLight: "#3A3A3A",
+    backgroundLight: "#656565",
   },
   dark: {
     text: "#ECEDEE",

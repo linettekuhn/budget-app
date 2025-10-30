@@ -1,13 +1,12 @@
-import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import CapsuleButton from "@/components/ui/capsule-button";
+import CategoryBudgetPreview from "@/components/ui/category-budget-preview";
 import { Colors } from "@/constants/theme";
-import { useCategories } from "@/hooks/useCategories";
-import { useRouter } from "expo-router";
-import { useEffect } from "react";
+import { useCategoriesSpend } from "@/hooks/useCategoriesSpend";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback } from "react";
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   StyleSheet,
   useColorScheme,
@@ -17,25 +16,27 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function Budget() {
   const colorScheme = useColorScheme();
   const btnColor = Colors[colorScheme ?? "light"].secondary1;
+  const bgColor = Colors[colorScheme ?? "light"].background;
   const router = useRouter();
 
-  const { loading, categories, reload } = useCategories();
+  const {
+    loading: loadingSpend,
+    budgets,
+    reload: reloadSpend,
+  } = useCategoriesSpend();
 
-  useEffect(() => {
-    reload();
-  }, [reload]);
+  useFocusEffect(
+    useCallback(() => {
+      reloadSpend();
+    }, [reloadSpend])
+  );
 
-  if (loading) {
+  if (loadingSpend) {
     return <ActivityIndicator size="large" />;
   }
 
   return (
-    <SafeAreaView
-      style={[
-        styles.safeArea,
-        { backgroundColor: Colors[colorScheme ?? "light"].background },
-      ]}
-    >
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
       <ScrollView contentContainerStyle={styles.container}>
         <ThemedView style={styles.main}>
           <CapsuleButton
@@ -43,27 +44,27 @@ export default function Budget() {
             onPress={() => router.push("/monthly-transactions")}
             bgFocused={btnColor}
           />
-          {categories.map((category) => {
-            return (
-              <Pressable
-                key={category.id}
-                onPress={() =>
-                  router.push({
-                    pathname: "/category-transactions",
-                    params: { category: JSON.stringify(category) },
-                  })
-                }
-              >
-                <ThemedText type="bodyLarge">
-                  {category.name
-                    .split(" ")
-                    .map((word) => word[0].toUpperCase() + word.slice(1))
-                    .join(" ")}
-                </ThemedText>
-                <ThemedText type="body">{category.budget}</ThemedText>
-              </Pressable>
-            );
-          })}
+          {budgets
+            .slice()
+            .sort((a, b) => {
+              const aPercent = a.totalSpent / a.budget;
+              const bPercent = b.totalSpent / b.budget;
+              return bPercent - aPercent;
+            })
+            .map((category) => {
+              return (
+                <CategoryBudgetPreview
+                  key={category.id}
+                  category={category}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/category-transactions",
+                      params: { category: JSON.stringify(category) },
+                    })
+                  }
+                />
+              );
+            })}
         </ThemedView>
       </ScrollView>
     </SafeAreaView>

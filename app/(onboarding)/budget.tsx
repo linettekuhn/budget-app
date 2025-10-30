@@ -56,8 +56,6 @@ export default function BudgetOnboarding() {
         const id = parseInt(cat[0]);
         const rawAmount = cat[1].raw;
 
-        console.log(rawAmount);
-
         if (parseFloat(rawAmount) === 0) {
           throw new Error("Budgets cannot be 0");
         }
