@@ -7,6 +7,7 @@ import { Colors } from "@/constants/theme";
 import { useCategories } from "@/hooks/useCategories";
 import { useModal } from "@/hooks/useModal";
 import { CategoryType } from "@/types";
+import adjustColorForScheme from "@/utils/adjustColorForScheme";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
@@ -112,17 +113,23 @@ export default function CategoriesOnboarding() {
           </ThemedText>
 
           <ThemedView style={styles.horizontalContainer}>
-            {categories.map((category) => (
-              <CapsuleToggle
-                key={category.id}
-                text={category.name}
-                bgFocused={category.color}
-                selected={selectedCategories.some(
-                  (cat) => cat.id === category.id
-                )}
-                onPress={() => toggleCategory(category)}
-              />
-            ))}
+            {categories.map((category) => {
+              const categoryColor = adjustColorForScheme(
+                category.color,
+                colorScheme
+              );
+              return (
+                <CapsuleToggle
+                  key={category.id}
+                  text={category.name}
+                  bgFocused={categoryColor}
+                  selected={selectedCategories.some(
+                    (cat) => cat.id === category.id
+                  )}
+                  onPress={() => toggleCategory(category)}
+                />
+              );
+            })}
             <CapsuleButton
               onPress={handleOpen}
               text="CREATE CATEGORY"

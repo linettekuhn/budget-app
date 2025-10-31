@@ -4,6 +4,7 @@ import AmountDisplay from "@/components/ui/amount-display";
 import CapsuleButton from "@/components/ui/capsule-button";
 import { Colors } from "@/constants/theme";
 import { useCategories } from "@/hooks/useCategories";
+import adjustColorForScheme from "@/utils/adjustColorForScheme";
 import { formatAmountDisplay } from "@/utils/formatAmountDisplay";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useRouter } from "expo-router";
@@ -104,22 +105,34 @@ export default function BudgetOnboarding() {
           </ThemedText>
 
           <ScrollView contentContainerStyle={styles.categoriesWrapper}>
-            {categories.map((category) => (
-              <ThemedView
-                style={[styles.categoryBudget, { borderColor: category.color }]}
-                key={category.id}
-              >
-                <ThemedText type="bodyLarge">{category.name}</ThemedText>
-                <AmountDisplay
-                  displayAmount={
-                    categoryAmounts[category.id]?.display || "0.00"
-                  }
-                  rawAmount={categoryAmounts[category.id]?.raw || "0"}
-                  onChangeText={(text) => handleAmountChange(category.id, text)}
-                  textType="bodyLarge"
-                />
-              </ThemedView>
-            ))}
+            {categories.map((category) => {
+              const categoryColor = adjustColorForScheme(
+                category.color,
+                colorScheme
+              );
+
+              return (
+                <ThemedView
+                  style={[
+                    styles.categoryBudget,
+                    { borderColor: categoryColor },
+                  ]}
+                  key={category.id}
+                >
+                  <ThemedText type="bodyLarge">{category.name}</ThemedText>
+                  <AmountDisplay
+                    displayAmount={
+                      categoryAmounts[category.id]?.display || "0.00"
+                    }
+                    rawAmount={categoryAmounts[category.id]?.raw || "0"}
+                    onChangeText={(text) =>
+                      handleAmountChange(category.id, text)
+                    }
+                    textType="bodyLarge"
+                  />
+                </ThemedView>
+              );
+            })}
           </ScrollView>
 
           <CapsuleButton

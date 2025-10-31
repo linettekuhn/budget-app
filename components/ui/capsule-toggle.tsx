@@ -24,7 +24,6 @@ export default function CapsuleToggle({
 }: Props) {
   const colorScheme = useColorScheme();
   const bgColor = Colors[colorScheme ?? "light"].background;
-  const bgDefault = Colors[colorScheme ?? "light"].primary[300];
   const color = Colors[colorScheme ?? "light"].text;
 
   return (
@@ -34,7 +33,7 @@ export default function CapsuleToggle({
         styles.button,
         {
           backgroundColor: selected ? bgFocused : bgColor,
-          borderColor: selected ? bgFocused : bgDefault,
+          borderColor: bgFocused,
         },
       ]}
     >

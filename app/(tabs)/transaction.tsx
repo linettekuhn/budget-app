@@ -9,6 +9,7 @@ import { Colors } from "@/constants/theme";
 import { useCategories } from "@/hooks/useCategories";
 import { useModal } from "@/hooks/useModal";
 import { CategoryType } from "@/types";
+import adjustColorForScheme from "@/utils/adjustColorForScheme";
 import { formatAmountDisplay } from "@/utils/formatAmountDisplay";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useSQLiteContext } from "expo-sqlite";
@@ -171,15 +172,21 @@ export default function Transaction() {
               Category
             </ThemedText>
             <ThemedView style={styles.horizontalContainer}>
-              {categories.map((category) => (
-                <CapsuleToggle
-                  key={category.id}
-                  text={category.name}
-                  bgFocused={category.color}
-                  selected={categorySelected?.id === category.id}
-                  onPress={() => setCategory(category)}
-                />
-              ))}
+              {categories.map((category) => {
+                const categoryColor = adjustColorForScheme(
+                  category.color,
+                  colorScheme
+                );
+                return (
+                  <CapsuleToggle
+                    key={category.id}
+                    text={category.name}
+                    bgFocused={categoryColor}
+                    selected={categorySelected?.id === category.id}
+                    onPress={() => setCategory(category)}
+                  />
+                );
+              })}
               <CapsuleButton
                 onPress={handleOpen}
                 text="+"
