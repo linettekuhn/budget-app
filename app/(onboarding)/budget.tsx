@@ -20,7 +20,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function BudgetOnboarding() {
   const colorScheme = useColorScheme();
-  const btnColor = Colors[colorScheme ?? "light"].secondary1;
+  const btnColor = Colors[colorScheme ?? "light"].secondary[500];
   const router = useRouter();
   const db = useSQLiteContext();
 

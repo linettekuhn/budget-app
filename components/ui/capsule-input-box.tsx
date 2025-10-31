@@ -29,7 +29,7 @@ export default function CapsuleInput({
   ...rest
 }: Props) {
   const colorScheme = useColorScheme();
-  const bgDefault = Colors[colorScheme ?? "light"].capsuleButtonDefault;
+  const bgDefault = Colors[colorScheme ?? "light"].primary[300];
   const color = Colors[colorScheme ?? "light"].text;
 
   return (

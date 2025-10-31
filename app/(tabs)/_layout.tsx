@@ -26,17 +26,19 @@ const TabIcon = (props: any) => {
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const tabsBgColor = Colors[colorScheme ?? "light"].tabBackground;
+  const activeTabColor = Colors[colorScheme ?? "light"].secondary[500];
 
   return (
     <Tabs
       safeAreaInsets={{ bottom: 0 }}
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
+        tabBarActiveTintColor: activeTabColor,
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarShowLabel: false,
         tabBarStyle: {
-          backgroundColor: Colors[colorScheme ?? "light"].tabsColor,
+          backgroundColor: tabsBgColor,
           position: "absolute",
           bottom: 35,
           borderRadius: 25,
@@ -101,8 +103,8 @@ export default function TabLayout() {
                 size={40}
                 color={
                   focused
-                    ? Colors[colorScheme ?? "light"].tabIconSelected
-                    : Colors[colorScheme ?? "light"].secondary1
+                    ? activeTabColor
+                    : Colors[colorScheme ?? "light"].primary[500]
                 }
               />
             </View>

@@ -21,7 +21,7 @@ export default function Register() {
   const router = useRouter();
 
   const textColor = Colors[colorScheme ?? "light"].text;
-  const btnColor = Colors[colorScheme ?? "light"].secondary1;
+  const btnColor = Colors[colorScheme ?? "light"].secondary[500];
   const bgColor = Colors[colorScheme ?? "light"].background;
 
   const [name, setName] = useState("");

@@ -22,7 +22,7 @@ export default function Login() {
   const router = useRouter();
 
   const textColor = Colors[colorScheme ?? "light"].text;
-  const btnColor = Colors[colorScheme ?? "light"].secondary1;
+  const btnColor = Colors[colorScheme ?? "light"].secondary[500];
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

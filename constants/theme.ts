@@ -1,37 +1,40 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
 import { Platform } from "react-native";
-
-const tintColorLight = "#DA9DF7";
-const tintColorDark = "#8C17C4";
 
 export const Colors = {
   light: {
-    text: "#2B2B2B",
-    background: "#E8E8E1",
-    tint: tintColorLight,
-    icon: "#687076",
-    tabIconDefault: "#E8E8E1",
-    tabIconSelected: tintColorLight,
-    capsuleButtonDefault: "#C6C6C6",
-    tabsColor: "#4C4C4C",
-    secondary1: "#F9A5A5",
-    backgroundLight: "#656565",
+    primary: {
+      900: "#170015", // darkest (text on light background)
+      700: "#64005A", // darker
+      500: "#FF00E5", // primary accent
+      300: "#FFB9F8", // lighter
+      100: "#FFF1FE", // lightest (contrast text)
+    },
+
+    secondary: {
+      500: "#DA9DF7", // secondary accent
+    },
+
+    background: "#FFF1FE",
+    text: "#170015",
+    tabBackground: "#391A36",
   },
+
   dark: {
-    text: "#ECEDEE",
-    background: "#3A3A39",
-    tint: tintColorDark,
-    icon: "#9BA1A6",
-    tabIconDefault: "#3A3A39",
-    tabIconSelected: tintColorDark,
-    capsuleButtonDefault: "#595959",
-    tabsColor: "#B4B4B4",
-    secondary1: "#B73684",
-    backgroundLight: "#C5C5C5",
+    primary: {
+      900: "#FFF1FE", // lightest (text on dark background)
+      700: "#FFB9F8", // lighter
+      500: "#B600A4", // primary accent
+      300: "#64005A", // darker
+      100: "#170015", // darkest (contrast text)
+    },
+
+    secondary: {
+      500: "#6D00A2",
+    },
+
+    background: "#170015",
+    text: "#FFF1FE",
+    tabBackground: "#FFDEFD",
   },
 };
 

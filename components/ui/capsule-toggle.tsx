@@ -23,7 +23,8 @@ export default function CapsuleToggle({
   selected,
 }: Props) {
   const colorScheme = useColorScheme();
-  const bgDefault = Colors[colorScheme ?? "light"].capsuleButtonDefault;
+  const bgColor = Colors[colorScheme ?? "light"].background;
+  const bgDefault = Colors[colorScheme ?? "light"].primary[300];
   const color = Colors[colorScheme ?? "light"].text;
 
   return (
@@ -31,7 +32,10 @@ export default function CapsuleToggle({
       onPress={onPress}
       style={[
         styles.button,
-        { backgroundColor: selected ? bgFocused : bgDefault },
+        {
+          backgroundColor: selected ? bgFocused : bgColor,
+          borderColor: selected ? bgFocused : bgDefault,
+        },
       ]}
     >
       {IconComponent && iconName && (
@@ -54,5 +58,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 15,
     gap: 5,
+    borderWidth: 4,
   },
 });

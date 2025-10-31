@@ -15,7 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Budget() {
   const colorScheme = useColorScheme();
-  const btnColor = Colors[colorScheme ?? "light"].secondary1;
+  const btnColor = Colors[colorScheme ?? "light"].secondary[500];
   const bgColor = Colors[colorScheme ?? "light"].background;
   const router = useRouter();
 

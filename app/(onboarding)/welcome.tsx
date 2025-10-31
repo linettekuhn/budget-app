@@ -9,7 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function WelcomeOnboarding() {
   const colorScheme = useColorScheme();
-  const btnColor = Colors[colorScheme ?? "light"].secondary1;
+  const btnColor = Colors[colorScheme ?? "light"].secondary[500];
   const router = useRouter();
 
   return (

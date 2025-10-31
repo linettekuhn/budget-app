@@ -25,6 +25,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function Transaction() {
   const colorScheme = useColorScheme();
   const db = useSQLiteContext();
+  const btnColor = Colors[colorScheme ?? "light"].secondary[500];
 
   const [rawAmount, setRawAmount] = useState("0");
   const [displayAmount, setDisplayAmount] = useState("0.00");
@@ -182,7 +183,7 @@ export default function Transaction() {
               <CapsuleButton
                 onPress={handleOpen}
                 text="+"
-                bgFocused={Colors[colorScheme ?? "light"].secondary1}
+                bgFocused={btnColor}
               />
             </ThemedView>
           </ThemedView>
@@ -190,7 +191,7 @@ export default function Transaction() {
           <CapsuleButton
             text="ADD TRANSACTION"
             onPress={handleTransaction}
-            bgFocused={Colors[colorScheme ?? "light"].secondary1}
+            bgFocused={btnColor}
           />
         </ThemedView>
       </ScrollView>

@@ -10,6 +10,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function Profile() {
   const colorScheme = useColorScheme();
   const db = useSQLiteContext();
+  const bgColor = Colors[colorScheme ?? "light"].background;
+  const btnColor = Colors[colorScheme ?? "light"].secondary[500];
 
   // TODO: DEV ONLY delete later
   const resetDatabase = async () => {
@@ -36,28 +38,23 @@ export default function Profile() {
     }
   };
   return (
-    <SafeAreaView
-      style={[
-        styles.safeArea,
-        { backgroundColor: Colors[colorScheme ?? "light"].background },
-      ]}
-    >
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
       <ScrollView contentContainerStyle={styles.container}>
         <ThemedView style={styles.main}>
           <CapsuleButton
             text="RESET DATABASE"
             onPress={resetDatabase}
-            bgFocused={Colors[colorScheme ?? "light"].secondary1}
+            bgFocused={btnColor}
           />
           <CapsuleButton
             text="RESET ONBOARDING"
             onPress={resetOnboarding}
-            bgFocused={Colors[colorScheme ?? "light"].secondary1}
+            bgFocused={btnColor}
           />
           <CapsuleButton
             text="RESET APP"
             onPress={resetApp}
-            bgFocused={Colors[colorScheme ?? "light"].secondary1}
+            bgFocused={btnColor}
           />
         </ThemedView>
       </ScrollView>

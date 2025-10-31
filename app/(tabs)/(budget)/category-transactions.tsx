@@ -21,7 +21,7 @@ export default function CategoryTransactions() {
 
   const db = useSQLiteContext();
   const colorScheme = useColorScheme();
-  const bgLight = Colors[colorScheme ?? "light"].backgroundLight;
+  const transactionBgColor = Colors[colorScheme ?? "light"].primary[700];
   const bgColor = Colors[colorScheme ?? "light"].background;
 
   const [loading, setLoading] = useState(true);
@@ -102,10 +102,10 @@ export default function CategoryTransactions() {
               <ThemedView
                 style={[
                   styles.transactionWrapper,
-                  { backgroundColor: bgLight },
+                  { backgroundColor: transactionBgColor },
                 ]}
               >
-                <ThemedView style={{ backgroundColor: bgLight }}>
+                <ThemedView style={{ backgroundColor: transactionBgColor }}>
                   <ThemedText style={{ color: bgColor }}>
                     {item.name}
                   </ThemedText>

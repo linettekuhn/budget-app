@@ -17,7 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function MonthlyTransactions() {
   const db = useSQLiteContext();
   const colorScheme = useColorScheme();
-  const bgLight = Colors[colorScheme ?? "light"].backgroundLight;
+  const transactinBgColor = Colors[colorScheme ?? "light"].primary[700];
   const bgColor = Colors[colorScheme ?? "light"].background;
 
   const [loading, setLoading] = useState(true);
@@ -79,10 +79,10 @@ export default function MonthlyTransactions() {
               <ThemedView
                 style={[
                   styles.transactionWrapper,
-                  { backgroundColor: bgLight },
+                  { backgroundColor: transactinBgColor },
                 ]}
               >
-                <ThemedView style={{ backgroundColor: bgLight }}>
+                <ThemedView style={{ backgroundColor: transactinBgColor }}>
                   <ThemedText style={{ color: bgColor }}>
                     {item.name}
                   </ThemedText>

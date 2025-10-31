@@ -21,7 +21,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function CategoriesOnboarding() {
   const colorScheme = useColorScheme();
-  const btnColor = Colors[colorScheme ?? "light"].secondary1;
+  const btnColor = Colors[colorScheme ?? "light"].secondary[500];
   const router = useRouter();
   const [selectedCategories, setSelectedCategories] = useState<CategoryType[]>(
     []
@@ -126,7 +126,7 @@ export default function CategoriesOnboarding() {
             <CapsuleButton
               onPress={handleOpen}
               text="CREATE CATEGORY"
-              bgFocused={Colors[colorScheme ?? "light"].secondary1}
+              bgFocused={btnColor}
               IconComponent={Octicons}
               iconName="plus"
             />

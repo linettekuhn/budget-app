@@ -15,17 +15,21 @@ export default function CategoryBudgetPreview({ category, onPress }: Props) {
     overflow = Math.abs(1 - spent);
     spent = 1;
   }
+  if (overflow >= 1) {
+    overflow = 1;
+  }
   const colorScheme = useColorScheme();
 
-  const bgColor = Colors[colorScheme ?? "light"].background;
-  const bgLightColor = Colors[colorScheme ?? "light"].backgroundLight;
+  const screenBgColor = Colors[colorScheme ?? "light"].background;
+  const previewBgColor = Colors[colorScheme ?? "light"].primary[700];
+
   return (
     <Pressable
       key={category.id}
       style={[
         styles.category,
         {
-          backgroundColor: bgLightColor,
+          backgroundColor: previewBgColor,
         },
       ]}
       onPress={onPress}
@@ -50,7 +54,7 @@ export default function CategoryBudgetPreview({ category, onPress }: Props) {
         </ThemedText>
       </View>
       <View style={styles.progressBar}>
-        <View style={[styles.backBar, { backgroundColor: bgColor }]} />
+        <View style={[styles.backBar, { backgroundColor: screenBgColor }]} />
         <View
           style={[
             styles.frontBar,
@@ -95,7 +99,7 @@ const styles = StyleSheet.create({
   },
 
   backBar: {
-    height: 4,
+    height: 6,
     width: "100%",
     borderRadius: 2,
   },
@@ -104,7 +108,7 @@ const styles = StyleSheet.create({
     height: 10,
     borderRadius: 5,
     position: "absolute",
-    top: -3,
+    top: -2,
     left: 0,
     zIndex: 1,
   },
@@ -113,7 +117,7 @@ const styles = StyleSheet.create({
     height: 10,
     borderRadius: 5,
     position: "absolute",
-    top: -3,
+    top: -2,
     left: 0,
     zIndex: 2,
   },
