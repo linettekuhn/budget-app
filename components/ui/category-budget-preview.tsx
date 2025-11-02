@@ -52,7 +52,7 @@ export default function CategoryBudgetPreview({ category, onPress }: Props) {
           darkColor={Colors["dark"].background}
           lightColor={Colors["light"].background}
         >
-          $ {category.totalSpent} / $ {category.budget}
+          ${category.totalSpent} / ${category.budget}
         </ThemedText>
       </View>
       <View style={styles.progressBar}>
