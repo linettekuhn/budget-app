@@ -1,16 +1,42 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import AmountDisplay from "@/components/ui/amount-display";
 import CapsuleButton from "@/components/ui/capsule-button";
+import CapsuleNumberInput from "@/components/ui/capsule-input-number";
+import CapsuleToggle from "@/components/ui/capsule-toggle";
 import { Colors } from "@/constants/theme";
+import { formatAmountDisplay } from "@/utils/formatAmountDisplay";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useRouter } from "expo-router";
-import { ScrollView, StyleSheet, useColorScheme } from "react-native";
+import { useState } from "react";
+import { ScrollView, StyleSheet, useColorScheme, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SalaryOnboarding() {
   const colorScheme = useColorScheme();
   const btnColor = Colors[colorScheme ?? "light"].secondary[500];
   const router = useRouter();
+  const [salaryType, setSalaryType] = useState<
+    "Hourly" | "Biweekly" | "Monthly" | "Yearly" | "Varies"
+  >("Hourly");
+  const [hoursRaw, setHoursRaw] = useState("0");
+  const [hoursDisplay, setHoursDisplay] = useState("0.00");
+  const [rawAmount, setRawAmount] = useState("0");
+  const [displayAmount, setDisplayAmount] = useState("0.00");
+
+  const handleAmountChange = (text: string) => {
+    const numeric = text.replace(/[^0-9]/g, "");
+    setRawAmount(numeric);
+    const formatted = formatAmountDisplay(numeric);
+    setDisplayAmount(formatted);
+  };
+
+  const handleHoursChange = (text: string) => {
+    const numeric = text.replace(/[^0-9]/g, "");
+    setHoursRaw(numeric);
+    const formatted = formatAmountDisplay(numeric);
+    setHoursDisplay(formatted);
+  };
 
   return (
     <SafeAreaView
@@ -27,24 +53,136 @@ export default function SalaryOnboarding() {
           <ThemedText type="h4">
             Entering your salary helps us calculate savings.
           </ThemedText>
-          <ThemedText type="h3">
-            You can skip this step if you&apos;d like and always add it later!
-          </ThemedText>
+          <ThemedText type="h3">How do you usually get paid?</ThemedText>
 
           <ThemedView style={styles.horizontalContainer}>
-            <CapsuleButton
-              text="Next"
-              iconName="arrow-right"
-              IconComponent={Octicons}
-              bgFocused={btnColor}
-              onPress={() => router.push("/finish")}
+            <CapsuleToggle
+              text={"Hourly"}
+              bgFocused={Colors[colorScheme ?? "light"].primary[500]}
+              selected={salaryType === "Hourly"}
+              onPress={() => setSalaryType("Hourly")}
             />
-            <CapsuleButton
-              text="Skip"
-              bgFocused={btnColor}
-              onPress={() => router.push("/finish")}
+            <CapsuleToggle
+              text={"Biweekly"}
+              bgFocused={Colors[colorScheme ?? "light"].primary[500]}
+              selected={salaryType === "Biweekly"}
+              onPress={() => setSalaryType("Biweekly")}
+            />
+            <CapsuleToggle
+              text={"Monthly"}
+              bgFocused={Colors[colorScheme ?? "light"].primary[500]}
+              selected={salaryType === "Monthly"}
+              onPress={() => setSalaryType("Monthly")}
+            />
+            <CapsuleToggle
+              text={"Yearly"}
+              bgFocused={Colors[colorScheme ?? "light"].primary[500]}
+              selected={salaryType === "Yearly"}
+              onPress={() => setSalaryType("Yearly")}
+            />
+            <CapsuleToggle
+              text={"Varies"}
+              bgFocused={Colors[colorScheme ?? "light"].primary[500]}
+              selected={salaryType === "Varies"}
+              onPress={() => setSalaryType("Varies")}
             />
           </ThemedView>
+          {salaryType === "Hourly" && (
+            <ThemedView style={styles.hourlyWrapper}>
+              <View style={styles.quantityWrapper}>
+                <ThemedText type="h2">How much?</ThemedText>
+                <ThemedView style={styles.salaryAmount}>
+                  <AmountDisplay
+                    displayAmount={displayAmount}
+                    rawAmount={rawAmount}
+                    onChangeText={handleAmountChange}
+                    textType="h3"
+                  />
+                  <ThemedText type="h3"> per hour</ThemedText>
+                </ThemedView>
+              </View>
+              <View
+                style={{ marginVertical: 10, gap: 5, alignItems: "center" }}
+              >
+                <ThemedText type="overline">
+                  Enter your best average if it varies
+                </ThemedText>
+                <ThemedView style={styles.salaryAmount}>
+                  <CapsuleNumberInput
+                    displayAmount={hoursDisplay}
+                    rawAmount={hoursRaw}
+                    onChangeText={handleHoursChange}
+                    textType="h3"
+                  />
+                  <ThemedText type="h3"> hours per week</ThemedText>
+                </ThemedView>
+              </View>
+            </ThemedView>
+          )}
+          {salaryType === "Biweekly" && (
+            <ThemedView style={styles.quantityWrapper}>
+              <ThemedText type="h2">How much?</ThemedText>
+              <ThemedView style={styles.salaryAmount}>
+                <AmountDisplay
+                  displayAmount={displayAmount}
+                  rawAmount={rawAmount}
+                  onChangeText={handleAmountChange}
+                  textType="h3"
+                />
+                <ThemedText type="h3"> every 2 weeks</ThemedText>
+              </ThemedView>
+            </ThemedView>
+          )}
+          {salaryType === "Monthly" && (
+            <ThemedView style={styles.quantityWrapper}>
+              <ThemedText type="h2">How much?</ThemedText>
+              <ThemedView style={styles.salaryAmount}>
+                <AmountDisplay
+                  displayAmount={displayAmount}
+                  rawAmount={rawAmount}
+                  onChangeText={handleAmountChange}
+                  textType="h3"
+                />
+                <ThemedText type="h3"> per month</ThemedText>
+              </ThemedView>
+            </ThemedView>
+          )}
+          {salaryType === "Yearly" && (
+            <ThemedView style={styles.quantityWrapper}>
+              <ThemedText type="h2">How much?</ThemedText>
+              <ThemedView style={styles.salaryAmount}>
+                <AmountDisplay
+                  displayAmount={displayAmount}
+                  rawAmount={rawAmount}
+                  onChangeText={handleAmountChange}
+                  textType="h3"
+                />
+                <ThemedText type="h3"> per year</ThemedText>
+              </ThemedView>
+            </ThemedView>
+          )}
+          {salaryType === "Varies" && (
+            <ThemedView style={styles.quantityWrapper}>
+              <ThemedText type="h2">How much?</ThemedText>
+              <ThemedView style={styles.salaryAmount}>
+                <AmountDisplay
+                  displayAmount={displayAmount}
+                  rawAmount={rawAmount}
+                  onChangeText={handleAmountChange}
+                  textType="h3"
+                />
+                <ThemedText type="h3"> per month (estimated)</ThemedText>
+              </ThemedView>
+            </ThemedView>
+          )}
+
+          <CapsuleButton
+            text="Next"
+            iconName="arrow-right"
+            IconComponent={Octicons}
+            bgFocused={btnColor}
+            onPress={() => router.push("/finish")}
+          />
         </ThemedView>
       </ScrollView>
     </SafeAreaView>
@@ -72,5 +210,22 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     flexWrap: "wrap",
     gap: 10,
+  },
+
+  salaryAmount: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  hourlyWrapper: {
+    justifyContent: "space-evenly",
+    alignItems: "center",
+    gap: 10,
+  },
+
+  quantityWrapper: {
+    marginVertical: 10,
+    alignItems: "center",
   },
 });

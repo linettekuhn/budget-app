@@ -4,7 +4,7 @@ import { Colors } from "@/constants/theme";
 import { useRef } from "react";
 import { Pressable, StyleSheet, TextInput, useColorScheme } from "react-native";
 
-type AmountDisplayProps = {
+type Props = {
   displayAmount: string;
   rawAmount: string;
   onChangeText: (text: string) => void;
@@ -27,12 +27,12 @@ type AmountDisplayProps = {
     | "link";
 };
 
-export default function AmountDisplay({
+export default function CapsuleNumberInput({
   displayAmount,
   rawAmount,
   onChangeText,
   textType,
-}: AmountDisplayProps) {
+}: Props) {
   const colorScheme = useColorScheme();
   const textColor = Colors[colorScheme ?? "light"].text;
   const bgColor = Colors[colorScheme ?? "light"].primary[300];
@@ -48,7 +48,7 @@ export default function AmountDisplay({
           type={textType}
           style={[styles.amountInput, { color: textColor }]}
         >
-          ${displayAmount}
+          {displayAmount}
         </ThemedText>
       </Pressable>
 

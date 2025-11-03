@@ -1,6 +1,6 @@
-import { StyleSheet, Text, type TextProps } from "react-native";
+import { StyleSheet, Text, useColorScheme, type TextProps } from "react-native";
 
-import { useThemeColor } from "@/hooks/use-theme-color";
+import { Colors } from "@/constants/theme";
 
 export type ThemedTextProps = TextProps & {
   lightColor?: string;
@@ -31,7 +31,8 @@ export function ThemedText({
   type = "body",
   ...rest
 }: ThemedTextProps) {
-  const color = useThemeColor({ light: lightColor, dark: darkColor }, "text");
+  const colorScheme = useColorScheme();
+  const color = Colors[colorScheme ?? "light"].text;
 
   return <Text style={[{ color }, typeStyles[type], style]} {...rest} />;
 }
@@ -123,8 +124,8 @@ const typeStyles = StyleSheet.create({
   },
   overline: {
     fontFamily: "BricolageGrotesque-Medium",
-    fontSize: 12.11,
-    lineHeight: 12.11 * 1.65,
+    fontSize: 13.53,
+    lineHeight: 13.53 * 1.65,
     letterSpacing: 0.03,
     textTransform: "uppercase",
   },

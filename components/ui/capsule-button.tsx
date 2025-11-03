@@ -52,6 +52,6 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     paddingVertical: 10,
     paddingHorizontal: 20,
-    gap: 5,
+    gap: 15,
   },
 });
