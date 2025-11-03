@@ -30,6 +30,7 @@ export default function BudgetOnboarding() {
   const [categoryAmounts, setCategoryAmounts] = useState<{
     [key: number]: { raw: string; display: string };
   }>({});
+  const [total, setTotal] = useState(0);
 
   useEffect(() => {
     const initial: { [key: number]: { raw: string; display: string } } = {};
@@ -84,6 +85,15 @@ export default function BudgetOnboarding() {
     }
   };
 
+  useEffect(() => {
+    const totalRaw = Object.values(categoryAmounts).reduce((sum, { raw }) => {
+      const value = parseFloat((Number(raw) / 100).toFixed(2));
+      return sum + value;
+    }, 0);
+
+    setTotal(totalRaw);
+  }, [categoryAmounts]);
+
   if (loading) {
     return <ActivityIndicator size="large" />;
   }
@@ -103,6 +113,7 @@ export default function BudgetOnboarding() {
           <ThemedText type="h3">
             Decide how much you want to spend in each category.
           </ThemedText>
+          <ThemedText type="h4">Total: ${total.toFixed(2)}</ThemedText>
 
           <ScrollView contentContainerStyle={styles.categoriesWrapper}>
             {categories.map((category) => {
