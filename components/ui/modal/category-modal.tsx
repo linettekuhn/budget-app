@@ -1,5 +1,6 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { formatAmountDisplay } from "@/utils/formatAmountDisplay";
 import { useSQLiteContext } from "expo-sqlite";
 import { useState } from "react";
 import { Alert, StyleSheet, View } from "react-native";
@@ -9,6 +10,7 @@ import ColorPicker, {
   Panel3,
   Swatches,
 } from "reanimated-color-picker";
+import AmountDisplay from "../amount-display";
 import CapsuleButton from "../capsule-button";
 import CapsuleInput from "../capsule-input-box";
 
@@ -21,6 +23,8 @@ export default function CustomCategory({
 
   const [categoryName, setCategoryName] = useState("");
   const [categoryColor, setCategoryColor] = useState("#ff3be8");
+  const [rawAmount, setRawAmount] = useState("0");
+  const [displayAmount, setDisplayAmount] = useState("0.00");
 
   const handleColorChange = (colors: ColorFormatsObject) => {
     try {
@@ -35,14 +39,27 @@ export default function CustomCategory({
 
   const handleAddCategory = async () => {
     try {
-      if (!categoryName || !categoryColor) {
+      if (!categoryName || !categoryColor || !rawAmount) {
         throw new Error("All fields are required");
       }
 
-      const name = categoryName.trim();
+      if (parseFloat(rawAmount) === 0) throw new Error("Amount cannot be 0");
+
+      // remove extra spaces
+      let name = categoryName.trim();
+
       if (!name) {
         throw new Error("Category name cannot be empty");
       }
+
+      // capitalize first letter in words
+      name = name
+        .split(" ")
+        .map((word) => word[0].toUpperCase() + word.slice(1))
+        .join(" ");
+
+      const budget = parseFloat((Number(rawAmount) / 100).toFixed(2));
+
       type CountResult = { count: number };
       const existing = await db.getAllAsync<CountResult>(
         "SELECT COUNT(*) as count FROM categories WHERE name = ?",
@@ -53,10 +70,10 @@ export default function CustomCategory({
         throw new Error("Category name already exists");
       }
 
-      await db.runAsync(`INSERT INTO categories (name, color) VALUES (?, ?)`, [
-        name,
-        categoryColor,
-      ]);
+      await db.runAsync(
+        `INSERT INTO categories (name, color, budget) VALUES (?, ?, ?)`,
+        [name, categoryColor, budget]
+      );
     } catch (error: unknown) {
       if (error instanceof Error) {
         Alert.alert("Error", error.message);
@@ -68,11 +85,29 @@ export default function CustomCategory({
     }
   };
 
+  const handleAmountChange = (text: string) => {
+    const numeric = text.replace(/[^0-9]/g, "");
+    setRawAmount(numeric);
+    const formatted = formatAmountDisplay(numeric);
+    setDisplayAmount(formatted);
+  };
+
   return (
     <ThemedView style={styles.categoryForm}>
       <ThemedText style={styles.heading} type="h1">
         Create a Category
       </ThemedText>
+      <ThemedView style={styles.budgetPreview}>
+        <ThemedText style={styles.heading} type="h2">
+          Budget
+        </ThemedText>
+        <AmountDisplay
+          displayAmount={displayAmount}
+          rawAmount={rawAmount}
+          onChangeText={handleAmountChange}
+          textType="h2"
+        />
+      </ThemedView>
       <ThemedView style={styles.options}>
         <ThemedText style={styles.heading} type="h2">
           Name
@@ -149,6 +184,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
+  budgetPreview: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 25,
+    maxWidth: "60%",
+    marginHorizontal: 1,
+  },
+
   colorPreviewWrapper: {
     flexDirection: "row",
     alignItems: "center",
@@ -164,6 +208,7 @@ const styles = StyleSheet.create({
 
   categoryForm: {
     justifyContent: "space-evenly",
+    alignItems: "center",
     gap: 10,
     paddingHorizontal: 20,
   },
