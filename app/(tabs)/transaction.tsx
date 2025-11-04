@@ -126,6 +126,14 @@ export default function Transaction() {
       <ScrollView contentContainerStyle={styles.container}>
         <ThemedView style={styles.main}>
           <ThemedView style={styles.options}>
+            <AmountDisplay
+              displayAmount={displayAmount}
+              rawAmount={rawAmount}
+              onChangeText={handleAmountChange}
+              textType="displayLarge"
+            />
+          </ThemedView>
+          <ThemedView style={styles.options}>
             <ThemedText style={styles.heading} type="h1">
               Name
             </ThemedText>
@@ -136,12 +144,6 @@ export default function Transaction() {
               keyboardType="default"
             />
           </ThemedView>
-          <AmountDisplay
-            displayAmount={displayAmount}
-            rawAmount={rawAmount}
-            onChangeText={handleAmountChange}
-            textType="displayLarge"
-          />
 
           <ThemedView style={styles.options}>
             <ThemedText style={styles.heading} type="h1">
