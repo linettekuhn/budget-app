@@ -49,15 +49,17 @@ export default function CategoriesOnboarding() {
     }
 
     // (?, ?) for each category
-    const placeholders = selectedCategories.map(() => "(?, ?, ?)").join(", ");
+    const placeholders = selectedCategories
+      .map(() => "(?, ?, ?, ?)")
+      .join(", ");
 
     // values to fill up parameter placeholders
     const values: (string | number)[] = [];
     selectedCategories.forEach((cat) => {
-      values.push(cat.name, cat.color, cat.budget);
+      values.push(cat.name, cat.color, cat.type, cat.budget);
     });
 
-    const query = `INSERT INTO categories (name, color, budget) VALUES ${placeholders}`;
+    const query = `INSERT INTO categories (name, color, type, budget) VALUES ${placeholders}`;
 
     try {
       await db.runAsync("DELETE FROM categories");
@@ -102,14 +104,17 @@ export default function CategoriesOnboarding() {
     >
       <ScrollView contentContainerStyle={styles.container}>
         <ThemedView style={styles.main}>
-          <ThemedText type="h1" style={{ textAlign: "center" }}>
+          <ThemedText
+            type="h1"
+            style={{ paddingHorizontal: 30, textAlign: "center" }}
+          >
             Choose or Add Your Categories
           </ThemedText>
-          <ThemedText type="h4">
+          <ThemedText
+            type="h5"
+            style={{ paddingHorizontal: 20, textAlign: "center" }}
+          >
             We&apos;ve added a few default categories to get you started.
-          </ThemedText>
-          <ThemedText type="h3">
-            You can customize them or create your own!
           </ThemedText>
 
           <ThemedView style={styles.horizontalContainer}>
@@ -132,7 +137,7 @@ export default function CategoriesOnboarding() {
             })}
             <CapsuleButton
               onPress={handleOpen}
-              text="CREATE CATEGORY"
+              text="NEW CATEGORY"
               bgFocused={btnColor}
               IconComponent={Octicons}
               iconName="plus"

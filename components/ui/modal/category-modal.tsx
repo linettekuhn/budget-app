@@ -1,5 +1,6 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { Colors } from "@/constants/theme";
 import { formatAmountDisplay } from "@/utils/formatAmountDisplay";
 import { useSQLiteContext } from "expo-sqlite";
 import { useState } from "react";
@@ -10,6 +11,7 @@ import {
   Platform,
   StyleSheet,
   TouchableWithoutFeedback,
+  useColorScheme,
   View,
 } from "react-native";
 import ColorPicker, {
@@ -21,6 +23,7 @@ import ColorPicker, {
 import AmountDisplay from "../amount-display";
 import CapsuleButton from "../capsule-button";
 import CapsuleInput from "../capsule-input-box";
+import CapsuleToggle from "../capsule-toggle";
 
 export default function CustomCategory({
   onComplete,
@@ -28,8 +31,10 @@ export default function CustomCategory({
   onComplete: () => void;
 }) {
   const db = useSQLiteContext();
+  const colorScheme = useColorScheme();
 
   const [categoryName, setCategoryName] = useState("");
+  const [typeSelected, setType] = useState("");
   const [categoryColor, setCategoryColor] = useState("#ff3be8");
   const [rawAmount, setRawAmount] = useState("0");
   const [displayAmount, setDisplayAmount] = useState("0.00");
@@ -78,9 +83,11 @@ export default function CustomCategory({
         throw new Error("Category name already exists");
       }
 
+      const categoryType = typeSelected.toLowerCase() as "need" | "want";
+
       await db.runAsync(
-        `INSERT INTO categories (name, color, budget) VALUES (?, ?, ?)`,
-        [name, categoryColor, budget]
+        `INSERT INTO categories (name, color, type, budget) VALUES (?, ?, ?, ?)`,
+        [name, categoryColor, categoryType, budget]
       );
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -110,6 +117,17 @@ export default function CustomCategory({
           <ThemedText style={styles.heading} type="h1">
             Create a Category
           </ThemedText>
+          <ThemedView style={styles.options}>
+            <ThemedText style={styles.heading} type="h2">
+              Name
+            </ThemedText>
+            <CapsuleInput
+              value={categoryName}
+              onChangeText={setCategoryName}
+              placeholder="Enter category name"
+              keyboardType="default"
+            />
+          </ThemedView>
           <ThemedView style={styles.budgetPreview}>
             <ThemedText style={styles.heading} type="h2">
               Budget
@@ -123,14 +141,22 @@ export default function CustomCategory({
           </ThemedView>
           <ThemedView style={styles.options}>
             <ThemedText style={styles.heading} type="h2">
-              Name
+              Type
             </ThemedText>
-            <CapsuleInput
-              value={categoryName}
-              onChangeText={setCategoryName}
-              placeholder="Enter category name"
-              keyboardType="default"
-            />
+            <ThemedView style={styles.horizontalContainer}>
+              <CapsuleToggle
+                text="NEED"
+                bgFocused={Colors[colorScheme ?? "light"].primary[300]}
+                selected={typeSelected === "NEED"}
+                onPress={() => setType("NEED")}
+              />
+              <CapsuleToggle
+                text="WANT"
+                bgFocused={Colors[colorScheme ?? "light"].primary[300]}
+                selected={typeSelected === "WANT"}
+                onPress={() => setType("WANT")}
+              />
+            </ThemedView>
           </ThemedView>
           <ThemedView style={styles.options}>
             <ColorPicker
@@ -193,17 +219,20 @@ const styles = StyleSheet.create({
   },
 
   options: {
-    flexDirection: "column",
+    flexDirection: "row",
+    justifyContent: "flex-start",
     alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 10,
+    maxWidth: "95%",
   },
 
   budgetPreview: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
     alignItems: "center",
-    gap: 25,
-    maxWidth: "60%",
-    marginHorizontal: 1,
+    gap: 10,
+    paddingHorizontal: 10,
   },
 
   colorPreviewWrapper: {
@@ -222,12 +251,19 @@ const styles = StyleSheet.create({
   categoryForm: {
     justifyContent: "space-evenly",
     alignItems: "center",
-    gap: 10,
+    gap: 5,
     paddingHorizontal: 20,
   },
 
   colorPicker: {
     gap: 20,
-    maxWidth: "60%",
+    width: "60%",
+  },
+
+  horizontalContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    flexWrap: "nowrap",
+    gap: 10,
   },
 });

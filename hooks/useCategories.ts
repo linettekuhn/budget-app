@@ -19,6 +19,7 @@ export function useCategories() {
         id: row.id,
         name: row.name,
         color: row.color,
+        type: row.type,
         budget: row.budget,
       }));
 

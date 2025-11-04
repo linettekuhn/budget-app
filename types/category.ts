@@ -3,6 +3,7 @@ export type CategoryType = {
   name: string;
   color: string;
   budget: number;
+  type: string;
 };
 
 export type CategorySpend = {

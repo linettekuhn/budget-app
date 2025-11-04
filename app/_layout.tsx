@@ -41,6 +41,7 @@ export default function RootLayout() {
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           name TEXT NOT NULL UNIQUE,
           color TEXT NOT NULL,
+          type TEXT NOT NULL,
           budget DECIMAL(13, 2)
         );
         CREATE TABLE IF NOT EXISTS transactions (
@@ -68,11 +69,18 @@ export default function RootLayout() {
       // TODO: dark and light mode category colors
       if (existingCategories[0].count === 0) {
         await db.execAsync(`
-          INSERT INTO categories (name, color) VALUES
-            ('Food', '#FF6B6B'),
-            ('Transport', '#4ECDC4'),
-            ('Entertainment', '#FFD93D'),
-            ('Bills', '#6A4C93');
+          INSERT INTO categories (name, color, type) VALUES
+            ('Utilities', '#FF6B6B', 'need'),
+            ('Transport', '#4ECDC4', 'need'),
+            ('Groceries', '#FFD93D', 'need'),
+            ('Rent', '#3DFF8B', 'need'),
+            ('Insurance', '#6A4C93', 'need'),
+            ('Debt', '#FF8C00', 'need'),
+            ('Restaurants', '#b2d100ff', 'want'),
+            ('Beauty', '#6980ffff', 'want'),
+            ('Shopping', '#DA70D6', 'want'),
+            ('Subscription', '#9370DB', 'want'),
+            ('Entertainment', '#20B2AA', 'want');
         `);
       }
       setDbReady(true);

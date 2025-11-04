@@ -54,7 +54,8 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    alignSelf: "flex-start",
+    flexShrink: 1,
+    flexGrow: 1,
     borderRadius: 25,
     paddingVertical: 10,
     paddingHorizontal: 15,
