@@ -8,6 +8,7 @@ import { Colors } from "@/constants/theme";
 import { formatAmountDisplay } from "@/utils/formatAmountDisplay";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useRouter } from "expo-router";
+import { useSQLiteContext } from "expo-sqlite";
 import { useState } from "react";
 import { ScrollView, StyleSheet, useColorScheme, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -16,6 +17,8 @@ export default function SalaryOnboarding() {
   const colorScheme = useColorScheme();
   const btnColor = Colors[colorScheme ?? "light"].secondary[500];
   const router = useRouter();
+  const db = useSQLiteContext();
+
   const [salaryType, setSalaryType] = useState<
     "Hourly" | "Biweekly" | "Monthly" | "Yearly" | "Varies"
   >("Hourly");
@@ -38,6 +41,48 @@ export default function SalaryOnboarding() {
     setHoursDisplay(formatted);
   };
 
+  const saveSalary = async () => {
+    if (!rawAmount || parseFloat(rawAmount) === 0) {
+      throw new Error("Amount cannot be 0");
+    }
+
+    if (salaryType === "Hourly" && (!hoursRaw || parseFloat(hoursRaw) === 0)) {
+      throw new Error("Hours cannot be 0");
+    }
+
+    let monthlySalary = 0;
+    const hours = parseFloat((Number(hoursRaw) / 100).toFixed(2));
+    const amount = parseFloat((Number(rawAmount) / 100).toFixed(2));
+
+    switch (salaryType) {
+      case "Hourly":
+        monthlySalary = amount * hours * 4.33;
+        break;
+      case "Biweekly":
+        monthlySalary = amount * 2;
+        break;
+      case "Monthly":
+        monthlySalary = amount;
+        break;
+      case "Yearly":
+        monthlySalary = amount / 12;
+        break;
+      case "Varies":
+        monthlySalary = amount;
+        break;
+    }
+    console.log(monthlySalary);
+    try {
+      await db.runAsync(
+        `INSERT INTO salary (type, amount, monthly, hoursPerWeek) VALUES (?, ?, ?, ?)`,
+        [salaryType, amount, monthlySalary, hours]
+      );
+    } catch (error) {
+      console.log(error);
+    } finally {
+      router.push("/finish");
+    }
+  };
   return (
     <SafeAreaView
       style={[
@@ -181,7 +226,7 @@ export default function SalaryOnboarding() {
             iconName="arrow-right"
             IconComponent={Octicons}
             bgFocused={btnColor}
-            onPress={() => router.push("/finish")}
+            onPress={saveSalary}
           />
         </ThemedView>
       </ScrollView>

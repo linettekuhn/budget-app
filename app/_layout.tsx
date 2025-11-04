@@ -52,7 +52,14 @@ export default function RootLayout() {
           categoryId INTEGER,
           FOREIGN KEY (categoryId) REFERENCES categories(id)
           );
-      `);
+        CREATE TABLE IF NOT EXISTS salary (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          type TEXT NOT NULL,
+          amount DECIMAL(13, 2) NOT NULL,
+          monthly DECIMAL(13, 2) NOT NULL,
+          hoursPerWeek DECIMAL(5, 2)
+          )
+          `);
 
       type CountResult = { count: number };
       const existingCategories = await db.getAllAsync<CountResult>(

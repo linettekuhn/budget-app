@@ -31,6 +31,7 @@ export default function Profile() {
       const db = await SQLite.openDatabaseAsync("app.db");
       await db.execAsync("DROP TABLE IF EXISTS transactions");
       await db.execAsync("DROP TABLE IF EXISTS categories");
+      await db.execAsync("DROP TABLE IF EXISTS salary");
 
       console.log("App data cleared successfully!");
     } catch (error) {
