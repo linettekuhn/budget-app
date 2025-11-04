@@ -118,11 +118,11 @@ const styles = StyleSheet.create({
 
   container: {
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingTop: 16,
+    paddingBottom: 70,
   },
 
   main: {
-    paddingVertical: 30,
     flex: 1,
     gap: 15,
   },

@@ -17,10 +17,13 @@ import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  ScrollView,
+  Keyboard,
+  Platform,
   StyleSheet,
+  TouchableWithoutFeedback,
   useColorScheme,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Transaction() {
@@ -123,87 +126,94 @@ export default function Transaction() {
         { backgroundColor: Colors[colorScheme ?? "light"].background },
       ]}
     >
-      <ScrollView contentContainerStyle={styles.container}>
-        <ThemedView style={styles.main}>
-          <ThemedView style={styles.options}>
-            <AmountDisplay
-              displayAmount={displayAmount}
-              rawAmount={rawAmount}
-              onChangeText={handleAmountChange}
-              textType="displayLarge"
-            />
-          </ThemedView>
-          <ThemedView style={styles.options}>
-            <ThemedText style={styles.heading} type="h1">
-              Name
-            </ThemedText>
-            <CapsuleInput
-              value={transactionName}
-              onChangeText={setTransactionName}
-              placeholder="Enter transaction name"
-              keyboardType="default"
-            />
-          </ThemedView>
-
-          <ThemedView style={styles.options}>
-            <ThemedText style={styles.heading} type="h1">
-              Type
-            </ThemedText>
-            <ThemedView style={styles.horizontalContainer}>
-              <CapsuleToggle
-                text="INCOME"
-                bgFocused="#2EA64E"
-                IconComponent={Octicons}
-                iconName="arrow-up"
-                selected={typeSelected === "INCOME"}
-                onPress={() => setType("INCOME")}
-              />
-              <CapsuleToggle
-                text="EXPENSE"
-                bgFocused="#CF3D3D"
-                IconComponent={Octicons}
-                iconName="arrow-down"
-                selected={typeSelected === "EXPENSE"}
-                onPress={() => setType("EXPENSE")}
+      <KeyboardAwareScrollView
+        keyboardShouldPersistTaps="handled"
+        extraScrollHeight={Platform.OS === "ios" ? 80 : 100}
+        enableOnAndroid={true}
+        contentContainerStyle={styles.container}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+          <ThemedView style={styles.main}>
+            <ThemedView style={styles.options}>
+              <AmountDisplay
+                displayAmount={displayAmount}
+                rawAmount={rawAmount}
+                onChangeText={handleAmountChange}
+                textType="displayLarge"
               />
             </ThemedView>
-          </ThemedView>
-
-          <ThemedView style={styles.options}>
-            <ThemedText style={styles.heading} type="h1">
-              Category
-            </ThemedText>
-            <ThemedView style={styles.horizontalContainer}>
-              {categories.map((category) => {
-                const categoryColor = adjustColorForScheme(
-                  category.color,
-                  colorScheme
-                );
-                return (
-                  <CapsuleToggle
-                    key={category.id}
-                    text={category.name}
-                    bgFocused={categoryColor}
-                    selected={categorySelected?.id === category.id}
-                    onPress={() => setCategory(category)}
-                  />
-                );
-              })}
-              <CapsuleButton
-                onPress={handleOpen}
-                text="+"
-                bgFocused={btnColor}
+            <ThemedView style={styles.options}>
+              <ThemedText style={styles.heading} type="h1">
+                Name
+              </ThemedText>
+              <CapsuleInput
+                value={transactionName}
+                onChangeText={setTransactionName}
+                placeholder="Enter transaction name"
+                keyboardType="default"
               />
             </ThemedView>
-          </ThemedView>
 
-          <CapsuleButton
-            text="ADD TRANSACTION"
-            onPress={handleTransaction}
-            bgFocused={btnColor}
-          />
-        </ThemedView>
-      </ScrollView>
+            <ThemedView style={styles.options}>
+              <ThemedText style={styles.heading} type="h1">
+                Type
+              </ThemedText>
+              <ThemedView style={styles.horizontalContainer}>
+                <CapsuleToggle
+                  text="INCOME"
+                  bgFocused="#2EA64E"
+                  IconComponent={Octicons}
+                  iconName="arrow-up"
+                  selected={typeSelected === "INCOME"}
+                  onPress={() => setType("INCOME")}
+                />
+                <CapsuleToggle
+                  text="EXPENSE"
+                  bgFocused="#CF3D3D"
+                  IconComponent={Octicons}
+                  iconName="arrow-down"
+                  selected={typeSelected === "EXPENSE"}
+                  onPress={() => setType("EXPENSE")}
+                />
+              </ThemedView>
+            </ThemedView>
+
+            <ThemedView style={styles.options}>
+              <ThemedText style={styles.heading} type="h1">
+                Category
+              </ThemedText>
+              <ThemedView style={styles.horizontalContainer}>
+                {categories.map((category) => {
+                  const categoryColor = adjustColorForScheme(
+                    category.color,
+                    colorScheme
+                  );
+                  return (
+                    <CapsuleToggle
+                      key={category.id}
+                      text={category.name}
+                      bgFocused={categoryColor}
+                      selected={categorySelected?.id === category.id}
+                      onPress={() => setCategory(category)}
+                    />
+                  );
+                })}
+                <CapsuleButton
+                  onPress={handleOpen}
+                  text="+"
+                  bgFocused={btnColor}
+                />
+              </ThemedView>
+            </ThemedView>
+
+            <CapsuleButton
+              text="ADD TRANSACTION"
+              onPress={handleTransaction}
+              bgFocused={btnColor}
+            />
+          </ThemedView>
+        </TouchableWithoutFeedback>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }
@@ -215,7 +225,8 @@ const styles = StyleSheet.create({
 
   container: {
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingTop: 16,
+    paddingBottom: 70,
   },
 
   main: {

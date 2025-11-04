@@ -3,7 +3,15 @@ import { ThemedView } from "@/components/themed-view";
 import { formatAmountDisplay } from "@/utils/formatAmountDisplay";
 import { useSQLiteContext } from "expo-sqlite";
 import { useState } from "react";
-import { Alert, StyleSheet, View } from "react-native";
+import {
+  Alert,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
 import ColorPicker, {
   BrightnessSlider,
   ColorFormatsObject,
@@ -93,83 +101,88 @@ export default function CustomCategory({
   };
 
   return (
-    <ThemedView style={styles.categoryForm}>
-      <ThemedText style={styles.heading} type="h1">
-        Create a Category
-      </ThemedText>
-      <ThemedView style={styles.budgetPreview}>
-        <ThemedText style={styles.heading} type="h2">
-          Budget
-        </ThemedText>
-        <AmountDisplay
-          displayAmount={displayAmount}
-          rawAmount={rawAmount}
-          onChangeText={handleAmountChange}
-          textType="h2"
-        />
-      </ThemedView>
-      <ThemedView style={styles.options}>
-        <ThemedText style={styles.heading} type="h2">
-          Name
-        </ThemedText>
-        <CapsuleInput
-          value={categoryName}
-          onChangeText={setCategoryName}
-          placeholder="Enter category name"
-          keyboardType="default"
-        />
-      </ThemedView>
-      <ThemedView style={styles.options}>
-        <ColorPicker
-          style={styles.colorPicker}
-          value={categoryColor}
-          onChangeJS={handleColorChange}
-        >
-          <ThemedView style={styles.colorPreviewWrapper}>
-            <ThemedText type="h2">Color</ThemedText>
-            <View
-              style={[styles.colorPreview, { backgroundColor: categoryColor }]}
-            ></View>
-          </ThemedView>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 25,
-            }}
-          >
-            <Panel3
-              centerChannel="saturation"
-              style={{ maxHeight: 150, maxWidth: 150, flex: 1 }}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <ThemedView style={styles.categoryForm}>
+          <ThemedText style={styles.heading} type="h1">
+            Create a Category
+          </ThemedText>
+          <ThemedView style={styles.budgetPreview}>
+            <ThemedText style={styles.heading} type="h2">
+              Budget
+            </ThemedText>
+            <AmountDisplay
+              displayAmount={displayAmount}
+              rawAmount={rawAmount}
+              onChangeText={handleAmountChange}
+              textType="h2"
             />
-            <BrightnessSlider vertical />
-          </View>
-          <Swatches
-            colors={[
-              "#F44336",
-              "#E91E63",
-              "#9C27B0",
-              "#3F51B5",
-              "#00BCD4",
-              "#009688",
-              "#8BC34A",
-              "#CDDC39",
-            ]}
+          </ThemedView>
+          <ThemedView style={styles.options}>
+            <ThemedText style={styles.heading} type="h2">
+              Name
+            </ThemedText>
+            <CapsuleInput
+              value={categoryName}
+              onChangeText={setCategoryName}
+              placeholder="Enter category name"
+              keyboardType="default"
+            />
+          </ThemedView>
+          <ThemedView style={styles.options}>
+            <ColorPicker
+              style={styles.colorPicker}
+              value={categoryColor}
+              onChangeJS={handleColorChange}
+            >
+              <ThemedView style={styles.colorPreviewWrapper}>
+                <ThemedText type="h2">Color</ThemedText>
+                <View
+                  style={[
+                    styles.colorPreview,
+                    { backgroundColor: categoryColor },
+                  ]}
+                ></View>
+              </ThemedView>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 25,
+                }}
+              >
+                <Panel3
+                  centerChannel="saturation"
+                  style={{ maxHeight: 150, maxWidth: 150, flex: 1 }}
+                />
+                <BrightnessSlider vertical />
+              </View>
+              <Swatches
+                colors={[
+                  "#F44336",
+                  "#E91E63",
+                  "#9C27B0",
+                  "#3F51B5",
+                  "#00BCD4",
+                  "#009688",
+                  "#8BC34A",
+                  "#CDDC39",
+                ]}
+              />
+            </ColorPicker>
+          </ThemedView>
+          <CapsuleButton
+            text="ADD CATEGORY"
+            onPress={handleAddCategory}
+            bgFocused={categoryColor}
           />
-        </ColorPicker>
-      </ThemedView>
-      <CapsuleButton
-        text="ADD CATEGORY"
-        onPress={handleAddCategory}
-        bgFocused={categoryColor}
-      />
-      <CapsuleButton
-        text="Cancel"
-        onPress={onComplete}
-        bgFocused={categoryColor}
-      />
-    </ThemedView>
+        </ThemedView>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 

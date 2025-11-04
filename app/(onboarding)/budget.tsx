@@ -13,10 +13,13 @@ import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  ScrollView,
+  Keyboard,
+  Platform,
   StyleSheet,
+  TouchableWithoutFeedback,
   useColorScheme,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function BudgetOnboarding() {
@@ -113,56 +116,68 @@ export default function BudgetOnboarding() {
         { backgroundColor: Colors[colorScheme ?? "light"].background },
       ]}
     >
-      <ThemedView style={styles.container}>
-        <ThemedView style={styles.main}>
-          <ThemedText type="h1" style={{ textAlign: "center" }}>
-            Set Your Monthly Budgets
-          </ThemedText>
-          <ThemedText type="h3">
-            Decide how much you want to spend in each category.
-          </ThemedText>
-          <ThemedText type="h4">Total: ${total.toFixed(2)}</ThemedText>
+      <KeyboardAwareScrollView
+        keyboardShouldPersistTaps="handled"
+        extraScrollHeight={Platform.OS === "ios" ? 80 : 100}
+        enableOnAndroid={true}
+        contentContainerStyle={styles.container}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+          <ThemedView style={styles.main}>
+            <ThemedText type="h1" style={{ textAlign: "center" }}>
+              Set Your Monthly Budgets
+            </ThemedText>
+            <ThemedText
+              type="h5"
+              style={{ paddingHorizontal: 20, textAlign: "center" }}
+            >
+              Decide how much you want to spend in each category.
+            </ThemedText>
 
-          <ScrollView contentContainerStyle={styles.categoriesWrapper}>
-            {categories.map((category) => {
-              const categoryColor = adjustColorForScheme(
-                category.color,
-                colorScheme
-              );
+            <ThemedView style={styles.categoriesWrapper}>
+              {categories.map((category) => {
+                const categoryColor = adjustColorForScheme(
+                  category.color,
+                  colorScheme
+                );
 
-              return (
-                <ThemedView
-                  style={[
-                    styles.categoryBudget,
-                    { borderColor: categoryColor },
-                  ]}
-                  key={category.id}
-                >
-                  <ThemedText type="bodyLarge">{category.name}</ThemedText>
-                  <AmountDisplay
-                    displayAmount={
-                      categoryAmounts[category.id]?.display || "0.00"
-                    }
-                    rawAmount={categoryAmounts[category.id]?.raw || "0"}
-                    onChangeText={(text) =>
-                      handleAmountChange(category.id, text)
-                    }
-                    textType="bodyLarge"
-                  />
-                </ThemedView>
-              );
-            })}
-          </ScrollView>
+                return (
+                  <ThemedView
+                    style={[
+                      styles.categoryBudget,
+                      { borderColor: categoryColor },
+                    ]}
+                    key={category.id}
+                  >
+                    <ThemedText type="bodyLarge">{category.name}</ThemedText>
+                    <AmountDisplay
+                      displayAmount={
+                        categoryAmounts[category.id]?.display || "0.00"
+                      }
+                      rawAmount={categoryAmounts[category.id]?.raw || "0"}
+                      onChangeText={(text) =>
+                        handleAmountChange(category.id, text)
+                      }
+                      textType="bodyLarge"
+                    />
+                  </ThemedView>
+                );
+              })}
+            </ThemedView>
+            <ThemedText type="h4" style={{ textAlign: "center" }}>
+              Total: ${total.toFixed(2)}
+            </ThemedText>
 
-          <CapsuleButton
-            text="Next"
-            iconName="arrow-right"
-            IconComponent={Octicons}
-            bgFocused={btnColor}
-            onPress={saveBudgets}
-          />
-        </ThemedView>
-      </ThemedView>
+            <CapsuleButton
+              text="Next"
+              iconName="arrow-right"
+              IconComponent={Octicons}
+              bgFocused={btnColor}
+              onPress={saveBudgets}
+            />
+          </ThemedView>
+        </TouchableWithoutFeedback>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }
@@ -175,18 +190,16 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 20,
     paddingVertical: 16,
-    flex: 1,
-    justifyContent: "center",
   },
 
   main: {
-    paddingVertical: 30,
+    paddingVertical: 10,
+    justifyContent: "space-evenly",
     flex: 1,
     gap: 20,
   },
 
   categoriesWrapper: {
-    justifyContent: "center",
     gap: 10,
   },
 

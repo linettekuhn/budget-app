@@ -10,11 +10,14 @@ import { useRouter } from "expo-router";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { useState } from "react";
 import {
+  Keyboard,
+  Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
+  TouchableWithoutFeedback,
   useColorScheme,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Login() {
@@ -52,55 +55,62 @@ export default function Login() {
         { backgroundColor: Colors[colorScheme ?? "light"].background },
       ]}
     >
-      <ScrollView contentContainerStyle={styles.container}>
-        <ThemedView style={styles.main}>
-          <ThemedView style={styles.form}>
-            <ThemedView style={styles.header}>
-              <ThemedText type="displayMedium">Login</ThemedText>
-              <ThemedText type="h2">Please sign in to continue</ThemedText>
-            </ThemedView>
-            <CapsuleInput
-              value={email}
-              onChangeText={setEmail}
-              placeholder="Email"
-              inputMode="email"
-              IconComponent={Octicons}
-              iconName="mail"
-            />
-            <CapsuleInput
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Password"
-              keyboardType="default"
-              secureTextEntry={!showPass}
-              IconComponent={Octicons}
-              iconName="lock"
-            >
-              <Pressable onPress={() => setShowPass((prev) => !prev)}>
-                {showPass ? (
-                  <Octicons name="eye-closed" size={20} color={textColor} />
-                ) : (
-                  <Octicons name="eye" size={20} color={textColor} />
-                )}
+      <KeyboardAwareScrollView
+        keyboardShouldPersistTaps="handled"
+        extraScrollHeight={Platform.OS === "ios" ? 80 : 100}
+        enableOnAndroid={true}
+        contentContainerStyle={styles.container}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+          <ThemedView style={styles.main}>
+            <ThemedView style={styles.form}>
+              <ThemedView style={styles.header}>
+                <ThemedText type="displayMedium">Login</ThemedText>
+                <ThemedText type="h2">Please sign in to continue</ThemedText>
+              </ThemedView>
+              <CapsuleInput
+                value={email}
+                onChangeText={setEmail}
+                placeholder="Email"
+                inputMode="email"
+                IconComponent={Octicons}
+                iconName="mail"
+              />
+              <CapsuleInput
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Password"
+                keyboardType="default"
+                secureTextEntry={!showPass}
+                IconComponent={Octicons}
+                iconName="lock"
+              >
+                <Pressable onPress={() => setShowPass((prev) => !prev)}>
+                  {showPass ? (
+                    <Octicons name="eye-closed" size={20} color={textColor} />
+                  ) : (
+                    <Octicons name="eye" size={20} color={textColor} />
+                  )}
+                </Pressable>
+              </CapsuleInput>
+              <CapsuleButton
+                text="SIGN IN"
+                onPress={handleLogin}
+                bgFocused={btnColor}
+              />
+              <ThemedView style={styles.registerPrompt}>
+                <ThemedText type="body">Don&apos;t have an account?</ThemedText>
+                <Pressable onPress={() => router.push("/register")}>
+                  <ThemedText type="link">Sign up</ThemedText>
+                </Pressable>
+              </ThemedView>
+              <Pressable onPress={handleOffline}>
+                <ThemedText type="link">Continue Offline</ThemedText>
               </Pressable>
-            </CapsuleInput>
-            <CapsuleButton
-              text="SIGN IN"
-              onPress={handleLogin}
-              bgFocused={btnColor}
-            />
-            <ThemedView style={styles.registerPrompt}>
-              <ThemedText type="body">Don&apos;t have an account?</ThemedText>
-              <Pressable onPress={() => router.push("/register")}>
-                <ThemedText type="link">Sign up</ThemedText>
-              </Pressable>
             </ThemedView>
-            <Pressable onPress={handleOffline}>
-              <ThemedText type="link">Continue Offline</ThemedText>
-            </Pressable>
           </ThemedView>
-        </ThemedView>
-      </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }
