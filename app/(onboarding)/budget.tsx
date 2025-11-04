@@ -33,9 +33,17 @@ export default function BudgetOnboarding() {
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
+    if (!categories.length) return;
+
     const initial: { [key: number]: { raw: string; display: string } } = {};
+    console.log(categories);
     categories.forEach((cat) => {
-      initial[cat.id] = { raw: "0", display: "0.00" };
+      const budget = cat.budget ?? 0;
+
+      const raw = Math.round(budget * 100).toString();
+      const display = formatAmountDisplay(raw);
+
+      initial[cat.id] = { raw: raw, display: display };
     });
     setCategoryAmounts(initial);
   }, [categories]);

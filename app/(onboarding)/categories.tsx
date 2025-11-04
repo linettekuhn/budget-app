@@ -49,15 +49,15 @@ export default function CategoriesOnboarding() {
     }
 
     // (?, ?) for each category
-    const placeholders = selectedCategories.map(() => "(?, ?)").join(", ");
+    const placeholders = selectedCategories.map(() => "(?, ?, ?)").join(", ");
 
     // values to fill up parameter placeholders
-    const values: string[] = [];
+    const values: (string | number)[] = [];
     selectedCategories.forEach((cat) => {
-      values.push(cat.name, cat.color);
+      values.push(cat.name, cat.color, cat.budget);
     });
 
-    const query = `INSERT INTO categories (name, color) VALUES ${placeholders}`;
+    const query = `INSERT INTO categories (name, color, budget) VALUES ${placeholders}`;
 
     try {
       await db.runAsync("DELETE FROM categories");
