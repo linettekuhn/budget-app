@@ -30,6 +30,7 @@ export default function MonthlyBudgetPieChart({ budgets }: Props) {
       color: Colors[colorScheme ?? "light"].secondary[500],
       budget: otherTotal,
       totalSpent: otherTotalSpent,
+      type: "need",
     });
   }
 

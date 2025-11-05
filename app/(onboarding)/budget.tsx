@@ -39,7 +39,6 @@ export default function BudgetOnboarding() {
     if (!categories.length) return;
 
     const initial: { [key: number]: { raw: string; display: string } } = {};
-    console.log(categories);
     categories.forEach((cat) => {
       const budget = cat.budget ?? 0;
 

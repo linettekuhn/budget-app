@@ -12,4 +12,5 @@ export type CategorySpend = {
   color: string;
   budget: number;
   totalSpent: number;
+  type: string;
 };

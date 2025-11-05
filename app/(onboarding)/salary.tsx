@@ -79,7 +79,6 @@ export default function SalaryOnboarding() {
         monthlySalary = amount;
         break;
     }
-    console.log(monthlySalary);
     try {
       await db.runAsync(
         `INSERT INTO salary (type, amount, monthly, hoursPerWeek) VALUES (?, ?, ?, ?)`,

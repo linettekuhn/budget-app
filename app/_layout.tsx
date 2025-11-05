@@ -108,9 +108,7 @@ export default function RootLayout() {
           if (hasCompleted === null) {
             await AsyncStorage.setItem("completedOnboarding", "false");
           }
-          console.log("Navigating to onboarding");
           router.replace("/(onboarding)/welcome");
-          console.log("Navigated to onboarding");
           return;
         }
 

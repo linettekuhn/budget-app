@@ -17,6 +17,7 @@ export function useCategoriesSpend(month?: string) {
             c.name,
             c.color,
             c.budget,
+            c.type,
             IFNULL(SUM(
                 CASE 
                     WHEN t.type = 'expense' THEN t.amount
