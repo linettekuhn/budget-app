@@ -37,6 +37,7 @@ export default function HomeScreen() {
     }, [reloadSpend])
   );
 
+  // TODO: adjust saved if overflow in spending
   useEffect(() => {
     const spent = [...budgets].reduce(
       (sum, budget) => sum + budget.totalSpent,
@@ -47,7 +48,7 @@ export default function HomeScreen() {
     setTotalBudget(budget);
 
     if (salary) {
-      const saved = salary.monthly - spent;
+      const saved = salary.monthly - budget;
       const savedPercent = saved / salary.monthly;
       setSaved(savedPercent);
     }
@@ -66,7 +67,7 @@ export default function HomeScreen() {
       <ScrollView contentContainerStyle={styles.container}>
         <ThemedView style={styles.main}>
           <ThemedText type="displayMedium" style={{ textAlign: "center" }}>
-            Your Salary Breakdown
+            Salary Breakdown
           </ThemedText>
           <ThemedView style={styles.pieChartWrapper}>
             <SalaryBreakdownPieChart budgets={budgets} salary={salary} />

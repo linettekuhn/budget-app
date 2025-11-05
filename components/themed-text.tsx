@@ -129,7 +129,9 @@ const typeStyles = StyleSheet.create({
     textTransform: "uppercase",
   },
   link: {
-    color: "#0a7ea4",
+    fontSize: 16,
+    lineHeight: 16 * 1.6,
+    letterSpacing: 0.03,
     textDecorationLine: "underline",
   },
 });

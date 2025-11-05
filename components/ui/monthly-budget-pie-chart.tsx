@@ -1,4 +1,3 @@
-import { Colors } from "@/constants/theme";
 import { CategorySpend } from "@/types";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
 import calculateSvgArcPath from "@/utils/calcuateSvgArcPath";
@@ -27,7 +26,7 @@ export default function MonthlyBudgetPieChart({ budgets }: Props) {
     displayBudgets.push({
       id: -1,
       name: "Other",
-      color: Colors[colorScheme ?? "light"].secondary[500],
+      color: adjustColorForScheme("#B6B6B6", colorScheme),
       budget: otherTotal,
       totalSpent: otherTotalSpent,
       type: "need",
