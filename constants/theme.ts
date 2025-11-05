@@ -4,7 +4,7 @@ export const Colors = {
   light: {
     primary: {
       900: "#170015", // darkest (text on light background)
-      700: "#64005A", // darker
+      700: "#ab39a0ff", // darker
       500: "#FF00E5", // primary accent
       300: "#FFB9F8", // lighter
       100: "#FFF1FE", // lightest (contrast text)
@@ -24,7 +24,7 @@ export const Colors = {
       900: "#FFF1FE", // lightest (text on dark background)
       700: "#FFB9F8", // lighter
       500: "#B600A4", // primary accent
-      300: "#64005A", // darker
+      300: "#ab39a0ff", // darker
       100: "#170015", // darkest (contrast text)
     },
 
