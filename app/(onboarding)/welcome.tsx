@@ -26,7 +26,7 @@ export default function WelcomeOnboarding() {
             Take control of your money, track your spending, and reach your
             financial goals
           </ThemedText>
-          <ThemedText type="h3" style={{ textAlign: "center" }}>
+          <ThemedText type="h3">
             Let&apos;s set things up to get you started!
           </ThemedText>
 

@@ -5,11 +5,11 @@ import SalaryBreakdownPieChart from "@/components/ui/salary-breakdown-pie-chart"
 import { Colors } from "@/constants/theme";
 import { useCategoriesSpend } from "@/hooks/useCategoriesSpend";
 import { useSalary } from "@/hooks/useSalary";
-import adjustColorForScheme from "@/utils/adjustColorForScheme";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Pressable,
   ScrollView,
   StyleSheet,
   useColorScheme,
@@ -49,14 +49,9 @@ export default function HomeScreen() {
 
     if (salary) {
       const saved = salary.monthly - budget;
-      const savedPercent = saved / salary.monthly;
-      setSaved(savedPercent);
+      setSaved(saved);
     }
   }, [salary, budgets]);
-
-  const wantsColor = adjustColorForScheme("#53C772", colorScheme);
-  const needsColor = adjustColorForScheme("#1A9FE0", colorScheme);
-  const savedColor = adjustColorForScheme("#E99A1B", colorScheme, 10);
 
   if (loadingSalary || loadingBudgets || !budgets || !salary) {
     return <ActivityIndicator size="large" />;
@@ -66,59 +61,50 @@ export default function HomeScreen() {
     <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
       <ScrollView contentContainerStyle={styles.container}>
         <ThemedView style={styles.main}>
-          <ThemedText type="displayMedium" style={{ textAlign: "center" }}>
-            Salary Breakdown
-          </ThemedText>
+          <View>
+            <ThemedText type="displayLarge">Monthly Report</ThemedText>
+            <ThemedText type="h6">
+              Here&apos;s a quick look at where your money went and what you
+              kept!
+            </ThemedText>
+          </View>
           <ThemedView style={styles.pieChartWrapper}>
             <SalaryBreakdownPieChart budgets={budgets} salary={salary} />
             <View style={styles.savedWrapper}>
               <ThemedText type="displayLarge" style={styles.percent}>
-                {Math.round(saved * 100).toString()}%
+                ${saved.toFixed(2)}
               </ThemedText>
-              <ThemedText type="displayMedium" style={styles.saved}>
+              <ThemedText type="h5" style={styles.saved}>
                 saved!
               </ThemedText>
             </View>
           </ThemedView>
-          <ThemedView style={styles.legend}>
-            <View
-              style={[
-                styles.capsuleLegendItem,
-                { backgroundColor: wantsColor },
-              ]}
-            >
-              <ThemedText type="overline">Wants</ThemedText>
-            </View>
-            <View
-              style={[
-                styles.capsuleLegendItem,
-                { backgroundColor: needsColor },
-              ]}
-            >
-              <ThemedText type="overline">Needs</ThemedText>
-            </View>
-            <View
-              style={[
-                styles.capsuleLegendItem,
-                { backgroundColor: savedColor },
-              ]}
-            >
-              <ThemedText type="overline">Saved</ThemedText>
-            </View>
-          </ThemedView>
-          <CategoryBudgetPreview
-            onPress={() => {
-              router.push("/(tabs)/(budget)");
-            }}
-            category={{
-              id: -1,
-              name: "Monthly Budget",
-              budget: totalBudget,
-              totalSpent: totalSpent,
-              color: Colors[colorScheme ?? "light"].primary[500],
-              type: "need",
-            }}
-          />
+          <View
+            style={[
+              styles.spendingTrackerWrapper,
+              { backgroundColor: Colors[colorScheme ?? "light"].primary[200] },
+            ]}
+          >
+            <ThemedText type="displayMedium">Spending Tracker</ThemedText>
+            <CategoryBudgetPreview
+              onPress={() => {
+                router.push("/(tabs)/(budget)");
+              }}
+              category={{
+                id: -1,
+                name: "Total Spent",
+                budget: totalBudget,
+                totalSpent: totalSpent,
+                color: Colors[colorScheme ?? "light"].primary[500],
+                type: "need",
+              }}
+            />
+            <Pressable>
+              <ThemedText type="link" style={{ textAlign: "center" }}>
+                Check your monthly budget →
+              </ThemedText>
+            </Pressable>
+          </View>
         </ThemedView>
       </ScrollView>
     </SafeAreaView>
@@ -136,9 +122,8 @@ const styles = StyleSheet.create({
   },
 
   main: {
-    paddingVertical: 30,
     flex: 1,
-    gap: 15,
+    gap: 30,
   },
 
   pieChartWrapper: {
@@ -152,14 +137,14 @@ const styles = StyleSheet.create({
   },
 
   percent: {
-    fontFamily: "BricolageGrotesque-ExtraBold",
+    fontFamily: "Onest-ExtraBold",
     margin: 0,
     lineHeight: 0,
     textAlign: "center",
   },
 
   saved: {
-    fontFamily: "BricolageGrotesque-SemiBold",
+    fontFamily: "Onest-SemiBold",
     margin: 0,
     lineHeight: 0,
     textAlign: "center",
@@ -171,9 +156,9 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
 
-  capsuleLegendItem: {
-    paddingHorizontal: 15,
-    paddingVertical: 10,
+  spendingTrackerWrapper: {
     borderRadius: 25,
+    gap: 20,
+    padding: 16,
   },
 });

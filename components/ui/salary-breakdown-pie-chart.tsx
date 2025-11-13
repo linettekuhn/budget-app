@@ -38,7 +38,7 @@ export default function SalaryBreakdownPieChart({ budgets, salary }: Props) {
   );
 
   const gap = 0.3;
-  const size = 300;
+  const size = 260;
   const center = size / 2;
   const radius = (size - 50) / 2;
   const strokeWidth = 25;
@@ -102,15 +102,18 @@ export default function SalaryBreakdownPieChart({ budgets, salary }: Props) {
             fill="none"
             strokeLinecap="round"
           />
-          {needsArcData.spentPercent > 0 && (
-            <Path
-              d={needsArcData.fillArcPath}
-              stroke={needsColor}
-              strokeWidth={strokeWidth}
-              fill="none"
-              strokeLinecap="round"
-            />
-          )}
+          {
+            // TODO: if budget is 0 dont show
+            needsArcData.spentPercent > 0 && (
+              <Path
+                d={needsArcData.fillArcPath}
+                stroke={needsColor}
+                strokeWidth={strokeWidth}
+                fill="none"
+                strokeLinecap="round"
+              />
+            )
+          }
           {needsArcData.overflowPercent > 0 && (
             <Path
               d={needsArcData.overflowArcPath}

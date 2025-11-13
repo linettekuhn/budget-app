@@ -81,10 +81,7 @@ export default function Budget() {
             <ThemedView style={styles.pieChartWrapper}>
               <MonthlyBudgetPieChart budgets={budgets} />
               <View style={styles.monthWrapper}>
-                <ThemedText
-                  type="h4"
-                  style={{ textAlign: "center", margin: 0 }}
-                >
+                <ThemedText type="captionLarge">
                   ${totalSpent} / ${totalBudget}
                 </ThemedText>
                 <ThemedText type="displayLarge" style={styles.month}>
@@ -124,7 +121,7 @@ export default function Budget() {
                 key={-1}
                 category={{
                   id: -1,
-                  name: "Other Categories",
+                  name: "Other",
                   budget: otherTotal,
                   totalSpent: otherTotalSpent,
                   color: adjustColorForScheme("#B6B6B6", colorScheme),
@@ -190,7 +187,7 @@ const styles = StyleSheet.create({
 
   main: {
     flex: 1,
-    gap: 10,
+    gap: 20,
   },
 
   pieChartWrapper: {
@@ -201,23 +198,21 @@ const styles = StyleSheet.create({
   monthWrapper: {
     position: "absolute",
     alignItems: "center",
+    gap: -15,
   },
 
   month: {
-    fontFamily: "BricolageGrotesque-ExtraBold",
-    margin: 0,
+    fontSize: 50,
     lineHeight: 0,
-    textAlign: "center",
   },
 
   year: {
-    fontFamily: "BricolageGrotesque-SemiBold",
-    margin: 0,
+    fontFamily: "Onest-SemiBold",
+    fontSize: 30,
     lineHeight: 0,
-    textAlign: "center",
   },
 
   categoryPreviews: {
-    gap: 5,
+    gap: 8,
   },
 });

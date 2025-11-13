@@ -21,13 +21,13 @@ export default function RootLayout() {
     [colorScheme]
   );
   const [fontsLoaded] = useFonts({
-    "BricolageGrotesque-ExtraBold": require("../assets/fonts/BricolageGrotesque-ExtraBold.ttf"),
-    "BricolageGrotesque-Bold": require("../assets/fonts/BricolageGrotesque-Bold.ttf"),
-    "BricolageGrotesque-SemiBold": require("../assets/fonts/BricolageGrotesque-SemiBold.ttf"),
-    "BricolageGrotesque-Medium": require("../assets/fonts/BricolageGrotesque-Medium.ttf"),
-    "BricolageGrotesque-Regular": require("../assets/fonts/BricolageGrotesque-Regular.ttf"),
-    "BricolageGrotesque-Light": require("../assets/fonts/BricolageGrotesque-Light.ttf"),
-    "BricolageGrotesque-ExtraLight": require("../assets/fonts/BricolageGrotesque-ExtraLight.ttf"),
+    "Onest-ExtraBold": require("../assets/fonts/Onest-ExtraBold.ttf"),
+    "Onest-Bold": require("../assets/fonts/Onest-Bold.ttf"),
+    "Onest-SemiBold": require("../assets/fonts/Onest-SemiBold.ttf"),
+    "Onest-Medium": require("../assets/fonts/Onest-Medium.ttf"),
+    "Onest-Regular": require("../assets/fonts/Onest-Regular.ttf"),
+    "Onest-Light": require("../assets/fonts/Onest-Light.ttf"),
+    "Onest-ExtraLight": require("../assets/fonts/Onest-ExtraLight.ttf"),
   });
 
   const { user, loading: authLoading } = useAuth();

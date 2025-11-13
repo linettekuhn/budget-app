@@ -1,7 +1,9 @@
 import { Colors } from "@/constants/theme";
 import { CategorySpend } from "@/types";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
+import Octicons from "@expo/vector-icons/Octicons";
 import { Pressable, StyleSheet, useColorScheme, View } from "react-native";
+import tinycolor from "tinycolor2";
 import { ThemedText } from "../themed-text";
 
 type Props = {
@@ -21,10 +23,11 @@ export default function CategoryBudgetPreview({ category, onPress }: Props) {
   }
   const colorScheme = useColorScheme();
 
-  const screenBgColor = Colors[colorScheme ?? "light"].background;
   const previewBgColor = Colors[colorScheme ?? "light"].primary[700];
 
   const categoryColor = adjustColorForScheme(category.color, colorScheme);
+  const bgColor = tinycolor(categoryColor).setAlpha(0.4).toRgbString();
+
   return (
     <Pressable
       key={category.id}
@@ -37,16 +40,24 @@ export default function CategoryBudgetPreview({ category, onPress }: Props) {
       onPress={onPress}
     >
       <View style={styles.categoryData}>
-        <ThemedText
-          type="bodyLarge"
-          darkColor={Colors["dark"].background}
-          lightColor={Colors["light"].background}
-        >
-          {category.name
-            .split(" ")
-            .map((word) => word[0].toUpperCase() + word.slice(1))
-            .join(" ")}
-        </ThemedText>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <ThemedText
+            type="bodyLarge"
+            darkColor={Colors["dark"].background}
+            lightColor={Colors["light"].background}
+          >
+            {category.name
+              .split(" ")
+              .map((word) => word[0].toUpperCase() + word.slice(1))
+              .join(" ")}{" "}
+          </ThemedText>
+          <Octicons
+            name="chevron-right"
+            size={20}
+            color={Colors[colorScheme ?? "light"].background}
+          />
+        </View>
+
         <ThemedText
           type="body"
           darkColor={Colors["dark"].background}
@@ -56,7 +67,7 @@ export default function CategoryBudgetPreview({ category, onPress }: Props) {
         </ThemedText>
       </View>
       <View style={styles.progressBar}>
-        <View style={[styles.backBar, { backgroundColor: screenBgColor }]} />
+        <View style={[styles.backBar, { backgroundColor: bgColor }]} />
         <View
           style={[
             styles.frontBar,
@@ -84,7 +95,7 @@ const styles = StyleSheet.create({
   category: {
     borderRadius: 25,
     justifyContent: "center",
-    paddingVertical: 15,
+    paddingVertical: 12,
     paddingHorizontal: 20,
     gap: 10,
   },

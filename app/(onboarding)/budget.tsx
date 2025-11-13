@@ -123,13 +123,8 @@ export default function BudgetOnboarding() {
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
           <ThemedView style={styles.main}>
-            <ThemedText type="h1" style={{ textAlign: "center" }}>
-              Set Your Monthly Budgets
-            </ThemedText>
-            <ThemedText
-              type="h5"
-              style={{ paddingHorizontal: 20, textAlign: "center" }}
-            >
+            <ThemedText type="h1">Set Your Monthly Budgets</ThemedText>
+            <ThemedText type="h5" style={{ paddingHorizontal: 20 }}>
               Decide how much you want to spend in each category.
             </ThemedText>
 
@@ -163,9 +158,7 @@ export default function BudgetOnboarding() {
                 );
               })}
             </ThemedView>
-            <ThemedText type="h4" style={{ textAlign: "center" }}>
-              Total: ${total.toFixed(2)}
-            </ThemedText>
+            <ThemedText type="h4">Total: ${total.toFixed(2)}</ThemedText>
 
             <CapsuleButton
               text="Next"

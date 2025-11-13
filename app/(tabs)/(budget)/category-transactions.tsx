@@ -154,6 +154,6 @@ const styles = StyleSheet.create({
   },
 
   transactionAmount: {
-    fontFamily: "BricolageGrotesque-SemiBold",
+    fontFamily: "Onest-SemiBold",
   },
 });

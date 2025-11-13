@@ -105,9 +105,7 @@ export default function SalaryOnboarding() {
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
           <ThemedView style={styles.main}>
-            <ThemedText type="h1" style={{ textAlign: "center" }}>
-              Add Your Monthly Income
-            </ThemedText>
+            <ThemedText type="h1">Add Your Monthly Income</ThemedText>
             <ThemedText type="h4">
               Entering your salary helps us calculate savings.
             </ThemedText>

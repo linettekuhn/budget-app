@@ -104,16 +104,10 @@ export default function CategoriesOnboarding() {
     >
       <ScrollView contentContainerStyle={styles.container}>
         <ThemedView style={styles.main}>
-          <ThemedText
-            type="h1"
-            style={{ paddingHorizontal: 30, textAlign: "center" }}
-          >
+          <ThemedText type="h1" style={{ paddingHorizontal: 30 }}>
             Choose or Add Your Categories
           </ThemedText>
-          <ThemedText
-            type="h5"
-            style={{ paddingHorizontal: 20, textAlign: "center" }}
-          >
+          <ThemedText type="h5" style={{ paddingHorizontal: 20 }}>
             We&apos;ve added a few default categories to get you started.
           </ThemedText>
 
