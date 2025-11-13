@@ -5,6 +5,7 @@ import SalaryBreakdownPieChart from "@/components/ui/salary-breakdown-pie-chart"
 import { Colors } from "@/constants/theme";
 import { useCategoriesSpend } from "@/hooks/useCategoriesSpend";
 import { useSalary } from "@/hooks/useSalary";
+import { formatCompactNumber } from "@/utils/formatCompactNumber";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -27,7 +28,7 @@ export default function HomeScreen() {
     loading: loadingBudgets,
     reload: reloadSpend,
   } = useCategoriesSpend();
-  const [saved, setSaved] = useState(0);
+  const [saved, setSaved] = useState("0.00");
   const [totalBudget, setTotalBudget] = useState(0);
   const [totalSpent, setTotalSpent] = useState(0);
 
@@ -49,7 +50,7 @@ export default function HomeScreen() {
 
     if (salary) {
       const saved = salary.monthly - budget;
-      setSaved(saved);
+      setSaved(formatCompactNumber(saved));
     }
   }, [salary, budgets]);
 
@@ -72,7 +73,7 @@ export default function HomeScreen() {
             <SalaryBreakdownPieChart budgets={budgets} salary={salary} />
             <View style={styles.savedWrapper}>
               <ThemedText type="displayLarge" style={styles.percent}>
-                ${saved.toFixed(2)}
+                ${saved}
               </ThemedText>
               <ThemedText type="h5" style={styles.saved}>
                 saved!
@@ -157,7 +158,7 @@ const styles = StyleSheet.create({
   },
 
   spendingTrackerWrapper: {
-    borderRadius: 25,
+    borderRadius: 20,
     gap: 20,
     padding: 16,
   },

@@ -200,8 +200,11 @@ export default function Transaction() {
                 })}
                 <CapsuleButton
                   onPress={handleOpen}
-                  text="+"
+                  text="New Category"
                   bgFocused={btnColor}
+                  bgDefault={Colors[colorScheme ?? "light"].primary[200]}
+                  iconName="plus"
+                  IconComponent={Octicons}
                 />
               </ThemedView>
             </ThemedView>

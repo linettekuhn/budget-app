@@ -7,6 +7,7 @@ type Props = {
   text: string;
   onPress: () => void;
   bgFocused: string;
+  bgDefault?: string;
   textColor?: string;
   IconComponent?: ComponentType<any>;
   iconName?: string;
@@ -16,12 +17,13 @@ export default function CapsuleButton({
   text,
   onPress,
   bgFocused,
+  bgDefault,
   textColor,
   IconComponent,
   iconName,
 }: Props) {
   const colorScheme = useColorScheme();
-  const bgDefault = Colors[colorScheme ?? "light"].primary[300];
+  const bgColor = bgDefault ?? Colors[colorScheme ?? "light"].primary[300];
   const color = Colors[colorScheme ?? "light"].text;
 
   return (
@@ -30,7 +32,7 @@ export default function CapsuleButton({
       style={({ pressed }) => [
         styles.button,
         {
-          backgroundColor: pressed ? bgFocused : bgDefault,
+          backgroundColor: pressed ? bgFocused : bgColor,
         },
       ]}
     >

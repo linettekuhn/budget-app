@@ -1,10 +1,12 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import CapsuleButton from "@/components/ui/capsule-button";
 import { Colors } from "@/constants/theme";
+import { useCategorySpend } from "@/hooks/useCategorySpend";
 import { CategoryType, TransactionType } from "@/types";
-import { useLocalSearchParams } from "expo-router";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -12,6 +14,7 @@ import {
   RefreshControl,
   StyleSheet,
   useColorScheme,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -26,10 +29,21 @@ export default function CategoryTransactions() {
 
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<TransactionType[]>([]);
+  const {
+    budget,
+    loading: loadingBudget,
+    reload: reloadSpend,
+  } = useCategorySpend(category.id);
+
+  useFocusEffect(
+    useCallback(() => {
+      reloadSpend();
+    }, [reloadSpend])
+  );
 
   const loadTransaction = async () => {
     try {
-      const data = await db.getAllAsync<TransactionType>(
+      const transactionsData = await db.getAllAsync<TransactionType>(
         `
         SELECT
             t.id,
@@ -47,7 +61,7 @@ export default function CategoryTransactions() {
     `,
         [category.id]
       );
-      const savedTransactions = data.map((row) => {
+      const savedTransactions = transactionsData.map((row) => {
         const transaction: TransactionType = {
           id: row.id,
           name: row.name,
@@ -76,52 +90,97 @@ export default function CategoryTransactions() {
     loadTransaction();
   }, []);
 
-  if (loading) {
+  if (loading || loadingBudget || !budget) {
     return <ActivityIndicator size="large" />;
   }
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
       <ThemedView style={styles.container}>
-        <ThemedText type="displayMedium" style={styles.header}>
-          {category.name
-            .split(" ")
-            .map((word) => word[0].toUpperCase() + word.slice(1))
-            .join(" ")}{" "}
-          Transactions
-        </ThemedText>
-        <FlatList
-          data={transactions}
-          keyExtractor={(item) => String(item.id)}
-          refreshControl={
-            <RefreshControl refreshing={loading} onRefresh={loadTransaction} />
-          }
-          renderItem={({ item }) => {
-            const date = new Date(item.date);
-            const typeColor = item.type === "income" ? "#2EA64E" : "#CF3D3D";
-            return (
-              <ThemedView
-                style={[
-                  styles.transactionWrapper,
-                  { backgroundColor: transactionBgColor },
-                ]}
-              >
-                <ThemedView style={{ backgroundColor: transactionBgColor }}>
-                  <ThemedText style={{ color: bgColor }}>
-                    {item.name}
-                  </ThemedText>
-                  <ThemedText type="caption" style={{ color: bgColor }}>
-                    {date.toLocaleDateString()}
-                  </ThemedText>
+        <ThemedView style={styles.main}>
+          <View>
+            <ThemedText type="displayMedium" style={styles.header}>
+              {category.name
+                .split(" ")
+                .map((word) => word[0].toUpperCase() + word.slice(1))
+                .join(" ")}{" "}
+              Transactions
+            </ThemedText>
+            <ThemedText
+              type="bodyLarge"
+              style={{ textAlign: "center", paddingHorizontal: 32 }}
+            >
+              You have spent ${budget.totalSpent} out of your ${budget.budget}{" "}
+              budget for{" "}
+              {category.name
+                .split(" ")
+                .map((word) => word[0].toLowerCase() + word.slice(1))
+                .join(" ")}
+              .
+            </ThemedText>
+          </View>
+          <CapsuleButton
+            text="Edit Budget"
+            onPress={() => {}}
+            bgFocused={Colors[colorScheme ?? "light"].primary[500]}
+          />
+          <FlatList
+            contentContainerStyle={[
+              styles.transactionList,
+              { backgroundColor: Colors[colorScheme ?? "light"].primary[200] },
+            ]}
+            data={transactions}
+            keyExtractor={(item) => String(item.id)}
+            refreshControl={
+              <RefreshControl
+                refreshing={loading}
+                onRefresh={loadTransaction}
+              />
+            }
+            renderItem={({ item }) => {
+              const date = new Date(item.date);
+              const typeColor = item.type === "income" ? "#2EA64E" : "#CF3D3D";
+              return (
+                <ThemedView
+                  style={[
+                    styles.transactionWrapper,
+                    { backgroundColor: transactionBgColor },
+                  ]}
+                >
+                  <ThemedView
+                    style={{
+                      backgroundColor: transactionBgColor,
+                    }}
+                  >
+                    <ThemedText
+                      style={{
+                        color: bgColor,
+                        margin: 0,
+                        lineHeight: 0,
+                      }}
+                    >
+                      {item.name}
+                    </ThemedText>
+                    <ThemedText
+                      type="captionSmall"
+                      style={{
+                        color: bgColor,
+                        margin: 0,
+                        lineHeight: 0,
+                      }}
+                    >
+                      {date.toLocaleDateString()}
+                    </ThemedText>
+                  </ThemedView>
+                  <ThemedText
+                    style={{ color: typeColor }}
+                    type="bodyLarge"
+                  >{`$${item.amount.toFixed(2)}`}</ThemedText>
                 </ThemedView>
-                <ThemedText
-                  style={[styles.transactionAmount, { color: typeColor }]}
-                  type="bodyLarge"
-                >{`$${item.amount.toFixed(2)}`}</ThemedText>
-              </ThemedView>
-            );
-          }}
-          ListEmptyComponent={<ThemedText>No transactions found</ThemedText>}
-        />
+              );
+            }}
+            ListEmptyComponent={<ThemedText>No transactions found</ThemedText>}
+          />
+        </ThemedView>
       </ThemedView>
     </SafeAreaView>
   );
@@ -136,6 +195,11 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
     paddingVertical: 16,
+  },
+
+  main: {
+    flex: 1,
+    gap: 30,
   },
 
   header: {
@@ -153,7 +217,11 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
 
-  transactionAmount: {
-    fontFamily: "Onest-SemiBold",
+  transactionList: {
+    borderRadius: 20,
+    gap: 20,
+    padding: 16,
+    alignItems: "center",
+    flex: 1,
   },
 });
