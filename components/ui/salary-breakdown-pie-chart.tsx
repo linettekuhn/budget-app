@@ -45,7 +45,7 @@ export default function SalaryBreakdownPieChart({ budgets, salary }: Props) {
   let startAngle = -(Math.PI / 2);
 
   // Needs Arc
-  const needsColor = adjustColorForScheme("#1A9FE0", colorScheme);
+  const needsColor = adjustColorForScheme("#3BACE4", colorScheme);
   const needsBgColor = tinycolor(needsColor).setAlpha(0.4).toRgbString();
   const needsPercent = needsTotal / salary.monthly;
   const needsAngleSpan = needsPercent * (2 * Math.PI);
@@ -61,7 +61,7 @@ export default function SalaryBreakdownPieChart({ budgets, salary }: Props) {
   startAngle += needsAngleSpan;
 
   // Wants Arc
-  const wantsColor = adjustColorForScheme("#53C772", colorScheme);
+  const wantsColor = adjustColorForScheme("#8F53C7", colorScheme);
   const wantsBgColor = tinycolor(wantsColor).setAlpha(0.4).toRgbString();
   const wantsPercent = wantsTotal / salary.monthly;
   const wantsAngleSpan = wantsPercent * (2 * Math.PI);
@@ -77,7 +77,7 @@ export default function SalaryBreakdownPieChart({ budgets, salary }: Props) {
   startAngle += wantsAngleSpan;
 
   // Saved Arc
-  const savedColor = adjustColorForScheme("#E99A1B", colorScheme, 10);
+  const savedColor = adjustColorForScheme("#35D17E", colorScheme, 10);
   const savedBgColor = tinycolor(savedColor).setAlpha(0.4).toRgbString();
   const savedPercent = saved / salary.monthly;
   const savedAngleSpan = savedPercent * (2 * Math.PI);
@@ -94,17 +94,16 @@ export default function SalaryBreakdownPieChart({ budgets, salary }: Props) {
   return (
     <Svg width={size} height={size}>
       <G>
-        <G key={"needs"}>
-          <Path
-            d={needsArcData.bgArcPath}
-            stroke={needsBgColor}
-            strokeWidth={strokeWidth}
-            fill="none"
-            strokeLinecap="round"
-          />
-          {
-            // TODO: if budget is 0 dont show
-            needsArcData.spentPercent > 0 && (
+        {needsTotal > 0 && (
+          <G key={"needs"}>
+            <Path
+              d={needsArcData.bgArcPath}
+              stroke={needsBgColor}
+              strokeWidth={strokeWidth}
+              fill="none"
+              strokeLinecap="round"
+            />
+            {needsArcData.spentPercent > 0 && (
               <Path
                 d={needsArcData.fillArcPath}
                 stroke={needsColor}
@@ -112,74 +111,78 @@ export default function SalaryBreakdownPieChart({ budgets, salary }: Props) {
                 fill="none"
                 strokeLinecap="round"
               />
-            )
-          }
-          {needsArcData.overflowPercent > 0 && (
-            <Path
-              d={needsArcData.overflowArcPath}
-              stroke="red"
-              strokeWidth={strokeWidth}
-              fill="none"
-              strokeLinecap="round"
-            />
-          )}
-        </G>
+            )}
+            {needsArcData.overflowPercent > 0 && (
+              <Path
+                d={needsArcData.overflowArcPath}
+                stroke="red"
+                strokeWidth={strokeWidth}
+                fill="none"
+                strokeLinecap="round"
+              />
+            )}
+          </G>
+        )}
 
-        <G key={"wants"}>
-          <Path
-            d={wantsArcData.bgArcPath}
-            stroke={wantsBgColor}
-            strokeWidth={strokeWidth}
-            fill="none"
-            strokeLinecap="round"
-          />
-          {wantsArcData.spentPercent > 0 && (
+        {wantsTotal > 0 && (
+          <G key={"wants"}>
             <Path
-              d={wantsArcData.fillArcPath}
-              stroke={wantsColor}
+              d={wantsArcData.bgArcPath}
+              stroke={wantsBgColor}
               strokeWidth={strokeWidth}
               fill="none"
               strokeLinecap="round"
             />
-          )}
-          {wantsArcData.overflowPercent > 0 && (
-            <Path
-              d={wantsArcData.overflowArcPath}
-              stroke="red"
-              strokeWidth={strokeWidth}
-              fill="none"
-              strokeLinecap="round"
-            />
-          )}
-        </G>
+            {wantsArcData.spentPercent > 0 && (
+              <Path
+                d={wantsArcData.fillArcPath}
+                stroke={wantsColor}
+                strokeWidth={strokeWidth}
+                fill="none"
+                strokeLinecap="round"
+              />
+            )}
+            {wantsArcData.overflowPercent > 0 && (
+              <Path
+                d={wantsArcData.overflowArcPath}
+                stroke="red"
+                strokeWidth={strokeWidth}
+                fill="none"
+                strokeLinecap="round"
+              />
+            )}
+          </G>
+        )}
 
-        <G key={"saved"}>
-          <Path
-            d={savedArcData.bgArcPath}
-            stroke={savedBgColor}
-            strokeWidth={strokeWidth}
-            fill="none"
-            strokeLinecap="round"
-          />
-          {savedArcData.spentPercent > 0 && (
+        {saved > 0 && (
+          <G key={"saved"}>
             <Path
-              d={savedArcData.fillArcPath}
-              stroke={savedColor}
+              d={savedArcData.bgArcPath}
+              stroke={savedBgColor}
               strokeWidth={strokeWidth}
               fill="none"
               strokeLinecap="round"
             />
-          )}
-          {savedArcData.overflowPercent > 0 && (
-            <Path
-              d={savedArcData.overflowArcPath}
-              stroke="red"
-              strokeWidth={strokeWidth}
-              fill="none"
-              strokeLinecap="round"
-            />
-          )}
-        </G>
+            {savedArcData.spentPercent > 0 && (
+              <Path
+                d={savedArcData.fillArcPath}
+                stroke={savedColor}
+                strokeWidth={strokeWidth}
+                fill="none"
+                strokeLinecap="round"
+              />
+            )}
+            {savedArcData.overflowPercent > 0 && (
+              <Path
+                d={savedArcData.overflowArcPath}
+                stroke="red"
+                strokeWidth={strokeWidth}
+                fill="none"
+                strokeLinecap="round"
+              />
+            )}
+          </G>
+        )}
       </G>
     </Svg>
   );
