@@ -34,10 +34,10 @@ export default function MonthlyBudgetPieChart({ budgets }: Props) {
   }
 
   const gap = 0.3;
-  const size = 300;
+  const size = 280;
   const center = size / 2;
   const radius = (size - 50) / 2;
-  const strokeWidth = 30;
+  const strokeWidth = 24;
   let startAngle = -(Math.PI / 2);
   const total = displayBudgets.reduce(
     (sum, category) => sum + category.budget,

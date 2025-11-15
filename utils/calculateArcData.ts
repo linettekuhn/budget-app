@@ -7,7 +7,8 @@ type Props = {
   startAngle: number;
   angleSpan: number;
   radius: number;
-  center: number;
+  centerX: number;
+  centerY: number;
 };
 
 export default function calculateArcData({
@@ -17,7 +18,8 @@ export default function calculateArcData({
   startAngle,
   angleSpan,
   radius,
-  center,
+  centerX,
+  centerY,
 }: Props) {
   const drawableAngle = angleSpan - gap;
 
@@ -40,24 +42,24 @@ export default function calculateArcData({
     startAngle,
     radius,
     drawableAngle,
-    center,
-    center
+    centerX,
+    centerY
   );
 
   const fillArcPath = calculateSvgArcPath(
     startAngle,
     radius,
     fillAngleSpan,
-    center,
-    center
+    centerX,
+    centerY
   );
 
   const overflowArcPath = calculateSvgArcPath(
     startAngle,
     radius,
     overflowAngleSpan,
-    center,
-    center
+    centerX,
+    centerY
   );
 
   return {

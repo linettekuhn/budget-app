@@ -1,7 +1,7 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import CategoryBudgetPreview from "@/components/ui/category-budget-preview";
-import MonthlyBudgetPieChart from "@/components/ui/monthly-budget-pie-chart";
+import MonthlyBudgetPieChart from "@/components/ui/pie-chart/monthly-budget-pie-chart";
 import { Colors } from "@/constants/theme";
 import { useCategoriesSpend } from "@/hooks/useCategoriesSpend";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";

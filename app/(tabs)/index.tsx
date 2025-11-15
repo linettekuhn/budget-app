@@ -1,7 +1,7 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import CategoryBudgetPreview from "@/components/ui/category-budget-preview";
-import SalaryBreakdownPieChart from "@/components/ui/salary-breakdown-pie-chart";
+import SalaryBreakdownPieChart from "@/components/ui/pie-chart/salary-breakdown-pie-chart";
 import { Colors } from "@/constants/theme";
 import { useCategoriesSpend } from "@/hooks/useCategoriesSpend";
 import { useSalary } from "@/hooks/useSalary";
@@ -72,7 +72,7 @@ export default function HomeScreen() {
           <ThemedView style={styles.pieChartWrapper}>
             <SalaryBreakdownPieChart budgets={budgets} salary={salary} />
             <View style={styles.savedWrapper}>
-              <ThemedText type="displayLarge" style={styles.percent}>
+              <ThemedText type="displayMedium" style={styles.percent}>
                 ${saved}
               </ThemedText>
               <ThemedText type="h5" style={styles.saved}>
