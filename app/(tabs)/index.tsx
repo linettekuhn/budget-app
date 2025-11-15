@@ -100,7 +100,11 @@ export default function HomeScreen() {
                 type: "need",
               }}
             />
-            <Pressable>
+            <Pressable
+              onPress={() => {
+                router.push("/(tabs)/(budget)");
+              }}
+            >
               <ThemedText type="link" style={{ textAlign: "center" }}>
                 Check your monthly budget →
               </ThemedText>
