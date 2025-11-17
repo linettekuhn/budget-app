@@ -66,7 +66,6 @@ export default function RootLayout() {
       const existingCategories = await db.getAllAsync<CountResult>(
         "SELECT COUNT(*) as count FROM categories"
       );
-      // TODO: dark and light mode category colors
       if (existingCategories[0].count === 0) {
         await db.execAsync(`
           INSERT INTO categories (name, color, type) VALUES

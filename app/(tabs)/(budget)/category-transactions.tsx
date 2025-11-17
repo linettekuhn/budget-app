@@ -1,8 +1,10 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import CapsuleButton from "@/components/ui/capsule-button";
+import EditCategory from "@/components/ui/modal/edit-category-modal";
 import { Colors } from "@/constants/theme";
 import { useCategorySpend } from "@/hooks/useCategorySpend";
+import { useModal } from "@/hooks/useModal";
 import { CategoryType, TransactionType } from "@/types";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
@@ -34,12 +36,25 @@ export default function CategoryTransactions() {
     loading: loadingBudget,
     reload: reloadSpend,
   } = useCategorySpend(category.id);
+  const { openModal, closeModal } = useModal();
 
   useFocusEffect(
     useCallback(() => {
       reloadSpend();
     }, [reloadSpend])
   );
+
+  const handleOpen = () => {
+    openModal(
+      <EditCategory
+        onComplete={() => {
+          closeModal();
+          reloadSpend();
+        }}
+        category={category}
+      />
+    );
+  };
 
   const loadTransaction = async () => {
     try {
@@ -120,7 +135,7 @@ export default function CategoryTransactions() {
           </View>
           <CapsuleButton
             text="Edit Budget"
-            onPress={() => {}}
+            onPress={handleOpen}
             bgFocused={Colors[colorScheme ?? "light"].primary[500]}
           />
           <FlatList

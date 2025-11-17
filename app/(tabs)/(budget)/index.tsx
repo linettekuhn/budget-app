@@ -64,7 +64,6 @@ export default function Budget() {
     0
   );
 
-  // TODO: retrieve data from month
   const updateMonthData = (date: Date) => {
     setSelectedDate(date);
   };

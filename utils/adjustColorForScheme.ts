@@ -4,7 +4,7 @@ import tinyColor from "tinycolor2";
 export default function adjustColorForScheme(
   color: string,
   colorScheme: ColorSchemeName,
-  adjustAmount: number = 30
+  adjustAmount: number = 25
 ) {
   const c = tinyColor(color);
 

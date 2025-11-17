@@ -1,10 +1,10 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
-import { CategorySpend } from "@/types";
+import { CategoryType } from "@/types";
 import { formatAmountDisplay } from "@/utils/formatAmountDisplay";
 import { useSQLiteContext } from "expo-sqlite";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   Keyboard,
@@ -23,24 +23,28 @@ import ColorPicker, {
 } from "reanimated-color-picker";
 import AmountDisplay from "../amount-display";
 import CapsuleButton from "../capsule-button";
-import CapsuleInput from "../capsule-input-box";
 import CapsuleToggle from "../capsule-toggle";
 
-export default function CustomCategory({
-  onComplete,
-  category,
-}: {
+type Props = {
   onComplete: () => void;
-  category?: CategorySpend;
-}) {
+  category: CategoryType;
+};
+
+export default function EditCategory({ onComplete, category }: Props) {
   const db = useSQLiteContext();
   const colorScheme = useColorScheme();
 
-  const [categoryName, setCategoryName] = useState("");
-  const [typeSelected, setType] = useState("");
-  const [categoryColor, setCategoryColor] = useState("#ff3be8");
-  const [rawAmount, setRawAmount] = useState("0");
-  const [displayAmount, setDisplayAmount] = useState("0.00");
+  const [typeSelected, setType] = useState(category.type.toUpperCase());
+  const [categoryColor, setCategoryColor] = useState(category.color);
+  const [rawAmount, setRawAmount] = useState("");
+  const [displayAmount, setDisplayAmount] = useState(
+    category.budget.toFixed(2)
+  );
+
+  useEffect(() => {
+    const formatted = formatAmountDisplay(rawAmount);
+    setDisplayAmount(formatted);
+  }, []);
 
   const handleColorChange = (colors: ColorFormatsObject) => {
     try {
@@ -53,50 +57,28 @@ export default function CustomCategory({
     }
   };
 
-  const handleAddCategory = async () => {
+  const handleUpdateCategory = async () => {
     try {
-      if (!categoryName || !categoryColor || !rawAmount) {
+      if (!categoryColor || !rawAmount || !typeSelected) {
         throw new Error("All fields are required");
       }
 
-      if (parseFloat(rawAmount) === 0) throw new Error("Amount cannot be 0");
-
-      // remove extra spaces
-      let name = categoryName.trim();
-
-      if (!name) {
-        throw new Error("Category name cannot be empty");
-      }
-
-      // capitalize first letter in words
-      name = name
-        .split(" ")
-        .map((word) => word[0].toUpperCase() + word.slice(1))
-        .join(" ");
+      if (parseFloat(rawAmount) === 0) throw new Error("Budget cannot be 0");
 
       const budget = parseFloat((Number(rawAmount) / 100).toFixed(2));
-
-      type CountResult = { count: number };
-      const existing = await db.getAllAsync<CountResult>(
-        "SELECT COUNT(*) as count FROM categories WHERE name = ?",
-        [name]
-      );
-
-      if (existing[0].count !== 0) {
-        throw new Error("Category name already exists");
-      }
-
       const categoryType = typeSelected.toLowerCase() as "need" | "want";
 
       await db.runAsync(
-        `INSERT INTO categories (name, color, type, budget) VALUES (?, ?, ?, ?)`,
-        [name, categoryColor, categoryType, budget]
+        `UPDATE categories SET color = ?, type = ?, budget = ? WHERE id = ?`,
+        [categoryColor, categoryType, budget, category.id]
       );
+
+      Alert.alert("Success", "Category updated successfully");
     } catch (error: unknown) {
       if (error instanceof Error) {
         Alert.alert("Error", error.message);
       } else {
-        Alert.alert("An error occurred saving category");
+        Alert.alert("Error", "An error occurred updating category");
       }
     } finally {
       onComplete();
@@ -113,24 +95,13 @@ export default function CustomCategory({
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
-      style={{ paddingVertical: 0 }}
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <ThemedView style={styles.categoryForm}>
           <ThemedText style={styles.heading} type="h1">
-            Create a Category
+            Edit {category.name}
           </ThemedText>
-          <ThemedView style={styles.options}>
-            <ThemedText style={styles.heading} type="h2">
-              Name
-            </ThemedText>
-            <CapsuleInput
-              value={categoryName}
-              onChangeText={setCategoryName}
-              placeholder="Enter category name"
-              keyboardType="default"
-            />
-          </ThemedView>
+
           <ThemedView style={styles.budgetPreview}>
             <ThemedText style={styles.heading} type="h2">
               Budget
@@ -142,6 +113,7 @@ export default function CustomCategory({
               textType="h2"
             />
           </ThemedView>
+
           <ThemedView style={styles.options}>
             <ThemedText style={styles.heading} type="h2">
               Type
@@ -161,6 +133,7 @@ export default function CustomCategory({
               />
             </ThemedView>
           </ThemedView>
+
           <ThemedView style={styles.options}>
             <ColorPicker
               style={styles.colorPicker}
@@ -204,9 +177,10 @@ export default function CustomCategory({
               />
             </ColorPicker>
           </ThemedView>
+
           <CapsuleButton
-            text="ADD CATEGORY"
-            onPress={handleAddCategory}
+            text="UPDATE CATEGORY"
+            onPress={handleUpdateCategory}
             bgFocused={categoryColor}
           />
         </ThemedView>
@@ -252,9 +226,10 @@ const styles = StyleSheet.create({
   },
 
   categoryForm: {
-    justifyContent: "space-between",
     alignItems: "center",
+    gap: 15,
     paddingHorizontal: 20,
+    paddingVertical: 20,
   },
 
   colorPicker: {
