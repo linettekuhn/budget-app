@@ -1,0 +1,87 @@
+[
+  {
+    "key": "first_transaction",
+    "title": "Baby’s First Steps",
+    "description": "First transaction",
+    "icon": "assets/icons/badges/First_Transaction_Icon.png",
+    "criteria_type": "first_transaction"
+  },
+  {
+    "key": "under_control",
+    "title": "Under Control",
+    "description": "Didn’t overspend for a month",
+    "icon": "assets/icons/badges/No_Overspending_Icon.png",
+    "criteria_type": "stayed_under_budget",
+    "criteria_value": 1
+  },
+  {
+    "key": "cheap_life",
+    "title": "Cheap Life",
+    "description": "Saved more than 50% of your monthly income",
+    "icon": "assets/icons/badges/Cheap_Life_Icon.png",
+    "criteria_type": "saved_over_percent",
+    "criteria_value": 50
+  },
+  {
+    "key": "shopaholic",
+    "title": "Shopaholic",
+    "description": "Spent more than 50% of your monthly earnings on wants",
+    "icon": "assets/icons/badges/Shopaholic_Icon.png",
+    "criteria_type": "spent_over_percent_wants",
+    "criteria_value": 50
+  },
+  {
+    "key": "custom_category",
+    "title": "Like I Like It",
+    "description": "Create your first custom category",
+    "icon": "assets/icons/badges/Custom_Category_Icon.png",
+    "criteria_type": "created_category",
+    "criteria_value": 1
+  },
+  {
+    "key": "steady_planner",
+    "title": "Steady Planner",
+    "description": "Stay within budget for three months consecutively",
+    "icon": "assets/icons/badges/Steady_Planner_Icon.png",
+    "criteria_type": "consecutive_months_under_budget",
+    "criteria_value": 3
+  },
+  {
+    "key": "expert_planner",
+    "title": "Expert Planner",
+    "description": "Stay within budget for the entire year",
+    "icon": "assets/icons/badges/Expert_Planner_Icon.png",
+    "criteria_type": "consecutive_months_under_budget",
+    "criteria_value": 12
+  },
+  {
+    "key": "restaurant_top",
+    "title": "A Little Treat",
+    "description": "Have restaurants as your top category for one month",
+    "icon": "assets/icons/badges/Restaurants_Top_Icon.png",
+    "criteria_type": "top_category",
+    "criteria_value": "restaurants"
+  },
+  {
+    "key": "smart_spender",
+    "title": "Smart Spender",
+    "description": "Spent more on needs than wants in a month",
+    "icon": "assets/icons/badges/Smart_Spender_Icon.png",
+    "criteria_type": "needs_over_wants"
+  },
+  {
+    "key": "perfectionist",
+    "title": "Perfectionist",
+    "description": "Spent exactly what was budgeted in a month",
+    "icon": "assets/icons/badges/Perfectionist_Icon.png",
+    "criteria_type": "exact_budget_match"
+  },
+  {
+    "key": "minimalist",
+    "title": "Minimalist",
+    "description": "Zero expenses in the shopping category for a whole month",
+    "icon": "assets/icons/badges/Minimalist_Icon.png",
+    "criteria_type": "zero_spend_category",
+    "criteria_value": "shopping"
+  }
+]
