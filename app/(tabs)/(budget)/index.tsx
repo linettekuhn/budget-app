@@ -5,9 +5,10 @@ import MonthSelect from "@/components/ui/month-select";
 import MonthlyBudgetPieChart from "@/components/ui/pie-chart/monthly-budget-pie-chart";
 import { Colors } from "@/constants/theme";
 import { useCategoriesSpend } from "@/hooks/useCategoriesSpend";
+import { CategorySpend } from "@/types";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -23,12 +24,20 @@ export default function Budget() {
   const bgColor = Colors[colorScheme ?? "light"].background;
   const router = useRouter();
   const [seeAll, setSeeAll] = useState(false);
+  const [budgets, setBudgets] = useState<CategorySpend[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+
+  const selectedMonth = selectedDate.toISOString().slice(0, 7);
 
   const {
     loading: loadingSpend,
-    budgets,
+    budgets: defaultBudgets,
     reload: reloadSpend,
-  } = useCategoriesSpend();
+  } = useCategoriesSpend(selectedMonth);
+
+  useEffect(() => {
+    setBudgets(defaultBudgets);
+  }, [defaultBudgets]);
 
   useFocusEffect(
     useCallback(() => {
@@ -56,12 +65,14 @@ export default function Budget() {
   );
 
   // TODO: retrieve data from month
-  const updateMonthData = (date: Date) => {};
+  const updateMonthData = (date: Date) => {
+    setSelectedDate(date);
+  };
+
   if (loadingSpend) {
     return <ActivityIndicator size="large" />;
   }
 
-  // TODO: change month
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
       <ScrollView contentContainerStyle={styles.container}>
@@ -73,7 +84,10 @@ export default function Budget() {
                 <ThemedText type="captionLarge">
                   ${totalSpent} / ${totalBudget}
                 </ThemedText>
-                <MonthSelect handleDateChange={updateMonthData} />
+                <MonthSelect
+                  handleDateChange={updateMonthData}
+                  initialDate={selectedDate}
+                />
               </View>
             </ThemedView>
           </Pressable>
