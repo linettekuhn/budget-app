@@ -1,6 +1,7 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import CategoryBudgetPreview from "@/components/ui/category-budget-preview";
+import MonthSelect from "@/components/ui/month-select";
 import MonthlyBudgetPieChart from "@/components/ui/pie-chart/monthly-budget-pie-chart";
 import { Colors } from "@/constants/theme";
 import { useCategoriesSpend } from "@/hooks/useCategoriesSpend";
@@ -43,20 +44,6 @@ export default function Budget() {
     (sum, category) => sum + category.totalSpent,
     0
   );
-  const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
 
   const sortedBudgets = [...budgets].sort((a, b) => b.budget - a.budget);
   const topThree = sortedBudgets.slice(0, 3);
@@ -68,6 +55,8 @@ export default function Budget() {
     0
   );
 
+  // TODO: retrieve data from month
+  const updateMonthData = (date: Date) => {};
   if (loadingSpend) {
     return <ActivityIndicator size="large" />;
   }
@@ -84,12 +73,7 @@ export default function Budget() {
                 <ThemedText type="captionLarge">
                   ${totalSpent} / ${totalBudget}
                 </ThemedText>
-                <ThemedText type="displayLarge" style={styles.month}>
-                  {months[new Date().getMonth()].toUpperCase()}
-                </ThemedText>
-                <ThemedText type="h1" style={styles.year}>
-                  {new Date().getFullYear()}
-                </ThemedText>
+                <MonthSelect handleDateChange={updateMonthData} />
               </View>
             </ThemedView>
           </Pressable>

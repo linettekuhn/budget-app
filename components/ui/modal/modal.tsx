@@ -1,5 +1,5 @@
 import { ThemedView } from "@/components/themed-view";
-import { Dimensions, Pressable, StyleSheet } from "react-native";
+import { Dimensions, Pressable, ScrollView, StyleSheet } from "react-native";
 import Modal from "react-native-modal";
 type Props = {
   onClose: () => void;
@@ -20,8 +20,19 @@ export default function AppModal({ onClose, visible, children }: Props) {
       backdropOpacity={0.5}
       style={styles.modalContainer}
     >
-      <Pressable onPress={(e) => e.stopPropagation()}>
-        <ThemedView style={styles.contentWrapper}>{children}</ThemedView>
+      <Pressable
+        onPress={(e) => e.stopPropagation()}
+        style={{ maxHeight: height * 0.85 }}
+      >
+        <ThemedView style={styles.contentWrapper}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+          >
+            {children}
+          </ScrollView>
+        </ThemedView>
       </Pressable>
     </Modal>
   );
@@ -35,9 +46,13 @@ const styles = StyleSheet.create({
     margin: 0,
   },
   contentWrapper: {
-    height: height * 0.85,
     width: width,
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
+  },
+
+  scrollContent: {
+    paddingTop: 16,
+    paddingBottom: 44,
   },
 });

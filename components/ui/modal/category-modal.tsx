@@ -109,8 +109,8 @@ export default function CustomCategory({
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
+      style={{ paddingVertical: 0 }}
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <ThemedView style={styles.categoryForm}>
@@ -249,9 +249,8 @@ const styles = StyleSheet.create({
   },
 
   categoryForm: {
-    justifyContent: "space-evenly",
+    justifyContent: "space-between",
     alignItems: "center",
-    gap: 5,
     paddingHorizontal: 20,
   },
 

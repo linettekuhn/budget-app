@@ -46,14 +46,12 @@ export default function Transaction() {
 
   const handleOpen = () => {
     openModal(
-      <ThemedView style={styles.main}>
-        <CustomCategory
-          onComplete={() => {
-            closeModal();
-            reload();
-          }}
-        />
-      </ThemedView>
+      <CustomCategory
+        onComplete={() => {
+          closeModal();
+          reload();
+        }}
+      />
     );
   };
 
