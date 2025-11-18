@@ -17,8 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function MonthlyTransactions() {
   const params = useLocalSearchParams();
-  const date: Date = JSON.parse(params.date as string);
-
+  const date: Date = new Date(JSON.parse(params.date as string));
   const colorScheme = useColorScheme();
   const transactinBgColor = Colors[colorScheme ?? "light"].primary[700];
   const bgColor = Colors[colorScheme ?? "light"].background;

@@ -32,10 +32,12 @@ type Props = {
 
 export default function EditCategory({ onComplete, category }: Props) {
   const colorScheme = useColorScheme();
-
+  console.log(category);
   const [typeSelected, setType] = useState(category.type.toUpperCase());
   const [categoryColor, setCategoryColor] = useState(category.color);
-  const [rawAmount, setRawAmount] = useState("");
+  const [rawAmount, setRawAmount] = useState(
+    (category.budget * 100).toString()
+  );
   const [displayAmount, setDisplayAmount] = useState(
     category.budget.toFixed(2)
   );

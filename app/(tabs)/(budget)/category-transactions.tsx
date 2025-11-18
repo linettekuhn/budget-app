@@ -23,7 +23,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function CategoryTransactions() {
   const params = useLocalSearchParams();
   const category: CategoryType = JSON.parse(params.category as string);
-  const date: Date = JSON.parse(params.date as string);
+  const date: Date = new Date(JSON.parse(params.date as string));
 
   const colorScheme = useColorScheme();
   const transactionBgColor = Colors[colorScheme ?? "light"].primary[700];
