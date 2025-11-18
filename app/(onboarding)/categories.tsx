@@ -6,11 +6,11 @@ import CustomCategory from "@/components/ui/modal/category-modal";
 import { Colors } from "@/constants/theme";
 import { useCategories } from "@/hooks/useCategories";
 import { useModal } from "@/hooks/useModal";
+import DatabaseService from "@/services/DatabaseService";
 import { CategoryType } from "@/types";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useRouter } from "expo-router";
-import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -27,7 +27,6 @@ export default function CategoriesOnboarding() {
   const [selectedCategories, setSelectedCategories] = useState<CategoryType[]>(
     []
   );
-  const db = useSQLiteContext();
 
   const toggleCategory = (category: CategoryType) => {
     setSelectedCategories((prev) => {
@@ -48,22 +47,9 @@ export default function CategoriesOnboarding() {
       return;
     }
 
-    // (?, ?) for each category
-    const placeholders = selectedCategories
-      .map(() => "(?, ?, ?, ?)")
-      .join(", ");
-
-    // values to fill up parameter placeholders
-    const values: (string | number)[] = [];
-    selectedCategories.forEach((cat) => {
-      values.push(cat.name, cat.color, cat.type, cat.budget);
-    });
-
-    const query = `INSERT INTO categories (name, color, type, budget) VALUES ${placeholders}`;
-
     try {
-      await db.runAsync("DELETE FROM categories");
-      await db.runAsync(query, values);
+      await DatabaseService.clearCategories();
+      await DatabaseService.insertCategories(selectedCategories);
     } catch (error) {
       console.log(error);
     } finally {

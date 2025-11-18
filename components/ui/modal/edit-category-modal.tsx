@@ -1,9 +1,9 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
+import DatabaseService from "@/services/DatabaseService";
 import { CategoryType } from "@/types";
 import { formatAmountDisplay } from "@/utils/formatAmountDisplay";
-import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import {
   Alert,
@@ -31,7 +31,6 @@ type Props = {
 };
 
 export default function EditCategory({ onComplete, category }: Props) {
-  const db = useSQLiteContext();
   const colorScheme = useColorScheme();
 
   const [typeSelected, setType] = useState(category.type.toUpperCase());
@@ -68,9 +67,11 @@ export default function EditCategory({ onComplete, category }: Props) {
       const budget = parseFloat((Number(rawAmount) / 100).toFixed(2));
       const categoryType = typeSelected.toLowerCase() as "need" | "want";
 
-      await db.runAsync(
-        `UPDATE categories SET color = ?, type = ?, budget = ? WHERE id = ?`,
-        [categoryColor, categoryType, budget, category.id]
+      await DatabaseService.updateCategory(
+        categoryColor,
+        categoryType,
+        budget,
+        category.id
       );
 
       Alert.alert("Success", "Category updated successfully");

@@ -4,11 +4,11 @@ import AmountDisplay from "@/components/ui/amount-display";
 import CapsuleButton from "@/components/ui/capsule-button";
 import { Colors } from "@/constants/theme";
 import { useCategories } from "@/hooks/useCategories";
+import DatabaseService from "@/services/DatabaseService";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
 import { formatAmountDisplay } from "@/utils/formatAmountDisplay";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useRouter } from "expo-router";
-import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -26,7 +26,6 @@ export default function BudgetOnboarding() {
   const colorScheme = useColorScheme();
   const btnColor = Colors[colorScheme ?? "light"].secondary[500];
   const router = useRouter();
-  const db = useSQLiteContext();
 
   const { loading, categories } = useCategories();
 
@@ -61,32 +60,10 @@ export default function BudgetOnboarding() {
   };
 
   const saveBudgets = async () => {
-    await db.execAsync("BEGIN TRANSACTION");
-
     try {
-      const updates = Object.entries(categoryAmounts).map(async (cat) => {
-        const id = parseInt(cat[0]);
-        const rawAmount = cat[1].raw;
-
-        if (parseFloat(rawAmount) === 0) {
-          throw new Error("Budgets cannot be 0");
-        }
-
-        await db.runAsync(
-          `
-          UPDATE categories
-          SET budget = ?
-          WHERE id = ?
-          `,
-          [parseFloat((Number(rawAmount) / 100).toFixed(2)), id]
-        );
-      });
-
-      await Promise.all(updates);
-      await db.execAsync("COMMIT");
+      await DatabaseService.updateCategoryBudgets(categoryAmounts);
       router.push("/salary");
     } catch (error: unknown) {
-      await db.execAsync("ROLLBACK");
       if (error instanceof Error) {
         Alert.alert("Error", error.message);
       } else {

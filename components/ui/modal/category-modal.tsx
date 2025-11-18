@@ -1,9 +1,9 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
+import DatabaseService from "@/services/DatabaseService";
 import { CategorySpend } from "@/types";
 import { formatAmountDisplay } from "@/utils/formatAmountDisplay";
-import { useSQLiteContext } from "expo-sqlite";
 import { useState } from "react";
 import {
   Alert,
@@ -33,7 +33,6 @@ export default function CustomCategory({
   onComplete: () => void;
   category?: CategorySpend;
 }) {
-  const db = useSQLiteContext();
   const colorScheme = useColorScheme();
 
   const [categoryName, setCategoryName] = useState("");
@@ -76,21 +75,17 @@ export default function CustomCategory({
 
       const budget = parseFloat((Number(rawAmount) / 100).toFixed(2));
 
-      type CountResult = { count: number };
-      const existing = await db.getAllAsync<CountResult>(
-        "SELECT COUNT(*) as count FROM categories WHERE name = ?",
-        [name]
-      );
-
-      if (existing[0].count !== 0) {
+      if (await DatabaseService.checkCategoryNameExists(name)) {
         throw new Error("Category name already exists");
       }
 
       const categoryType = typeSelected.toLowerCase() as "need" | "want";
 
-      await db.runAsync(
-        `INSERT INTO categories (name, color, type, budget) VALUES (?, ?, ?, ?)`,
-        [name, categoryColor, categoryType, budget]
+      await DatabaseService.addCategory(
+        name,
+        categoryColor,
+        categoryType,
+        budget
       );
     } catch (error: unknown) {
       if (error instanceof Error) {

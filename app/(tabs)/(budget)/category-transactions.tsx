@@ -5,9 +5,9 @@ import EditCategory from "@/components/ui/modal/edit-category-modal";
 import { Colors } from "@/constants/theme";
 import { useCategorySpend } from "@/hooks/useCategorySpend";
 import { useModal } from "@/hooks/useModal";
+import DatabaseService from "@/services/DatabaseService";
 import { CategoryType, TransactionType } from "@/types";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
-import { useSQLiteContext } from "expo-sqlite";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -23,8 +23,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function CategoryTransactions() {
   const params = useLocalSearchParams();
   const category: CategoryType = JSON.parse(params.category as string);
+  const date: Date = JSON.parse(params.date as string);
 
-  const db = useSQLiteContext();
   const colorScheme = useColorScheme();
   const transactionBgColor = Colors[colorScheme ?? "light"].primary[700];
   const bgColor = Colors[colorScheme ?? "light"].background;
@@ -58,23 +58,12 @@ export default function CategoryTransactions() {
 
   const loadTransaction = async () => {
     try {
-      const transactionsData = await db.getAllAsync<TransactionType>(
-        `
-        SELECT
-            t.id,
-            t.name,
-            t.amount,
-            t.type,
-            t.categoryId,
-            t.date,
-            c.name AS categoryName,
-            c.color AS categoryColor
-        FROM transactions t
-        INNER JOIN categories c ON t.categoryId = c.id
-        WHERE t.categoryId = ?
-        ORDER BY t.date DESC
-    `,
-        [category.id]
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      const transactionsData = await DatabaseService.getCategoryTransactions(
+        category.id,
+        year,
+        month
       );
       const savedTransactions = transactionsData.map((row) => {
         const transaction: TransactionType = {

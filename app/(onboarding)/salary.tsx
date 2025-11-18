@@ -5,10 +5,10 @@ import CapsuleButton from "@/components/ui/capsule-button";
 import CapsuleNumberInput from "@/components/ui/capsule-input-number";
 import CapsuleToggle from "@/components/ui/capsule-toggle";
 import { Colors } from "@/constants/theme";
+import DatabaseService from "@/services/DatabaseService";
 import { formatAmountDisplay } from "@/utils/formatAmountDisplay";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useRouter } from "expo-router";
-import { useSQLiteContext } from "expo-sqlite";
 import React, { useState } from "react";
 import {
   Keyboard,
@@ -25,7 +25,6 @@ export default function SalaryOnboarding() {
   const colorScheme = useColorScheme();
   const btnColor = Colors[colorScheme ?? "light"].secondary[500];
   const router = useRouter();
-  const db = useSQLiteContext();
 
   const [salaryType, setSalaryType] = useState<
     "Hourly" | "Biweekly" | "Monthly" | "Yearly" | "Varies"
@@ -80,9 +79,11 @@ export default function SalaryOnboarding() {
         break;
     }
     try {
-      await db.runAsync(
-        `INSERT INTO salary (type, amount, monthly, hoursPerWeek) VALUES (?, ?, ?, ?)`,
-        [salaryType, amount, monthlySalary, hours]
+      await DatabaseService.saveSalary(
+        salaryType,
+        amount,
+        monthlySalary,
+        salaryType === "Hourly" ? hours : null
       );
     } catch (error) {
       console.log(error);

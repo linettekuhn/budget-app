@@ -1,19 +1,16 @@
+import DatabaseService from "@/services/DatabaseService";
 import { CategoryType } from "@/types";
-import { useSQLiteContext } from "expo-sqlite";
 import { useCallback, useEffect, useState } from "react";
 import { Alert } from "react-native";
 
 export function useCategories() {
-  const db = useSQLiteContext();
   const [reloadFlag, setReloadFlag] = useState(false);
   const [categories, setCategories] = useState<CategoryType[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadCategories = useCallback(async () => {
     try {
-      const data = await db.getAllAsync<CategoryType>(
-        "SELECT * FROM categories"
-      );
+      const data = await DatabaseService.getCategories();
 
       const savedCategories = data.map((row) => ({
         id: row.id,
@@ -33,7 +30,7 @@ export function useCategories() {
     } finally {
       setLoading(false);
     }
-  }, [db]);
+  }, []);
 
   useEffect(() => {
     loadCategories();

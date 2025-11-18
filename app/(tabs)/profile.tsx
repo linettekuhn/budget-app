@@ -1,21 +1,19 @@
 import { ThemedView } from "@/components/themed-view";
 import CapsuleButton from "@/components/ui/capsule-button";
 import { Colors } from "@/constants/theme";
+import DatabaseService from "@/services/DatabaseService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as SQLite from "expo-sqlite";
-import { useSQLiteContext } from "expo-sqlite";
 import { Alert, ScrollView, StyleSheet, useColorScheme } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Profile() {
   const colorScheme = useColorScheme();
-  const db = useSQLiteContext();
   const bgColor = Colors[colorScheme ?? "light"].background;
   const btnColor = Colors[colorScheme ?? "light"].secondary[500];
 
   // TODO: DEV ONLY delete later
   const resetDatabase = async () => {
-    await db.runAsync("DELETE FROM transactions");
+    await DatabaseService.clearTransactions();
     Alert.alert("database cleared!");
   };
 
@@ -28,10 +26,7 @@ export default function Profile() {
     try {
       await AsyncStorage.clear();
 
-      const db = await SQLite.openDatabaseAsync("app.db");
-      await db.execAsync("DROP TABLE IF EXISTS transactions");
-      await db.execAsync("DROP TABLE IF EXISTS categories");
-      await db.execAsync("DROP TABLE IF EXISTS salary");
+      await DatabaseService.resetTables();
 
       console.log("App data cleared successfully!");
     } catch (error) {

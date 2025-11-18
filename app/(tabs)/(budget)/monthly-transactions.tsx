@@ -1,8 +1,9 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
+import DatabaseService from "@/services/DatabaseService";
 import { TransactionType } from "@/types";
-import { useSQLiteContext } from "expo-sqlite";
+import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -15,7 +16,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function MonthlyTransactions() {
-  const db = useSQLiteContext();
+  const params = useLocalSearchParams();
+  const date: Date = JSON.parse(params.date as string);
+
   const colorScheme = useColorScheme();
   const transactinBgColor = Colors[colorScheme ?? "light"].primary[700];
   const bgColor = Colors[colorScheme ?? "light"].background;
@@ -25,9 +28,10 @@ export default function MonthlyTransactions() {
 
   const loadTransaction = async () => {
     try {
-      const data = await db.getAllAsync<TransactionType>(
-        "SELECT id, name, amount, type, categoryId, date FROM transactions ORDER BY date DESC"
-      );
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+
+      const data = await DatabaseService.getTransactionsByMonth(year, month);
       const savedTransactions = data.map((row) => {
         const transaction: TransactionType = {
           id: row.id,

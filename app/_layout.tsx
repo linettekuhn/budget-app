@@ -1,6 +1,7 @@
 import { ModalProvider } from "@/components/ui/modal/modal-provider";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAuth } from "@/hooks/useAuth";
+import DatabaseService from "@/services/DatabaseService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   DarkTheme,
@@ -36,52 +37,7 @@ export default function RootLayout() {
 
   const createDatabase = useCallback(async (db: SQLiteDatabase) => {
     try {
-      await db.execAsync(`
-        CREATE TABLE IF NOT EXISTS categories (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT NOT NULL UNIQUE,
-          color TEXT NOT NULL,
-          type TEXT NOT NULL,
-          budget DECIMAL(13, 2)
-        );
-        CREATE TABLE IF NOT EXISTS transactions (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT NOT NULL,
-          amount DECIMAL(13, 2) NOT NULL,
-          type TEXT NOT NULL,
-          date TEXT DEFAULT (datetime('now')),
-          categoryId INTEGER,
-          FOREIGN KEY (categoryId) REFERENCES categories(id)
-          );
-        CREATE TABLE IF NOT EXISTS salary (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          type TEXT NOT NULL,
-          amount DECIMAL(13, 2) NOT NULL,
-          monthly DECIMAL(13, 2) NOT NULL,
-          hoursPerWeek DECIMAL(5, 2)
-          )
-          `);
-
-      type CountResult = { count: number };
-      const existingCategories = await db.getAllAsync<CountResult>(
-        "SELECT COUNT(*) as count FROM categories"
-      );
-      if (existingCategories[0].count === 0) {
-        await db.execAsync(`
-          INSERT INTO categories (name, color, type) VALUES
-            ('Utilities', '#FF6B6B', 'need'),
-            ('Transport', '#4ECDC4', 'need'),
-            ('Groceries', '#FFD93D', 'need'),
-            ('Rent', '#3DFF8B', 'need'),
-            ('Insurance', '#6A4C93', 'need'),
-            ('Debt', '#FF8C00', 'need'),
-            ('Restaurants', '#b2d100ff', 'want'),
-            ('Beauty', '#6980ffff', 'want'),
-            ('Shopping', '#DA70D6', 'want'),
-            ('Subscription', '#9370DB', 'want'),
-            ('Entertainment', '#20B2AA', 'want');
-        `);
-      }
+      await DatabaseService.initalize();
       setDbReady(true);
     } catch (error: unknown) {
       if (error instanceof Error) {

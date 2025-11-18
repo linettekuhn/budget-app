@@ -8,11 +8,11 @@ import CustomCategory from "@/components/ui/modal/category-modal";
 import { Colors } from "@/constants/theme";
 import { useCategories } from "@/hooks/useCategories";
 import { useModal } from "@/hooks/useModal";
+import DatabaseService from "@/services/DatabaseService";
 import { CategoryType } from "@/types";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
 import { formatAmountDisplay } from "@/utils/formatAmountDisplay";
 import Octicons from "@expo/vector-icons/Octicons";
-import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -28,7 +28,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Transaction() {
   const colorScheme = useColorScheme();
-  const db = useSQLiteContext();
   const btnColor = Colors[colorScheme ?? "light"].secondary[500];
 
   const [rawAmount, setRawAmount] = useState("0");
@@ -77,19 +76,7 @@ export default function Transaction() {
         date: new Date().toISOString(),
       };
 
-      await db.runAsync(
-        `
-          INSERT INTO transactions (name, amount, type, categoryId, date) 
-          VALUES (?, ?, ?, ?, ?);
-          `,
-        [
-          transaction.name,
-          transaction.amount,
-          transaction.type,
-          transaction.categoryId,
-          transaction.date,
-        ]
-      );
+      await DatabaseService.addTransaction(transaction);
       Alert.alert("Success", "Transaction added successfully");
 
       setTransactionName("");

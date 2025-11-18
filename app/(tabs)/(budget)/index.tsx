@@ -76,7 +76,14 @@ export default function Budget() {
     <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
       <ScrollView contentContainerStyle={styles.container}>
         <ThemedView style={styles.main}>
-          <Pressable onPress={() => router.push("/monthly-transactions")}>
+          <Pressable
+            onPress={() =>
+              router.push({
+                pathname: "/monthly-transactions",
+                params: { date: JSON.stringify(selectedDate) },
+              })
+            }
+          >
             <ThemedView style={styles.pieChartWrapper}>
               <MonthlyBudgetPieChart budgets={budgets} />
               <View style={styles.monthWrapper}>
@@ -107,7 +114,10 @@ export default function Budget() {
                     onPress={() =>
                       router.push({
                         pathname: "/category-transactions",
-                        params: { category: JSON.stringify(category) },
+                        params: {
+                          category: JSON.stringify(category),
+                          date: JSON.stringify(selectedDate),
+                        },
                       })
                     }
                   />
@@ -143,7 +153,10 @@ export default function Budget() {
                       onPress={() =>
                         router.push({
                           pathname: "/category-transactions",
-                          params: { category: JSON.stringify(category) },
+                          params: {
+                            category: JSON.stringify(category),
+                            date: JSON.stringify(selectedDate),
+                          },
                         })
                       }
                     />

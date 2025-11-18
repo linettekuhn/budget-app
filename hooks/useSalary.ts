@@ -1,17 +1,16 @@
+import DatabaseService from "@/services/DatabaseService";
 import { Salary } from "@/types";
-import { useSQLiteContext } from "expo-sqlite";
 import { useCallback, useEffect, useState } from "react";
 import { Alert } from "react-native";
 
 export function useSalary() {
-  const db = useSQLiteContext();
   const [reloadFlag, setReloadFlag] = useState(false);
   const [salary, setSalary] = useState<Salary | null>(null);
   const [loading, setLoading] = useState(true);
 
   const loadSalary = useCallback(async () => {
     try {
-      const data = await db.getFirstAsync<Salary>("SELECT * FROM salary");
+      const data = await DatabaseService.getSalary();
       if (data) {
         const salary: Salary = {
           id: data.id,
@@ -31,7 +30,7 @@ export function useSalary() {
     } finally {
       setLoading(false);
     }
-  }, [db]);
+  }, []);
 
   useEffect(() => {
     loadSalary();
