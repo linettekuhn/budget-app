@@ -20,7 +20,7 @@
     "description": "Saved more than 50% of your monthly income",
     "icon": "assets/icons/badges/Cheap_Life_Icon.png",
     "criteria_type": "saved_over_percent",
-    "criteria_value": 50
+    "criteria_value": 0.5
   },
   {
     "key": "shopaholic",
@@ -28,15 +28,14 @@
     "description": "Spent more than 50% of your monthly earnings on wants",
     "icon": "assets/icons/badges/Shopaholic_Icon.png",
     "criteria_type": "spent_over_percent_wants",
-    "criteria_value": 50
+    "criteria_value": 0.5
   },
   {
     "key": "custom_category",
     "title": "Like I Like It",
     "description": "Create your first custom category",
     "icon": "assets/icons/badges/Custom_Category_Icon.png",
-    "criteria_type": "created_category",
-    "criteria_value": 1
+    "criteria_type": "created_category"
   },
   {
     "key": "steady_planner",
@@ -60,7 +59,7 @@
     "description": "Have restaurants as your top category for one month",
     "icon": "assets/icons/badges/Restaurants_Top_Icon.png",
     "criteria_type": "top_category",
-    "criteria_value": "restaurants"
+    "criteria_value": "Restaurants"
   },
   {
     "key": "smart_spender",
@@ -82,6 +81,6 @@
     "description": "Zero expenses in the shopping category for a whole month",
     "icon": "assets/icons/badges/Minimalist_Icon.png",
     "criteria_type": "zero_spend_category",
-    "criteria_value": "shopping"
+    "criteria_value": "Shopping"
   }
 ]

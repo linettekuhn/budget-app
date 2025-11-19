@@ -1,5 +1,14 @@
-import { CategorySpend, CategoryType, Salary, TransactionType } from "@/types";
+import badgesJson from "@/assets/data/badges.json";
+import {
+  BadgeDefinition,
+  CategorySpend,
+  CategoryType,
+  Salary,
+  TransactionType,
+} from "@/types";
 import * as SQLite from "expo-sqlite";
+const badges = badgesJson as BadgeDefinition[];
+type CountResult = { count: number };
 
 export default class DatabaseService {
   private static db: SQLite.SQLiteDatabase | null = null;
@@ -11,16 +20,27 @@ export default class DatabaseService {
     return this.db;
   }
 
+  // Database Initalization
   static async initalize() {
     const db = await this.getDatabase();
 
     await db.execAsync(`
+        CREATE TABLE IF NOT EXISTS app_meta (
+          key TEXT PRIMARY KEY,
+          value TEXT
+        );
+        CREATE TABLE IF NOT EXISTS badges (
+          badge_key TEXT PRIMARY KEY,
+          unlocked INTEGER DEFAULT 0,
+          unlocked_at TEXT
+        );
         CREATE TABLE IF NOT EXISTS categories (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           name TEXT NOT NULL UNIQUE,
           color TEXT NOT NULL,
           type TEXT NOT NULL,
-          budget DECIMAL(13, 2)
+          budget DECIMAL(13, 2),
+          is_default INTEGER DEFAULT 0
         );
         CREATE TABLE IF NOT EXISTS transactions (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -40,32 +60,71 @@ export default class DatabaseService {
           )
           `);
 
+    await this.seedDefaultAppData(db);
     await this.seedDefaultCategories(db);
+    await this.seedDefaultBadges(db);
+  }
+
+  private static async seedDefaultAppData(db: SQLite.SQLiteDatabase) {
+    const existing = await db.getFirstAsync<{ value: string }>(
+      "SELECT value FROM app_meta WHERE key = 'app_start_date'"
+    );
+
+    if (existing) return;
+
+    const now = new Date().toISOString();
+    await db.runAsync(
+      `INSERT INTO app_meta (key, value) VALUES ('app_start_date', ?)`,
+      [now]
+    );
   }
 
   private static async seedDefaultCategories(db: SQLite.SQLiteDatabase) {
-    type CountResult = { count: number };
     const existingCategories = await db.getAllAsync<CountResult>(
       "SELECT COUNT(*) as count FROM categories"
     );
     if (existingCategories[0].count === 0) {
       await db.execAsync(`
-          INSERT INTO categories (name, color, type) VALUES
-            ('Utilities', '#FF6B6B', 'need'),
-            ('Transport', '#4ECDC4', 'need'),
-            ('Groceries', '#FFD93D', 'need'),
-            ('Rent', '#3DFF8B', 'need'),
-            ('Insurance', '#6A4C93', 'need'),
-            ('Debt', '#FF8C00', 'need'),
-            ('Restaurants', '#b2d100ff', 'want'),
-            ('Beauty', '#6980ffff', 'want'),
-            ('Shopping', '#DA70D6', 'want'),
-            ('Subscription', '#9370DB', 'want'),
-            ('Entertainment', '#20B2AA', 'want');
+          INSERT INTO categories (name, color, type, is_default) VALUES
+            ('Utilities', '#FF6B6B', 'need', 1),
+            ('Transport', '#4ECDC4', 'need', 1),
+            ('Groceries', '#FFD93D', 'need', 1),
+            ('Rent', '#3DFF8B', 'need', 1),
+            ('Insurance', '#6A4C93', 'need', 1),
+            ('Debt', '#FF8C00', 'need', 1),
+            ('Restaurants', '#b2d100ff', 'want', 1),
+            ('Beauty', '#6980ffff', 'want', 1),
+            ('Shopping', '#DA70D6', 'want', 1),
+            ('Subscription', '#9370DB', 'want', 1),
+            ('Entertainment', '#20B2AA', 'want', 1);
         `);
     }
   }
 
+  private static async seedDefaultBadges(db: SQLite.SQLiteDatabase) {
+    const existing = await db.getAllAsync<CountResult>(
+      "SELECT COUNT(*) AS count FROM badges"
+    );
+
+    if (existing[0].count === 0) {
+      await db.execAsync("BEGIN TRANSACTION;");
+
+      for (const badge of badges) {
+        await db.runAsync(
+          `INSERT INTO badges (badge_key, unlocked, unlocked_at) VALUES (?, 0, NULL)`,
+          [badge.key]
+        );
+      }
+      try {
+        await db.execAsync("COMMIT");
+      } catch (error) {
+        await db.execAsync("ROLLBACK");
+        throw error;
+      }
+    }
+  }
+
+  // Database Reset
   static async resetTables() {
     const db = await this.getDatabase();
 
@@ -78,6 +137,7 @@ export default class DatabaseService {
     await this.initalize();
   }
 
+  // Categories Table Interaction
   static async updateCategoryBudgets(
     categoryAmounts: Record<number, { raw: string }>
   ) {
@@ -110,22 +170,11 @@ export default class DatabaseService {
       throw error;
     }
   }
-
-  static async clearCategories() {
-    const db = await this.getDatabase();
-    await db.runAsync("DELETE FROM categories");
-  }
-
-  static async clearTransactions() {
-    const db = await this.getDatabase();
-    await db.runAsync("DELETE FROM transactions");
-  }
-
   static async insertCategories(categories: CategoryType[]) {
     const db = await this.getDatabase();
 
     // (?, ?) for each category
-    const placeholders = categories.map(() => "(?, ?, ?, ?)").join(", ");
+    const placeholders = categories.map(() => "(?, ?, ?, ?, 0)").join(", ");
 
     // values to fill up parameter placeholders
     const values: (string | number)[] = [];
@@ -133,45 +182,14 @@ export default class DatabaseService {
       values.push(cat.name, cat.color, cat.type, cat.budget);
     });
 
-    const query = `INSERT INTO categories (name, color, type, budget) VALUES ${placeholders}`;
+    const query = `INSERT INTO categories (name, color, type, budget, is_default) VALUES ${placeholders}`;
 
     await db.runAsync(query, values);
   }
 
-  static async saveSalary(
-    type: string,
-    amount: number,
-    monthly: number,
-    hoursPerWeek: number | null
-  ) {
+  static async clearCategories() {
     const db = await this.getDatabase();
-
-    await db.runAsync(
-      `INSERT INTO salary (type, amount, monthly, hoursPerWeek) VALUES (?, ?, ?, ?)`,
-      [type, amount, monthly, hoursPerWeek]
-    );
-  }
-
-  static async addTransaction(transaction: {
-    name: string;
-    amount: number;
-    type: "income" | "expense";
-    categoryId: number;
-    date: string;
-  }) {
-    const db = await this.getDatabase();
-
-    await db.runAsync(
-      `INSERT INTO transactions (name, amount, type, categoryId, date)
-       VALUES (?, ?, ?, ?, ?);`,
-      [
-        transaction.name,
-        transaction.amount,
-        transaction.type,
-        transaction.categoryId,
-        transaction.date,
-      ]
-    );
+    await db.runAsync("DELETE FROM categories");
   }
 
   static async addCategory(
@@ -191,7 +209,6 @@ export default class DatabaseService {
   static async checkCategoryNameExists(name: string) {
     const db = await this.getDatabase();
 
-    type CountResult = { count: number };
     const existing = await db.getAllAsync<CountResult>(
       "SELECT COUNT(*) as count FROM categories WHERE name = ?",
       [name]
@@ -222,6 +239,68 @@ export default class DatabaseService {
     const db = await this.getDatabase();
 
     return await db.getAllAsync<CategoryType>("SELECT * FROM categories");
+  }
+
+  static async checkCustomCategoryCreated() {
+    const db = await this.getDatabase();
+
+    const existing = await db.getAllAsync<CountResult>(
+      "SELECT COUNT(*) as count FROM categories WHERE is_default = 0"
+    );
+
+    if (existing[0].count > 0) {
+      return true;
+    }
+
+    return false;
+  }
+
+  // Salary Table Interaction
+  static async saveSalary(
+    type: string,
+    amount: number,
+    monthly: number,
+    hoursPerWeek: number | null
+  ) {
+    const db = await this.getDatabase();
+
+    await db.runAsync(
+      `INSERT INTO salary (type, amount, monthly, hoursPerWeek) VALUES (?, ?, ?, ?)`,
+      [type, amount, monthly, hoursPerWeek]
+    );
+  }
+
+  static async getSalary() {
+    const db = await this.getDatabase();
+    return db.getFirstAsync<Salary>("SELECT * FROM salary");
+  }
+
+  // Transactions Table Interaction
+  static async clearTransactions() {
+    const db = await this.getDatabase();
+    await db.runAsync("DELETE FROM transactions");
+  }
+
+  static async addTransaction(transaction: {
+    name: string;
+    amount: number;
+    type: "income" | "expense";
+    categoryId: number;
+    date: string;
+  }) {
+    const db = await this.getDatabase();
+
+    await db.runAsync(
+      `INSERT INTO transactions (name, amount, type, categoryId, date)
+       VALUES (?, ?, ?, ?, ?);`,
+      [
+        transaction.name,
+        transaction.amount,
+        transaction.type,
+        transaction.categoryId,
+        transaction.date,
+      ]
+    );
   }
 
   static async getCategoryTransactions(
@@ -275,6 +354,20 @@ export default class DatabaseService {
       [startDate, endDate]
     );
   }
+
+  static async getAllTransactions() {
+    const db = await this.getDatabase();
+
+    return await db.getAllAsync<TransactionType>(
+      `
+      SELECT id, name, amount, type, categoryId, date
+      FROM transactions
+      ORDER BY date DESC
+      `,
+      []
+    );
+  }
+
   static async getCategoriesSpend(month?: string) {
     const db = await this.getDatabase();
     const monthFilter = month ? month : new Date().toISOString().slice(0, 7);
@@ -334,8 +427,66 @@ export default class DatabaseService {
     );
   }
 
-  static async getSalary() {
+  // Badges Table Interaction
+  static async checkBadgeUnlocked(badgeKey: string) {
     const db = await this.getDatabase();
-    return db.getFirstAsync<Salary>("SELECT * FROM salary");
+
+    type BadgeDatabaseRow = {
+      badge_key: string;
+      unlocked: number;
+      unlocked_at: string;
+    };
+    const row = await db.getFirstAsync<BadgeDatabaseRow>(
+      "SELECT badge_key, unlocked, unlocked_at FROM badges WHERE badge_key = ?",
+      [badgeKey]
+    );
+
+    if (row && row.unlocked !== 0) {
+      return true;
+    }
+
+    return false;
+  }
+
+  static async unlockBadge(badgeKey: string) {
+    const db = await this.getDatabase();
+    const now = new Date().toISOString();
+
+    type BadgeDatabaseRow = {
+      badge_key: string;
+      unlocked: number;
+      unlocked_at: string;
+    };
+    await db.getFirstAsync<BadgeDatabaseRow>(
+      ` 
+        UPDATE badges
+        SET unlocked = 1,
+            unlocked_at = ?
+        WHERE badge_key = ?
+      `,
+      [now, badgeKey]
+    );
+
+    return await this.checkBadgeUnlocked(badgeKey);
+  }
+
+  static async monthsSinceAppStart() {
+    const db = await this.getDatabase();
+
+    const row = await db.getFirstAsync<{ value: string }>(
+      "SELECT value FROM app_meta WHERE key = 'app_start_date'"
+    );
+
+    if (row) {
+      const startDate = new Date(row.value);
+      const now = new Date();
+
+      const yearsDiff = now.getFullYear() - startDate.getFullYear();
+      const monthsDiff = now.getMonth() - startDate.getMonth();
+
+      const totalMonthsPassed = yearsDiff * 12 + monthsDiff;
+
+      return totalMonthsPassed > 0 ? totalMonthsPassed : 0;
+    }
   }
 }
