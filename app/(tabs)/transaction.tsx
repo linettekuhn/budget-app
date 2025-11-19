@@ -6,6 +6,7 @@ import CapsuleInput from "@/components/ui/capsule-input-box";
 import CapsuleToggle from "@/components/ui/capsule-toggle";
 import CustomCategory from "@/components/ui/modal/category-modal";
 import { Colors } from "@/constants/theme";
+import { useBadgeCheck } from "@/hooks/useBadgeCheck";
 import { useCategories } from "@/hooks/useCategories";
 import { useModal } from "@/hooks/useModal";
 import DatabaseService from "@/services/DatabaseService";
@@ -38,6 +39,7 @@ export default function Transaction() {
 
   const { openModal, closeModal } = useModal();
   const { categories, loading, reload } = useCategories();
+  const { checkBadges } = useBadgeCheck();
 
   useEffect(() => {
     reload();
@@ -77,6 +79,7 @@ export default function Transaction() {
       };
 
       await DatabaseService.addTransaction(transaction);
+      await checkBadges();
       Alert.alert("Success", "Transaction added successfully");
 
       setTransactionName("");

@@ -1,6 +1,7 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
+import { useBadgeCheck } from "@/hooks/useBadgeCheck";
 import DatabaseService from "@/services/DatabaseService";
 import { CategorySpend } from "@/types";
 import { formatAmountDisplay } from "@/utils/formatAmountDisplay";
@@ -34,6 +35,7 @@ export default function CustomCategory({
   category?: CategorySpend;
 }) {
   const colorScheme = useColorScheme();
+  const { checkBadges } = useBadgeCheck();
 
   const [categoryName, setCategoryName] = useState("");
   const [typeSelected, setType] = useState("");
@@ -87,6 +89,7 @@ export default function CustomCategory({
         categoryType,
         budget
       );
+      await checkBadges();
     } catch (error: unknown) {
       if (error instanceof Error) {
         Alert.alert("Error", error.message);

@@ -1,6 +1,7 @@
 import { ModalProvider } from "@/components/ui/modal/modal-provider";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAuth } from "@/hooks/useAuth";
+import { useBadgeCheck } from "@/hooks/useBadgeCheck";
 import DatabaseService from "@/services/DatabaseService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
@@ -32,6 +33,7 @@ export default function RootLayout() {
   });
 
   const { user, loading: authLoading } = useAuth();
+  const { checkBadges } = useBadgeCheck();
   const [dbReady, setDbReady] = useState<boolean>(false);
   const initialCheckDone = useRef(false);
 
@@ -55,6 +57,9 @@ export default function RootLayout() {
     const routeUser = async () => {
       try {
         initialCheckDone.current = true;
+
+        // check if any badges were awarded while app was closed
+        await checkBadges();
 
         // check if user has completed onboarding
         const hasCompleted = await AsyncStorage.getItem("completedOnboarding");
