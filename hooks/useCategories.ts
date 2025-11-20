@@ -1,7 +1,7 @@
 import DatabaseService from "@/services/DatabaseService";
 import { CategoryType } from "@/types";
 import { useCallback, useEffect, useState } from "react";
-import { Alert } from "react-native";
+import { Toast } from "toastify-react-native";
 
 export function useCategories() {
   const [reloadFlag, setReloadFlag] = useState(false);
@@ -23,9 +23,15 @@ export function useCategories() {
       setCategories(savedCategories);
     } catch (error: unknown) {
       if (error instanceof Error) {
-        Alert.alert("Error", error.message);
+        Toast.show({
+          type: "error",
+          text1: error.message,
+        });
       } else {
-        Alert.alert("An error occurred loading categories");
+        Toast.show({
+          type: "error",
+          text1: "An error occurred loading categories",
+        });
       }
     } finally {
       setLoading(false);

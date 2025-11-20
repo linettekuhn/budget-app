@@ -6,7 +6,6 @@ import { CategoryType } from "@/types";
 import { formatAmountDisplay } from "@/utils/formatAmountDisplay";
 import { useEffect, useState } from "react";
 import {
-  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -21,6 +20,7 @@ import ColorPicker, {
   Panel3,
   Swatches,
 } from "reanimated-color-picker";
+import { Toast } from "toastify-react-native";
 import AmountDisplay from "../amount-display";
 import CapsuleButton from "../capsule-button";
 import CapsuleToggle from "../capsule-toggle";
@@ -76,12 +76,21 @@ export default function EditCategory({ onComplete, category }: Props) {
         category.id
       );
 
-      Alert.alert("Success", "Category updated successfully");
+      Toast.show({
+        type: "success",
+        text1: "Category updated successfully!",
+      });
     } catch (error: unknown) {
       if (error instanceof Error) {
-        Alert.alert("Error", error.message);
+        Toast.show({
+          type: "error",
+          text1: error.message,
+        });
       } else {
-        Alert.alert("Error", "An error occurred updating category");
+        Toast.show({
+          type: "error",
+          text1: "An error occurred updating category",
+        });
       }
     } finally {
       onComplete();

@@ -2,7 +2,7 @@ import badgesJson from "@/assets/data/badges.json";
 import DatabaseService from "@/services/DatabaseService";
 import { BadgeDefinition, BadgeType } from "@/types";
 import { useCallback, useEffect, useState } from "react";
-import { Alert } from "react-native";
+import { Toast } from "toastify-react-native";
 export function useBadges() {
   const [reloadFlag, setReloadFlag] = useState(false);
   const [badges, setBadges] = useState<BadgeType[]>([]);
@@ -32,9 +32,15 @@ export function useBadges() {
       setBadges(badges);
     } catch (error: unknown) {
       if (error instanceof Error) {
-        Alert.alert("Error", error.message);
+        Toast.show({
+          type: "error",
+          text1: error.message,
+        });
       } else {
-        Alert.alert("An error occurred loading badges");
+        Toast.show({
+          type: "error",
+          text1: "An error occurred loading badges",
+        });
       }
     } finally {
       setLoading(false);

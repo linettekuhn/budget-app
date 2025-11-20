@@ -7,13 +7,13 @@ import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   RefreshControl,
   StyleSheet,
   useColorScheme,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Toast } from "toastify-react-native";
 
 export default function MonthlyTransactions() {
   const params = useLocalSearchParams();
@@ -45,9 +45,15 @@ export default function MonthlyTransactions() {
       setTransactions(savedTransactions);
     } catch (error: unknown) {
       if (error instanceof Error) {
-        Alert.alert("Error", error.message);
+        Toast.show({
+          type: "error",
+          text1: error.message,
+        });
       } else {
-        Alert.alert("An error ocurred loading transactions");
+        Toast.show({
+          type: "error",
+          text1: "An error ocurred loading transactions",
+        });
       }
     } finally {
       setLoading(false);

@@ -1,4 +1,9 @@
 import { ModalProvider } from "@/components/ui/modal/modal-provider";
+import {
+  BadgeToast,
+  ErrorToast,
+  SuccessToast,
+} from "@/components/ui/toast-components";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAuth } from "@/hooks/useAuth";
 import { useBadgeCheck } from "@/hooks/useBadgeCheck";
@@ -15,6 +20,11 @@ import { SQLiteDatabase, SQLiteProvider } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "react-native-reanimated";
+import ToastManager from "toastify-react-native";
+import {
+  ToastConfig,
+  ToastConfigParams,
+} from "toastify-react-native/utils/interfaces";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -97,7 +107,13 @@ export default function RootLayout() {
     };
 
     routeUser();
-  }, [fontsLoaded, authLoading, user, dbReady]);
+  }, [fontsLoaded, authLoading, user, dbReady, checkBadges]);
+
+  const toastConfig: ToastConfig = {
+    badge: (props: ToastConfigParams) => <BadgeToast {...props} />,
+    success: (props: ToastConfigParams) => <SuccessToast {...props} />,
+    error: (props: ToastConfigParams) => <ErrorToast {...props} />,
+  };
 
   return (
     <SQLiteProvider databaseName="app.db" onInit={createDatabase}>
@@ -109,6 +125,7 @@ export default function RootLayout() {
             <Stack.Screen name="(onboarding)" />
           </Stack>
           <StatusBar style="auto" />
+          <ToastManager config={toastConfig} useModal={false} />
         </ModalProvider>
       </ThemeProvider>
     </SQLiteProvider>

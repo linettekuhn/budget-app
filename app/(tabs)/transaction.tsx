@@ -17,7 +17,6 @@ import Octicons from "@expo/vector-icons/Octicons";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Keyboard,
   Platform,
   StyleSheet,
@@ -26,6 +25,7 @@ import {
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Toast } from "toastify-react-native";
 
 export default function Transaction() {
   const colorScheme = useColorScheme();
@@ -80,7 +80,10 @@ export default function Transaction() {
 
       await DatabaseService.addTransaction(transaction);
       await checkBadges();
-      Alert.alert("Success", "Transaction added successfully");
+      Toast.show({
+        type: "success",
+        text1: "Transaction added!",
+      });
 
       setTransactionName("");
       setRawAmount("");
@@ -89,9 +92,15 @@ export default function Transaction() {
       setCategory(null);
     } catch (error: unknown) {
       if (error instanceof Error) {
-        Alert.alert("Error", error.message);
+        Toast.show({
+          type: "error",
+          text1: error.message,
+        });
       } else {
-        Alert.alert("An error ocurred saving transaction");
+        Toast.show({
+          type: "error",
+          text1: "An error ocurred saving transaction",
+        });
       }
     }
   };

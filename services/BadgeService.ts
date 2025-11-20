@@ -1,6 +1,6 @@
 import badgesJson from "@/assets/data/badges.json";
 import { BadgeCriteriaType, BadgeDefinition } from "@/types";
-import { Alert } from "react-native";
+import { Toast } from "toastify-react-native";
 import DatabaseService from "./DatabaseService";
 
 const badges = badgesJson as BadgeDefinition[];
@@ -38,9 +38,11 @@ export class BadgeService {
 
       const award = await handler(badge);
       if (award) {
-        // TODO: badge earned message
         await DatabaseService.unlockBadge(badge.key);
-        Alert.alert(`Badge earned: ${badge.title}`);
+        Toast.show({
+          type: "badge",
+          text1: `Badge Earned: ${badge.title}`,
+        });
       }
     }
   }

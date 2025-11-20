@@ -3,8 +3,9 @@ import CapsuleButton from "@/components/ui/capsule-button";
 import { Colors } from "@/constants/theme";
 import DatabaseService from "@/services/DatabaseService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Alert, ScrollView, StyleSheet, useColorScheme } from "react-native";
+import { ScrollView, StyleSheet, useColorScheme } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Toast } from "toastify-react-native";
 
 export default function Profile() {
   const colorScheme = useColorScheme();
@@ -14,12 +15,18 @@ export default function Profile() {
   // TODO: DEV ONLY delete later
   const resetDatabase = async () => {
     await DatabaseService.clearTransactions();
-    Alert.alert("database cleared!");
+    Toast.show({
+      type: "success",
+      text1: "Database cleared!",
+    });
   };
 
   const resetOnboarding = async () => {
     await AsyncStorage.setItem("completedOnboarding", "false");
-    Alert.alert("onboarding reset!");
+    Toast.show({
+      type: "success",
+      text1: "Onboarding reset!",
+    });
   };
 
   const resetApp = async () => {
@@ -28,8 +35,15 @@ export default function Profile() {
 
       await DatabaseService.resetTables();
 
-      console.log("App data cleared successfully!");
+      Toast.show({
+        type: "success",
+        text1: "App data cleared successfully!",
+      });
     } catch (error) {
+      Toast.show({
+        type: "success",
+        text1: "Error clearing app data",
+      });
       console.error("Error clearing app data:", error);
     }
   };

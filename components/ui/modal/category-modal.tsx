@@ -7,7 +7,6 @@ import { CategorySpend } from "@/types";
 import { formatAmountDisplay } from "@/utils/formatAmountDisplay";
 import { useState } from "react";
 import {
-  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -22,6 +21,7 @@ import ColorPicker, {
   Panel3,
   Swatches,
 } from "reanimated-color-picker";
+import { Toast } from "toastify-react-native";
 import AmountDisplay from "../amount-display";
 import CapsuleButton from "../capsule-button";
 import CapsuleInput from "../capsule-input-box";
@@ -92,9 +92,15 @@ export default function CustomCategory({
       await checkBadges();
     } catch (error: unknown) {
       if (error instanceof Error) {
-        Alert.alert("Error", error.message);
+        Toast.show({
+          type: "error",
+          text1: error.message,
+        });
       } else {
-        Alert.alert("An error occurred saving category");
+        Toast.show({
+          type: "error",
+          text1: "An error occurred saving category",
+        });
       }
     } finally {
       onComplete();

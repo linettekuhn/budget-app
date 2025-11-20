@@ -12,7 +12,6 @@ import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Keyboard,
   Platform,
   StyleSheet,
@@ -21,6 +20,7 @@ import {
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Toast } from "toastify-react-native";
 
 export default function BudgetOnboarding() {
   const colorScheme = useColorScheme();
@@ -65,9 +65,15 @@ export default function BudgetOnboarding() {
       router.push("/salary");
     } catch (error: unknown) {
       if (error instanceof Error) {
-        Alert.alert("Error", error.message);
+        Toast.show({
+          type: "error",
+          text1: error.message,
+        });
       } else {
-        Alert.alert("An error ocurred saving budgets");
+        Toast.show({
+          type: "error",
+          text1: "An error ocurred saving budgets",
+        });
       }
     }
   };

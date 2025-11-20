@@ -133,6 +133,8 @@ export default class DatabaseService {
       DROP TABLE IF EXISTS transactions;
       DROP TABLE IF EXISTS categories;
       DROP TABLE IF EXISTS salary;
+      DROP TABLE IF EXISTS badges;
+      DROP TABLE IF EXISTS app_meta;
     `);
 
     await this.initalize();
