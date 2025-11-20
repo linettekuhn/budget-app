@@ -115,11 +115,11 @@ export default function CustomCategory({
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      style={{ paddingVertical: 0 }}
-    >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={{ paddingVertical: 0 }}
+      >
         <ThemedView style={styles.categoryForm}>
           <ThemedText style={styles.heading} type="h1">
             Create a Category
@@ -155,13 +155,19 @@ export default function CustomCategory({
                 text="NEED"
                 bgFocused={Colors[colorScheme ?? "light"].primary[300]}
                 selected={typeSelected === "NEED"}
-                onPress={() => setType("NEED")}
+                onPress={() => {
+                  Keyboard.dismiss();
+                  setType("NEED");
+                }}
               />
               <CapsuleToggle
                 text="WANT"
                 bgFocused={Colors[colorScheme ?? "light"].primary[300]}
                 selected={typeSelected === "WANT"}
-                onPress={() => setType("WANT")}
+                onPress={() => {
+                  Keyboard.dismiss();
+                  setType("WANT");
+                }}
               />
             </ThemedView>
           </ThemedView>
@@ -214,8 +220,8 @@ export default function CustomCategory({
             bgFocused={categoryColor}
           />
         </ThemedView>
-      </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
   );
 }
 

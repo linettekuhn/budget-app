@@ -1,12 +1,13 @@
 import { Colors } from "@/constants/theme";
-import { ComponentType, ReactNode } from "react";
+import { ComponentType, ReactNode, useRef, useState } from "react";
 import {
+  Pressable,
   StyleSheet,
   TextInput,
   TextInputProps,
   useColorScheme,
-  View,
 } from "react-native";
+import tinycolor from "tinycolor2";
 
 type Props = TextInputProps & {
   value: string;
@@ -31,13 +32,31 @@ export default function CapsuleInput({
   const colorScheme = useColorScheme();
   const bgDefault = Colors[colorScheme ?? "light"].primary[300];
   const color = Colors[colorScheme ?? "light"].text;
+  const inputRef = useRef<TextInput>(null);
+  const focusColor =
+    colorScheme === "dark"
+      ? tinycolor(bgDefault).lighten(10).toHexString()
+      : tinycolor(bgDefault).darken(10).toHexString();
+  const [focused, setFocused] = useState(false);
 
   return (
-    <View style={[styles.inputContainer, { backgroundColor: bgDefault }]}>
+    <Pressable
+      onPress={() => inputRef.current?.focus()}
+      style={[
+        styles.inputContainer,
+        {
+          backgroundColor: bgDefault,
+          borderColor: focused ? focusColor : bgDefault,
+        },
+      ]}
+    >
       {IconComponent && iconName && (
         <IconComponent name={iconName} size={17} color={color + "88"} />
       )}
       <TextInput
+        ref={inputRef}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
         style={[styles.textInput, { color: textColor ?? color }]}
         value={value}
         onChangeText={onChangeText}
@@ -46,7 +65,7 @@ export default function CapsuleInput({
         {...rest}
       />
       {children}
-    </View>
+    </Pressable>
   );
 }
 
@@ -57,9 +76,10 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     flexGrow: 1,
     borderRadius: 25,
-    paddingVertical: 10,
-    paddingHorizontal: 15,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
     gap: 10,
+    borderWidth: 4,
   },
   textInput: {
     flex: 1,

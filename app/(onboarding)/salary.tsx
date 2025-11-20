@@ -98,15 +98,15 @@ export default function SalaryOnboarding() {
         { backgroundColor: Colors[colorScheme ?? "light"].background },
       ]}
     >
-      <KeyboardAwareScrollView
-        keyboardShouldPersistTaps="handled"
-        extraScrollHeight={Platform.OS === "ios" ? 80 : 100}
-        enableOnAndroid={true}
-        contentContainerStyle={styles.container}
-      >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <KeyboardAwareScrollView
+          keyboardShouldPersistTaps="handled"
+          extraScrollHeight={Platform.OS === "ios" ? 80 : 100}
+          enableOnAndroid={true}
+          contentContainerStyle={styles.container}
+        >
           <ThemedView style={styles.main}>
-            <ThemedText type="h1">Add Your Monthly Income</ThemedText>
+            <ThemedText type="h1">Add Your Income</ThemedText>
             <ThemedText type="h4">
               Entering your salary helps us calculate savings.
             </ThemedText>
@@ -117,31 +117,46 @@ export default function SalaryOnboarding() {
                 text={"Hourly"}
                 bgFocused={Colors[colorScheme ?? "light"].primary[500]}
                 selected={salaryType === "Hourly"}
-                onPress={() => setSalaryType("Hourly")}
+                onPress={() => {
+                  Keyboard.dismiss();
+                  setSalaryType("Hourly");
+                }}
               />
               <CapsuleToggle
                 text={"Biweekly"}
                 bgFocused={Colors[colorScheme ?? "light"].primary[500]}
                 selected={salaryType === "Biweekly"}
-                onPress={() => setSalaryType("Biweekly")}
+                onPress={() => {
+                  Keyboard.dismiss();
+                  setSalaryType("Biweekly");
+                }}
               />
               <CapsuleToggle
                 text={"Monthly"}
                 bgFocused={Colors[colorScheme ?? "light"].primary[500]}
                 selected={salaryType === "Monthly"}
-                onPress={() => setSalaryType("Monthly")}
+                onPress={() => {
+                  Keyboard.dismiss();
+                  setSalaryType("Monthly");
+                }}
               />
               <CapsuleToggle
                 text={"Yearly"}
                 bgFocused={Colors[colorScheme ?? "light"].primary[500]}
                 selected={salaryType === "Yearly"}
-                onPress={() => setSalaryType("Yearly")}
+                onPress={() => {
+                  Keyboard.dismiss();
+                  setSalaryType("Yearly");
+                }}
               />
               <CapsuleToggle
                 text={"Varies"}
                 bgFocused={Colors[colorScheme ?? "light"].primary[500]}
                 selected={salaryType === "Varies"}
-                onPress={() => setSalaryType("Varies")}
+                onPress={() => {
+                  Keyboard.dismiss();
+                  setSalaryType("Varies");
+                }}
               />
             </ThemedView>
             {salaryType === "Hourly" && (
@@ -241,8 +256,8 @@ export default function SalaryOnboarding() {
               onPress={saveSalary}
             />
           </ThemedView>
-        </TouchableWithoutFeedback>
-      </KeyboardAwareScrollView>
+        </KeyboardAwareScrollView>
+      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 }

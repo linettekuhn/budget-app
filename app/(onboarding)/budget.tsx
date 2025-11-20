@@ -98,13 +98,13 @@ export default function BudgetOnboarding() {
         { backgroundColor: Colors[colorScheme ?? "light"].background },
       ]}
     >
-      <KeyboardAwareScrollView
-        keyboardShouldPersistTaps="handled"
-        extraScrollHeight={Platform.OS === "ios" ? 80 : 100}
-        enableOnAndroid={true}
-        contentContainerStyle={styles.container}
-      >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <KeyboardAwareScrollView
+          keyboardShouldPersistTaps="handled"
+          extraScrollHeight={Platform.OS === "ios" ? 80 : 100}
+          enableOnAndroid={true}
+          contentContainerStyle={styles.container}
+        >
           <ThemedView style={styles.main}>
             <ThemedText type="h1">Set Your Monthly Budgets</ThemedText>
             <ThemedText type="h5" style={{ paddingHorizontal: 20 }}>
@@ -151,8 +151,8 @@ export default function BudgetOnboarding() {
               onPress={saveBudgets}
             />
           </ThemedView>
-        </TouchableWithoutFeedback>
-      </KeyboardAwareScrollView>
+        </KeyboardAwareScrollView>
+      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 }

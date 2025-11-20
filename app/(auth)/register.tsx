@@ -43,13 +43,13 @@ export default function Register() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
-      <KeyboardAwareScrollView
-        keyboardShouldPersistTaps="handled"
-        extraScrollHeight={Platform.OS === "ios" ? 80 : 100}
-        enableOnAndroid={true}
-        contentContainerStyle={styles.container}
-      >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <KeyboardAwareScrollView
+          keyboardShouldPersistTaps="handled"
+          extraScrollHeight={Platform.OS === "ios" ? 80 : 100}
+          enableOnAndroid={true}
+          contentContainerStyle={styles.container}
+        >
           <ThemedView style={styles.main}>
             <ThemedView style={styles.form}>
               <ThemedView style={styles.header}>
@@ -102,8 +102,8 @@ export default function Register() {
               </ThemedView>
             </ThemedView>
           </ThemedView>
-        </TouchableWithoutFeedback>
-      </KeyboardAwareScrollView>
+        </KeyboardAwareScrollView>
+      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 }

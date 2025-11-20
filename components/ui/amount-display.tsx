@@ -1,8 +1,14 @@
 import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
-import { useRef } from "react";
-import { Pressable, StyleSheet, TextInput, useColorScheme } from "react-native";
+import { useRef, useState } from "react";
+import {
+  Pressable,
+  StyleSheet,
+  TextInput,
+  useColorScheme,
+  View,
+} from "react-native";
+import tinycolor from "tinycolor2";
 
 type AmountDisplayProps = {
   displayAmount: string;
@@ -37,10 +43,26 @@ export default function AmountDisplay({
   const textColor = Colors[colorScheme ?? "light"].text;
   const bgColor = Colors[colorScheme ?? "light"].primary[300];
   const inputRef = useRef<TextInput>(null);
+  const focusColor =
+    colorScheme === "dark"
+      ? tinycolor(bgColor).lighten(10).toHexString()
+      : tinycolor(bgColor).darken(10).toHexString();
+  const [focused, setFocused] = useState(false);
 
   return (
-    <ThemedView style={[styles.amountWrapper, { backgroundColor: bgColor }]}>
-      <Pressable onPress={() => inputRef.current?.focus()}>
+    <View>
+      <Pressable
+        style={[
+          styles.amountWrapper,
+          {
+            backgroundColor: bgColor,
+            borderColor: focused ? focusColor : bgColor,
+          },
+        ]}
+        onPress={() => {
+          inputRef.current?.focus();
+        }}
+      >
         <ThemedText
           numberOfLines={1}
           adjustsFontSizeToFit
@@ -58,8 +80,10 @@ export default function AmountDisplay({
         onChangeText={onChangeText}
         keyboardType="numeric"
         style={styles.hiddenInput}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
       />
-    </ThemedView>
+    </View>
   );
 }
 
@@ -67,17 +91,20 @@ const styles = StyleSheet.create({
   amountWrapper: {
     flexDirection: "row",
     justifyContent: "center",
-    alignItems: "flex-end",
+    alignItems: "center",
     position: "relative",
     borderRadius: 25,
-    paddingVertical: 5,
-    paddingHorizontal: 15,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderWidth: 4,
   },
   amountInput: {
     textAlign: "center",
+    alignSelf: "center",
     padding: 0,
     margin: 0,
     zIndex: 1,
+    includeFontPadding: false,
   },
   hiddenInput: {
     position: "absolute",

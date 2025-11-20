@@ -55,13 +55,13 @@ export default function Login() {
         { backgroundColor: Colors[colorScheme ?? "light"].background },
       ]}
     >
-      <KeyboardAwareScrollView
-        keyboardShouldPersistTaps="handled"
-        extraScrollHeight={Platform.OS === "ios" ? 80 : 100}
-        enableOnAndroid={true}
-        contentContainerStyle={styles.container}
-      >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <KeyboardAwareScrollView
+          keyboardShouldPersistTaps="handled"
+          extraScrollHeight={Platform.OS === "ios" ? 80 : 100}
+          enableOnAndroid={true}
+          contentContainerStyle={styles.container}
+        >
           <ThemedView style={styles.main}>
             <ThemedView style={styles.form}>
               <ThemedView style={styles.header}>
@@ -109,8 +109,8 @@ export default function Login() {
               </Pressable>
             </ThemedView>
           </ThemedView>
-        </TouchableWithoutFeedback>
-      </KeyboardAwareScrollView>
+        </KeyboardAwareScrollView>
+      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 }

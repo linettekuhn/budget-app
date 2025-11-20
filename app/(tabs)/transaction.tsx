@@ -123,13 +123,13 @@ export default function Transaction() {
         { backgroundColor: Colors[colorScheme ?? "light"].background },
       ]}
     >
-      <KeyboardAwareScrollView
-        keyboardShouldPersistTaps="handled"
-        extraScrollHeight={Platform.OS === "ios" ? 80 : 100}
-        enableOnAndroid={true}
-        contentContainerStyle={styles.container}
-      >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <KeyboardAwareScrollView
+          keyboardShouldPersistTaps="handled"
+          extraScrollHeight={Platform.OS === "ios" ? 80 : 100}
+          enableOnAndroid={true}
+          contentContainerStyle={styles.container}
+        >
           <ThemedView style={styles.main}>
             <ThemedView style={styles.options}>
               <AmountDisplay
@@ -162,7 +162,10 @@ export default function Transaction() {
                   IconComponent={Octicons}
                   iconName="arrow-up"
                   selected={typeSelected === "INCOME"}
-                  onPress={() => setType("INCOME")}
+                  onPress={() => {
+                    Keyboard.dismiss();
+                    setType("INCOME");
+                  }}
                 />
                 <CapsuleToggle
                   text="EXPENSE"
@@ -170,7 +173,10 @@ export default function Transaction() {
                   IconComponent={Octicons}
                   iconName="arrow-down"
                   selected={typeSelected === "EXPENSE"}
-                  onPress={() => setType("EXPENSE")}
+                  onPress={() => {
+                    Keyboard.dismiss();
+                    setType("EXPENSE");
+                  }}
                 />
               </ThemedView>
             </ThemedView>
@@ -191,12 +197,18 @@ export default function Transaction() {
                       text={category.name}
                       bgFocused={categoryColor}
                       selected={categorySelected?.id === category.id}
-                      onPress={() => setCategory(category)}
+                      onPress={() => {
+                        Keyboard.dismiss();
+                        setCategory(category);
+                      }}
                     />
                   );
                 })}
                 <CapsuleButton
-                  onPress={handleOpen}
+                  onPress={() => {
+                    Keyboard.dismiss();
+                    handleOpen();
+                  }}
                   text="New Category"
                   bgFocused={btnColor}
                   bgDefault={Colors[colorScheme ?? "light"].primary[200]}
@@ -208,12 +220,15 @@ export default function Transaction() {
 
             <CapsuleButton
               text="ADD TRANSACTION"
-              onPress={handleTransaction}
+              onPress={() => {
+                Keyboard.dismiss();
+                handleTransaction();
+              }}
               bgFocused={btnColor}
             />
           </ThemedView>
-        </TouchableWithoutFeedback>
-      </KeyboardAwareScrollView>
+        </KeyboardAwareScrollView>
+      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 }

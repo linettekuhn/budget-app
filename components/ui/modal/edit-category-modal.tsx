@@ -105,10 +105,10 @@ export default function EditCategory({ onComplete, category }: Props) {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
         <ThemedView style={styles.categoryForm}>
           <ThemedText style={styles.heading} type="h1">
             Edit {category.name}
@@ -135,13 +135,19 @@ export default function EditCategory({ onComplete, category }: Props) {
                 text="NEED"
                 bgFocused={Colors[colorScheme ?? "light"].primary[300]}
                 selected={typeSelected === "NEED"}
-                onPress={() => setType("NEED")}
+                onPress={() => {
+                  Keyboard.dismiss();
+                  setType("NEED");
+                }}
               />
               <CapsuleToggle
                 text="WANT"
                 bgFocused={Colors[colorScheme ?? "light"].primary[300]}
                 selected={typeSelected === "WANT"}
-                onPress={() => setType("WANT")}
+                onPress={() => {
+                  Keyboard.dismiss();
+                  setType("WANT");
+                }}
               />
             </ThemedView>
           </ThemedView>
@@ -196,8 +202,8 @@ export default function EditCategory({ onComplete, category }: Props) {
             bgFocused={categoryColor}
           />
         </ThemedView>
-      </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
   );
 }
 
