@@ -2,9 +2,22 @@ export type BadgeDefinition = {
   key: string;
   title: string;
   description: string;
-  icon: string;
   criteria_type: BadgeCriteriaType;
   criteria_value?: number | string;
+};
+
+export type BadgeType = {
+  key: string;
+  title: string;
+  description: string;
+  unlocked: boolean;
+  unlocked_at: Date;
+};
+
+export type AwardedBadge = {
+  badge_key: string;
+  unlocked: number;
+  unlocked_at: string;
 };
 
 export type BadgeCriteriaType =

@@ -1,5 +1,6 @@
 import badgesJson from "@/assets/data/badges.json";
 import {
+  AwardedBadge,
   BadgeDefinition,
   CategorySpend,
   CategoryType,
@@ -488,5 +489,16 @@ export default class DatabaseService {
 
       return totalMonthsPassed > 0 ? totalMonthsPassed : 0;
     }
+  }
+
+  static async getBadges() {
+    const db = await this.getDatabase();
+
+    return await db.getAllAsync<AwardedBadge>(
+      `
+      SELECT badge_key, unlocked, unlocked_at
+      FROM badges
+    `
+    );
   }
 }
