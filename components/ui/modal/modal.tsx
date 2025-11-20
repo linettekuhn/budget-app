@@ -1,5 +1,12 @@
 import { ThemedView } from "@/components/themed-view";
-import { Dimensions, Pressable, ScrollView, StyleSheet } from "react-native";
+import { Colors } from "@/constants/theme";
+import {
+  Dimensions,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  useColorScheme,
+} from "react-native";
 import Modal from "react-native-modal";
 type Props = {
   onClose: () => void;
@@ -10,6 +17,7 @@ type Props = {
 const { width, height } = Dimensions.get("window");
 
 export default function AppModal({ onClose, visible, children }: Props) {
+  const colorScheme = useColorScheme();
   return (
     <Modal
       isVisible={visible}
@@ -19,6 +27,7 @@ export default function AppModal({ onClose, visible, children }: Props) {
       animationInTiming={300}
       backdropOpacity={0.5}
       style={styles.modalContainer}
+      backdropColor={Colors[colorScheme ?? "light"].primary[300]}
     >
       <Pressable
         onPress={(e) => e.stopPropagation()}

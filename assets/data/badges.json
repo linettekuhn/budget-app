@@ -1,8 +1,8 @@
 [
   {
     "key": "first_transaction",
-    "title": "Baby’s First Steps",
-    "description": "First transaction",
+    "title": "First Steps",
+    "description": "Add your first transaction",
     "criteria_type": "first_transaction"
   },
   {

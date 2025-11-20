@@ -25,9 +25,12 @@ import ShopaholicIcon from "@/assets/icons/badges/Shopaholic_Icon.png";
 import SmartSpenderIcon from "@/assets/icons/badges/Smart_Spender_Icon.png";
 import SteadyPlannerIcon from "@/assets/icons/badges/Steady_Planner_Icon.png";
 import { ThemedText } from "@/components/themed-text";
+import BadgeModal from "@/components/ui/modal/badge-modal";
+import AppModal from "@/components/ui/modal/modal";
 import { useBadges } from "@/hooks/useBadges";
+import { BadgeType } from "@/types";
 import { useFocusEffect } from "expo-router";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 
 export default function Rewards() {
   const colorScheme = useColorScheme();
@@ -48,6 +51,8 @@ export default function Rewards() {
   };
 
   const { badges, loading, reload } = useBadges();
+  const [showBadgeInfo, setShowBadgeInfo] = useState(false);
+  const [selectedBadge, setSelectedBadge] = useState<BadgeType | null>(null);
 
   // check unlocked badges when user focuses tab
   useFocusEffect(
@@ -59,6 +64,16 @@ export default function Rewards() {
   if (loading) {
     return <ActivityIndicator size="large" />;
   }
+
+  const openBadgeModal = (badge: BadgeType) => {
+    setSelectedBadge(badge);
+    setShowBadgeInfo(true);
+  };
+
+  const closeBadgeModal = () => {
+    setShowBadgeInfo(false);
+    setSelectedBadge(null);
+  };
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
@@ -78,7 +93,13 @@ export default function Rewards() {
             <View style={styles.badgesWrapper}>
               {badges.map((badge) =>
                 badge.unlocked ? (
-                  <Pressable style={styles.badge} key={badge.key}>
+                  <Pressable
+                    style={styles.badge}
+                    key={badge.key}
+                    onPress={() => {
+                      openBadgeModal(badge);
+                    }}
+                  >
                     <Image
                       resizeMode="contain"
                       style={styles.badgeIcon}
@@ -96,6 +117,14 @@ export default function Rewards() {
                 )
               )}
             </View>
+            {showBadgeInfo && selectedBadge && (
+              <AppModal visible={showBadgeInfo} onClose={closeBadgeModal}>
+                <BadgeModal
+                  badge={selectedBadge}
+                  icon={iconMap[selectedBadge.key]}
+                />
+              </AppModal>
+            )}
           </ThemedView>
         </ThemedView>
       </ScrollView>
@@ -127,6 +156,7 @@ const styles = StyleSheet.create({
 
   badge: {
     flexBasis: "29.33%",
+    width: 120,
     height: 120,
     justifyContent: "center",
     alignItems: "center",
@@ -134,5 +164,6 @@ const styles = StyleSheet.create({
 
   badgeIcon: {
     height: "100%",
+    width: "100%",
   },
 });
