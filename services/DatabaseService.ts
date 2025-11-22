@@ -4,10 +4,12 @@ import {
   BadgeDefinition,
   CategorySpend,
   CategoryType,
+  RecurringTransaction,
   Salary,
   TransactionType,
 } from "@/types";
 import * as SQLite from "expo-sqlite";
+import { rrulestr } from "rrule";
 const badges = badgesJson as BadgeDefinition[];
 type CountResult = { count: number };
 
@@ -48,17 +50,28 @@ export default class DatabaseService {
           name TEXT NOT NULL,
           amount DECIMAL(13, 2) NOT NULL,
           type TEXT NOT NULL,
-          date TEXT DEFAULT (datetime('now')),
+          date TEXT DEFAULT (CURRENT_TIMESTAMP),
           categoryId INTEGER,
           FOREIGN KEY (categoryId) REFERENCES categories(id)
-          );
+        );
+        CREATE TABLE IF NOT EXISTS recurring_transactions (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          amount DECIMAL(13, 2) NOT NULL,
+          type TEXT NOT NULL,
+          date TEXT DEFAULT (CURRENT_TIMESTAMP),
+          categoryId INTEGER,
+          rrule TEXT NOT NULL,
+          lastGenerated TEXT DEFAULT (CURRENT_TIMESTAMP),
+          FOREIGN KEY (categoryId) REFERENCES categories(id)
+        );
         CREATE TABLE IF NOT EXISTS salary (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           type TEXT NOT NULL,
           amount DECIMAL(13, 2) NOT NULL,
           monthly DECIMAL(13, 2) NOT NULL,
           hoursPerWeek DECIMAL(5, 2)
-          )
+        )
           `);
 
     await this.seedDefaultAppData(db);
@@ -131,6 +144,7 @@ export default class DatabaseService {
 
     await db.execAsync(`
       DROP TABLE IF EXISTS transactions;
+      DROP TABLE IF EXISTS recurring_transactions;
       DROP TABLE IF EXISTS categories;
       DROP TABLE IF EXISTS salary;
       DROP TABLE IF EXISTS badges;
@@ -304,6 +318,68 @@ export default class DatabaseService {
         transaction.date,
       ]
     );
+  }
+
+  static async addRecurringTransaction(transaction: {
+    name: string;
+    amount: number;
+    type: "income" | "expense";
+    categoryId: number;
+    date: string;
+    rrule: string;
+  }) {
+    const db = await this.getDatabase();
+
+    await db.runAsync(
+      `INSERT INTO recurring_transactions (name, amount, type, categoryId, date, rrule)
+       VALUES (?, ?, ?, ?, ?, ?);`,
+      [
+        transaction.name,
+        transaction.amount,
+        transaction.type,
+        transaction.categoryId,
+        transaction.date,
+        transaction.rrule,
+      ]
+    );
+  }
+
+  static async addMissedRecurringTransactions() {
+    const db = await this.getDatabase();
+
+    const recurringTransactions = await db.getAllAsync<RecurringTransaction>(
+      "SELECT * FROM recurring_transactions"
+    );
+
+    for (const recurring of recurringTransactions) {
+      const last = new Date(recurring.lastGenerated);
+      const now = new Date();
+      const rrule = rrulestr(recurring.rrule);
+      const datesMissed = rrule.between(last, now);
+
+      // add a transaction on each missed date
+      if (!datesMissed.length) continue;
+      for (const occurrenceDate of datesMissed) {
+        this.addTransaction({
+          name: recurring.name,
+          amount: recurring.amount,
+          type: recurring.type,
+          categoryId: recurring.categoryId,
+          date: occurrenceDate.toISOString(),
+        });
+      }
+
+      // update last generated date
+      const lastGenerated = datesMissed[datesMissed.length - 1];
+      await db.runAsync(
+        `
+        UPDATE recurring_transactions
+        SET lastGenerated = ?
+        WHERE id = ?
+      `,
+        [lastGenerated.toISOString(), recurring.id]
+      );
+    }
   }
 
   static async getCategoryTransactions(

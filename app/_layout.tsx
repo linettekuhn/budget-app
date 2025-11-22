@@ -71,6 +71,9 @@ export default function RootLayout() {
         // check if any badges were awarded while app was closed
         await checkBadges();
 
+        // add any recurring transactions that happened while app was closed
+        await DatabaseService.addMissedRecurringTransactions();
+
         // check if user has completed onboarding
         const hasCompleted = await AsyncStorage.getItem("completedOnboarding");
         console.log("Onboarding complete:", hasCompleted);
