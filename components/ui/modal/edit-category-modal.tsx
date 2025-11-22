@@ -3,7 +3,7 @@ import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
 import DatabaseService from "@/services/DatabaseService";
 import { CategoryType } from "@/types";
-import { formatAmountDisplay } from "@/utils/formatAmountDisplay";
+import { formatAmountDisplay } from "@/utils/formatDisplay";
 import { useEffect, useState } from "react";
 import {
   Keyboard,

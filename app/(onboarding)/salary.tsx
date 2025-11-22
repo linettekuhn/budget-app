@@ -6,7 +6,7 @@ import CapsuleNumberInput from "@/components/ui/capsule-input-number";
 import CapsuleToggle from "@/components/ui/capsule-toggle";
 import { Colors } from "@/constants/theme";
 import DatabaseService from "@/services/DatabaseService";
-import { formatAmountDisplay } from "@/utils/formatAmountDisplay";
+import { formatAmountDisplay } from "@/utils/formatDisplay";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";

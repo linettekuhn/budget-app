@@ -9,6 +9,8 @@ type Props = {
   displayAmount: string;
   rawAmount: string;
   onChangeText: (text: string) => void;
+  min?: number;
+  max?: number;
   textType?:
     | "displayLarge"
     | "displayMedium"
@@ -28,10 +30,12 @@ type Props = {
     | "link";
 };
 
-export default function CapsuleNumberInput({
+export default function CapsuleNumberInteger({
   displayAmount,
   rawAmount,
   onChangeText,
+  min,
+  max,
   textType,
 }: Props) {
   const colorScheme = useColorScheme();
@@ -43,6 +47,24 @@ export default function CapsuleNumberInput({
       ? tinycolor(bgColor).lighten(10).toHexString()
       : tinycolor(bgColor).darken(10).toHexString();
   const [focused, setFocused] = useState(false);
+
+  const handleChange = (text: string) => {
+    // keep only whole numbers
+    let filtered = text.replace(/[^0-9]/g, "");
+
+    if (filtered === "") {
+      onChangeText("");
+      return;
+    }
+
+    let numeric = parseInt(filtered, 10);
+
+    // apply min + max if provided
+    if (min !== undefined && numeric < min) numeric = min;
+    if (max !== undefined && numeric > max) numeric = max;
+
+    onChangeText(numeric.toString());
+  };
 
   return (
     <ThemedView
@@ -69,7 +91,7 @@ export default function CapsuleNumberInput({
       <TextInput
         ref={inputRef}
         value={rawAmount}
-        onChangeText={onChangeText}
+        onChangeText={handleChange}
         keyboardType="numeric"
         style={styles.hiddenInput}
         onFocus={() => setFocused(true)}

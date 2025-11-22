@@ -12,3 +12,14 @@ export const formatAmountDisplay = (numericOnly: string): string => {
 
   return `${integer}.${decimal}`;
 };
+
+export const formatIntegerDisplay = (numericOnly: string): string => {
+  // empty or all zeros return "0"
+  if (!numericOnly || /^0+$/.test(numericOnly)) return "0";
+
+  // remove leading zeros
+  const cleaned = String(parseInt(numericOnly, 10));
+
+  // add commas
+  return cleaned.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+};

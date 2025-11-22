@@ -6,7 +6,7 @@ import { Colors } from "@/constants/theme";
 import { useCategories } from "@/hooks/useCategories";
 import DatabaseService from "@/services/DatabaseService";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
-import { formatAmountDisplay } from "@/utils/formatAmountDisplay";
+import { formatAmountDisplay } from "@/utils/formatDisplay";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";

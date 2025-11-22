@@ -4,7 +4,7 @@ import { Colors } from "@/constants/theme";
 import { useBadgeCheck } from "@/hooks/useBadgeCheck";
 import DatabaseService from "@/services/DatabaseService";
 import { CategorySpend } from "@/types";
-import { formatAmountDisplay } from "@/utils/formatAmountDisplay";
+import { formatAmountDisplay } from "@/utils/formatDisplay";
 import { useState } from "react";
 import {
   Keyboard,
