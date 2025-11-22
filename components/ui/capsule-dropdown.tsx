@@ -6,12 +6,12 @@ import tinycolor from "tinycolor2";
 import { ThemedText } from "../themed-text";
 import AppModal from "./modal/modal";
 
-type Option = { label: string; value: string };
+type Option = { label: string; value: any };
 
 type Props = {
-  value: string;
+  value: any;
   options: Option[];
-  onChange: (value: string) => void;
+  onChange: (value: any) => void;
   textType?:
     | "displayLarge"
     | "displayMedium"

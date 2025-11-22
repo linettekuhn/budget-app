@@ -19,8 +19,9 @@ import {
   formatIntegerDisplay,
 } from "@/utils/formatDisplay";
 import Octicons from "@expo/vector-icons/Octicons";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { Checkbox } from "expo-checkbox";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Keyboard,
@@ -32,13 +33,13 @@ import {
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Options, RRule, Weekday } from "rrule";
 import { Toast } from "toastify-react-native";
 
 export default function Transaction() {
   const colorScheme = useColorScheme();
   const btnColor = Colors[colorScheme ?? "light"].secondary[500];
   const now = new Date();
-  const rruleDays = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
 
   const [rawAmount, setRawAmount] = useState("0");
   const [displayAmount, setDisplayAmount] = useState("0.00");
@@ -46,21 +47,73 @@ export default function Transaction() {
   const [typeSelected, setType] = useState("");
   const [categorySelected, setCategory] = useState<CategoryType | null>(null);
 
+  const [startDate, setStartDate] = useState(new Date());
   const [isRecurring, setRecurring] = useState(false);
   const [intervalRaw, setIntervalRaw] = useState("1");
   const [intervalDisplay, setIntervalDisplay] = useState("1");
-  const [frequency, setFrequency] = useState("WEEK");
-  const [weekday, setWeekday] = useState(rruleDays[now.getDay()]);
-  const [monthDay, setMonthDay] = useState(String(now.getDate()));
-  const [yearMonth, setYearMonth] = useState(String(now.getMonth() + 1));
+  const [frequency, setFrequency] = useState(RRule.WEEKLY);
+  const [weekday, setWeekday] = useState<Weekday>(RRule.MO);
+  const [monthDay, setMonthDay] = useState(1);
+  const [yearMonth, setYearMonth] = useState(now.getMonth() + 1);
 
   const { openModal, closeModal } = useModal();
   const { categories, loading, reload } = useCategories();
   const { checkBadges } = useBadgeCheck();
 
+  const recurrenceOptions = [
+    { label: "Week", value: RRule.WEEKLY },
+    { label: "Month", value: RRule.MONTHLY },
+    { label: "Year", value: RRule.YEARLY },
+  ];
+  const weekdays = useMemo(
+    () => [
+      { label: "Monday", value: RRule.MO },
+      { label: "Tuesday", value: RRule.TU },
+      { label: "Wednesday", value: RRule.WE },
+      { label: "Thursday", value: RRule.TH },
+      { label: "Friday", value: RRule.FR },
+      { label: "Saturday", value: RRule.SA },
+      { label: "Sunday", value: RRule.SU },
+    ],
+    []
+  );
+  const months = useMemo(
+    () => [
+      { label: "January", value: 1 },
+      { label: "February", value: 2 },
+      { label: "March", value: 3 },
+      { label: "April", value: 4 },
+      { label: "May", value: 5 },
+      { label: "June", value: 6 },
+      { label: "July", value: 7 },
+      { label: "August", value: 8 },
+      { label: "September", value: 9 },
+      { label: "October", value: 10 },
+      { label: "November", value: 11 },
+      { label: "December", value: 12 },
+    ],
+    []
+  );
+
   useEffect(() => {
     reload();
   }, [reload]);
+
+  useEffect(() => {
+    const weekdayOption = weekdays.find(
+      (weekday) => weekday.value.weekday === startDate.getDay()
+    );
+    if (weekdayOption) {
+      setWeekday(weekdayOption.value);
+    }
+    setMonthDay(startDate.getDate());
+    const monthOption = months.find(
+      (month) => month.value === startDate.getMonth() + 1
+    );
+    if (monthOption) {
+      setYearMonth(monthOption.value);
+    }
+  }, [startDate, months, weekdays]);
 
   const handleOpen = () => {
     openModal(
@@ -92,7 +145,7 @@ export default function Transaction() {
         amount: parseFloat((Number(rawAmount) / 100).toFixed(2)),
         type: typeSelected.toLowerCase() as "income" | "expense",
         categoryId: categorySelected.id,
-        date: new Date().toISOString(),
+        date: startDate.toISOString(),
       };
 
       if (isRecurring) {
@@ -100,26 +153,54 @@ export default function Transaction() {
           throw new Error("Interval must be at least 1");
         }
 
-        // build RRULE string
-        let rrule = `FREQ=${frequency};INTERVAL=${Number(intervalRaw)}`;
+        const year = startDate.getUTCFullYear();
+        const month = startDate.getUTCMonth();
+        const day = startDate.getUTCDate();
+        const hours = startDate.getUTCHours();
+        const minutes = startDate.getUTCMinutes();
+        const seconds = startDate.getUTCSeconds();
+        const utcStartDate = new Date(
+          year,
+          month,
+          day,
+          hours,
+          minutes,
+          seconds
+        );
+
+        // build RRULE options object
+        const rruleOptions: Partial<Options> = {
+          freq: frequency,
+          interval: Number(intervalRaw),
+          dtstart: utcStartDate,
+        };
 
         switch (frequency) {
-          case "WEEK":
-            rrule += `;BYDAY=${weekday}`;
+          case RRule.WEEKLY:
+            rruleOptions.byweekday = weekday;
             break;
-          case "MONTH":
-            rrule += `;BYMONTHDAY=${monthDay}`;
+          case RRule.MONTHLY:
+            rruleOptions.bymonthday = Number(monthDay);
             break;
-          case "YEAR":
-            rrule += `;BYMONTH=${yearMonth};BYMONTHDAY=${monthDay}`;
+          case RRule.YEARLY:
+            rruleOptions.bymonth = Number(yearMonth);
+            rruleOptions.bymonthday = Number(monthDay);
             break;
-          default:
-            break;
+        }
+
+        // create rrule instance with options
+        const rrule = new RRule(rruleOptions);
+
+        // compute most recent recurrence date
+        const lastDate = rrule.before(new Date(), true);
+
+        if (lastDate) {
+          transaction.date = lastDate.toISOString();
         }
 
         await DatabaseService.addRecurringTransaction({
           ...transaction,
-          rrule,
+          rrule: rrule.toString(),
         });
         Toast.show({
           type: "success",
@@ -141,10 +222,9 @@ export default function Transaction() {
       setCategory(null);
       setIntervalRaw("1");
       setIntervalDisplay("1");
-      setFrequency("WEEK");
-      setWeekday(rruleDays[now.getDay()]);
-      setMonthDay(String(now.getDate()));
-      setYearMonth(String(now.getMonth() + 1));
+      setFrequency(RRule.WEEKLY);
+      setStartDate(new Date());
+      setRecurring(false);
 
       await checkBadges();
     } catch (error: unknown) {
@@ -176,35 +256,6 @@ export default function Transaction() {
     setIntervalDisplay(formatted);
   };
 
-  const recurrenceOptions = [
-    { label: "Week", value: "WEEK" },
-    { label: "Month", value: "MONTH" },
-    { label: "Year", value: "YEAR" },
-  ];
-  const weekdays = [
-    { label: "Monday", value: "MO" },
-    { label: "Tuesday", value: "TU" },
-    { label: "Wednesday", value: "WE" },
-    { label: "Thursday", value: "TH" },
-    { label: "Friday", value: "FR" },
-    { label: "Saturday", value: "SA" },
-    { label: "Sunday", value: "SU" },
-  ];
-  const months = [
-    { label: "January", value: "1" },
-    { label: "February", value: "2" },
-    { label: "March", value: "3" },
-    { label: "April", value: "4" },
-    { label: "May", value: "5" },
-    { label: "June", value: "6" },
-    { label: "July", value: "7" },
-    { label: "August", value: "8" },
-    { label: "September", value: "9" },
-    { label: "October", value: "10" },
-    { label: "November", value: "11" },
-    { label: "December", value: "12" },
-  ];
-
   if (loading) {
     return <ActivityIndicator size="large" />;
   }
@@ -230,6 +281,28 @@ export default function Transaction() {
                 rawAmount={rawAmount}
                 onChangeText={handleAmountChange}
                 textType="displayLarge"
+              />
+            </ThemedView>
+            <ThemedView style={styles.options}>
+              <ThemedText style={styles.heading} type="h1">
+                Date
+              </ThemedText>
+              <DateTimePicker
+                value={startDate}
+                mode="date"
+                is24Hour={true}
+                display={Platform.OS === "ios" ? "compact" : "default"}
+                onChange={(event, selectedDate?: Date) => {
+                  if (selectedDate) {
+                    setStartDate(selectedDate);
+                  }
+                }}
+                style={{
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: 0,
+                  marginLeft: -10,
+                }}
               />
             </ThemedView>
 
@@ -281,43 +354,43 @@ export default function Transaction() {
                   <ThemedText style={styles.heading} type="h3">
                     on
                   </ThemedText>
-                  {frequency === "WEEK" && (
+                  {frequency === RRule.WEEKLY && (
                     <CapsuleDropdown
                       options={weekdays}
                       value={weekday}
                       onChange={setWeekday}
                     />
                   )}
-                  {frequency === "MONTH" && (
+                  {frequency === RRule.MONTHLY && (
                     <>
                       <ThemedText style={styles.heading} type="h3">
                         the
                       </ThemedText>
                       <CapsuleNumberInteger
-                        displayAmount={monthDay}
-                        rawAmount={monthDay}
+                        displayAmount={monthDay.toString()}
+                        rawAmount={monthDay.toString()}
                         min={1}
                         max={31}
                         textType="bodyLarge"
-                        onChangeText={setMonthDay}
+                        onChangeText={(text) => setMonthDay(Number(text))}
                       />
                       <ThemedText style={styles.heading} type="h3">
                         of the month{" "}
                       </ThemedText>
                     </>
                   )}
-                  {frequency === "YEAR" && (
+                  {frequency === RRule.YEARLY && (
                     <View style={{ flexDirection: "row", gap: 8 }}>
                       <ThemedText style={styles.heading} type="h3">
                         the
                       </ThemedText>
                       <CapsuleNumberInteger
-                        displayAmount={monthDay}
-                        rawAmount={monthDay}
+                        displayAmount={monthDay.toString()}
+                        rawAmount={monthDay.toString()}
                         min={1}
                         max={31}
                         textType="bodyLarge"
-                        onChangeText={setMonthDay}
+                        onChangeText={(text) => setMonthDay(Number(text))}
                       />
                       <ThemedText style={styles.heading} type="h3">
                         of

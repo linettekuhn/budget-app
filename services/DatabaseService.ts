@@ -264,7 +264,7 @@ export default class DatabaseService {
     const existing = await db.getAllAsync<CountResult>(
       "SELECT COUNT(*) as count FROM categories WHERE is_default = 0"
     );
-    console.log("Existing custom categories count:", existing[0].count);
+
     if (existing[0].count > 0) {
       return true;
     }
@@ -331,8 +331,8 @@ export default class DatabaseService {
     const db = await this.getDatabase();
 
     await db.runAsync(
-      `INSERT INTO recurring_transactions (name, amount, type, categoryId, date, rrule)
-       VALUES (?, ?, ?, ?, ?, ?);`,
+      `INSERT INTO recurring_transactions (name, amount, type, categoryId, date, rrule, lastGenerated)
+       VALUES (?, ?, ?, ?, ?, ?, ?);`,
       [
         transaction.name,
         transaction.amount,
@@ -340,8 +340,11 @@ export default class DatabaseService {
         transaction.categoryId,
         transaction.date,
         transaction.rrule,
+        transaction.date,
       ]
     );
+
+    this.addTransaction(transaction);
   }
 
   static async addMissedRecurringTransactions() {
@@ -355,7 +358,7 @@ export default class DatabaseService {
       const last = new Date(recurring.lastGenerated);
       const now = new Date();
       const rrule = rrulestr(recurring.rrule);
-      const datesMissed = rrule.between(last, now);
+      const datesMissed = rrule.between(last, now, false);
 
       // add a transaction on each missed date
       if (!datesMissed.length) continue;
