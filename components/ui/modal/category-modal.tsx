@@ -265,6 +265,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 20,
+    gap: 8,
   },
 
   colorPicker: {

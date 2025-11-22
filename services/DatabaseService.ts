@@ -191,7 +191,7 @@ export default class DatabaseService {
     const db = await this.getDatabase();
 
     // (?, ?) for each category
-    const placeholders = categories.map(() => "(?, ?, ?, ?, 0)").join(", ");
+    const placeholders = categories.map(() => "(?, ?, ?, ?, 1)").join(", ");
 
     // values to fill up parameter placeholders
     const values: (string | number)[] = [];
@@ -218,7 +218,7 @@ export default class DatabaseService {
     const db = await this.getDatabase();
 
     await db.runAsync(
-      `INSERT INTO categories (name, color, type, budget) VALUES (?, ?, ?, ?)`,
+      `INSERT INTO categories (name, color, type, budget, is_default) VALUES (?, ?, ?, ?, 0)`,
       [name, categoryColor, categoryType, budget]
     );
   }
@@ -264,7 +264,7 @@ export default class DatabaseService {
     const existing = await db.getAllAsync<CountResult>(
       "SELECT COUNT(*) as count FROM categories WHERE is_default = 0"
     );
-
+    console.log("Existing custom categories count:", existing[0].count);
     if (existing[0].count > 0) {
       return true;
     }
