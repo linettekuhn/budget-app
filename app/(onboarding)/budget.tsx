@@ -39,7 +39,7 @@ export default function BudgetOnboarding() {
 
     const initial: { [key: number]: { raw: string; display: string } } = {};
     categories.forEach((cat) => {
-      const budget = cat.budget ?? 0;
+      const budget = cat.budget ?? 1;
 
       const raw = Math.round(budget * 100).toString();
       const display = formatAmountDisplay(raw);

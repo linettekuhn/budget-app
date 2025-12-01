@@ -64,7 +64,8 @@ export default function EditCategory({ onComplete, category }: Props) {
         throw new Error("All fields are required");
       }
 
-      if (parseFloat(rawAmount) === 0) throw new Error("Budget cannot be 0");
+      if (parseFloat(rawAmount) < 1)
+        throw new Error("Budget cannot be less than 1");
 
       const budget = parseFloat((Number(rawAmount) / 100).toFixed(2));
       const categoryType = typeSelected.toLowerCase() as "need" | "want";

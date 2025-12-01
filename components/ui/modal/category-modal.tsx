@@ -60,7 +60,8 @@ export default function CustomCategory({
         throw new Error("All fields are required");
       }
 
-      if (parseFloat(rawAmount) === 0) throw new Error("Amount cannot be 0");
+      if (parseFloat(rawAmount) < 1)
+        throw new Error("Budget cannot be less than 1");
 
       // remove extra spaces
       let name = categoryName.trim();
