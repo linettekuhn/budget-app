@@ -24,6 +24,7 @@ import RestaurantsTopIcon from "@/assets/icons/badges/Restaurants_Top_Icon.png";
 import ShopaholicIcon from "@/assets/icons/badges/Shopaholic_Icon.png";
 import SmartSpenderIcon from "@/assets/icons/badges/Smart_Spender_Icon.png";
 import SteadyPlannerIcon from "@/assets/icons/badges/Steady_Planner_Icon.png";
+import FireStreakIcon from "@/assets/icons/streak_icon.png";
 import { ThemedText } from "@/components/themed-text";
 import BadgeModal from "@/components/ui/modal/badge-modal";
 import AppModal from "@/components/ui/modal/modal";
@@ -32,6 +33,7 @@ import { useStreak } from "@/hooks/useStreak";
 import { BadgeType } from "@/types";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
+import Svg, { Text } from "react-native-svg";
 
 export default function Rewards() {
   const colorScheme = useColorScheme();
@@ -82,22 +84,72 @@ export default function Rewards() {
     setSelectedBadge(null);
   };
 
+  const calculateStreakFontSize = (streak: number) => {
+    const digits = String(streak).length;
+
+    if (digits <= 2) {
+      return 60;
+    } else if (digits === 3) {
+      return 48;
+    } else if (digits === 4) {
+      return 40;
+    }
+    return 32;
+  };
+  const streakFontSize = calculateStreakFontSize(currentStreak);
+
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
       <ScrollView contentContainerStyle={styles.container}>
         <ThemedView style={styles.main}>
-          <ThemedText>current streak: {currentStreak}</ThemedText>
+          <ThemedView style={styles.streakHeader}>
+            <View style={styles.streakWrapper}>
+              <Image
+                resizeMode="contain"
+                style={[styles.streakIcon, StyleSheet.absoluteFill]}
+                source={FireStreakIcon}
+              />
+              <Svg height={80} width={80} style={[styles.streak]}>
+                <Text
+                  fill={"none"}
+                  stroke={bgColor}
+                  strokeWidth={10}
+                  strokeLinejoin="round"
+                  fontSize={streakFontSize}
+                  fontFamily="Onest-Black"
+                  textAnchor="middle"
+                  x="50%"
+                  y="100%"
+                  alignmentBaseline="ideographic"
+                >
+                  {String(currentStreak)}
+                </Text>
+                <Text
+                  fill={Colors[colorScheme ?? "light"].text}
+                  stroke={"none"}
+                  fontSize={streakFontSize}
+                  fontFamily="Onest-Black"
+                  textAnchor="middle"
+                  x="50%"
+                  y="100%"
+                  alignmentBaseline="ideographic"
+                >
+                  {String(currentStreak)}
+                </Text>
+              </Svg>
+            </View>
+            <ThemedText type="h2">Smart Spending Streak</ThemedText>
+          </ThemedView>
           <ThemedView
             style={[
               {
                 backgroundColor: Colors[colorScheme ?? "light"].primary[200],
                 gap: 12,
                 borderRadius: 24,
-                paddingVertical: 16,
+                paddingVertical: 8,
               },
             ]}
           >
-            <ThemedText type="displayMedium">Badges</ThemedText>
             <View style={styles.badgesWrapper}>
               {badges.map((badge) =>
                 badge.unlocked ? (
@@ -152,7 +204,35 @@ const styles = StyleSheet.create({
 
   main: {
     flex: 1,
-    gap: 30,
+    gap: 12,
+  },
+
+  streakHeader: {
+    justifyContent: "flex-end",
+    alignItems: "center",
+    gap: 8,
+  },
+
+  streakWrapper: {
+    position: "relative",
+    height: 100,
+    width: 80,
+    justifyContent: "flex-start",
+  },
+
+  streakIcon: {
+    position: "absolute",
+    height: 100,
+    width: 80,
+    top: 0,
+    left: 0,
+    zIndex: 0,
+  },
+
+  streak: {
+    zIndex: 1,
+    position: "absolute",
+    bottom: -20,
   },
 
   badgesWrapper: {
