@@ -28,51 +28,66 @@ export default class DatabaseService {
     const db = await this.getDatabase();
 
     await db.execAsync(`
-        CREATE TABLE IF NOT EXISTS app_meta (
-          key TEXT PRIMARY KEY,
-          value TEXT
-        );
-        CREATE TABLE IF NOT EXISTS badges (
-          badge_key TEXT PRIMARY KEY,
-          unlocked INTEGER DEFAULT 0,
-          unlocked_at TEXT
-        );
-        CREATE TABLE IF NOT EXISTS categories (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT NOT NULL UNIQUE,
-          color TEXT NOT NULL,
-          type TEXT NOT NULL,
-          budget DECIMAL(13, 2),
-          is_default INTEGER DEFAULT 0
-        );
-        CREATE TABLE IF NOT EXISTS transactions (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT NOT NULL,
-          amount DECIMAL(13, 2) NOT NULL,
-          type TEXT NOT NULL,
-          date TEXT DEFAULT (CURRENT_TIMESTAMP),
-          categoryId INTEGER,
-          FOREIGN KEY (categoryId) REFERENCES categories(id)
-        );
-        CREATE TABLE IF NOT EXISTS recurring_transactions (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT NOT NULL,
-          amount DECIMAL(13, 2) NOT NULL,
-          type TEXT NOT NULL,
-          date TEXT DEFAULT (CURRENT_TIMESTAMP),
-          categoryId INTEGER,
-          rrule TEXT NOT NULL,
-          lastGenerated TEXT DEFAULT (CURRENT_TIMESTAMP),
-          FOREIGN KEY (categoryId) REFERENCES categories(id)
-        );
-        CREATE TABLE IF NOT EXISTS salary (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          type TEXT NOT NULL,
-          amount DECIMAL(13, 2) NOT NULL,
-          monthly DECIMAL(13, 2) NOT NULL,
-          hoursPerWeek DECIMAL(5, 2)
-        )
-          `);
+      CREATE TABLE IF NOT EXISTS app_meta (
+        key TEXT PRIMARY KEY,
+        value TEXT
+      )
+    `);
+
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS badges (
+        badge_key TEXT PRIMARY KEY,
+        unlocked INTEGER DEFAULT 0,
+        unlocked_at TEXT
+      )
+    `);
+
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS categories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        color TEXT NOT NULL,
+        type TEXT NOT NULL,
+        budget DECIMAL(13, 2),
+        is_default INTEGER DEFAULT 0
+      )
+    `);
+
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS transactions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        amount DECIMAL(13, 2) NOT NULL,
+        type TEXT NOT NULL,
+        date TEXT DEFAULT (CURRENT_TIMESTAMP),
+        categoryId INTEGER,
+        FOREIGN KEY (categoryId) REFERENCES categories(id)
+      )
+    `);
+
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS recurring_transactions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        amount DECIMAL(13, 2) NOT NULL,
+        type TEXT NOT NULL,
+        date TEXT DEFAULT (CURRENT_TIMESTAMP),
+        categoryId INTEGER,
+        rrule TEXT NOT NULL,
+        lastGenerated TEXT DEFAULT (CURRENT_TIMESTAMP),
+        FOREIGN KEY (categoryId) REFERENCES categories(id)
+      )
+    `);
+
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS salary (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        type TEXT NOT NULL,
+        amount DECIMAL(13, 2) NOT NULL,
+        monthly DECIMAL(13, 2) NOT NULL,
+        hoursPerWeek DECIMAL(5, 2)
+      )
+    `);
 
     await this.seedDefaultAppData(db);
     await this.seedDefaultCategories(db);
@@ -88,9 +103,21 @@ export default class DatabaseService {
 
     const now = new Date().toISOString();
     await db.runAsync(
-      `INSERT INTO app_meta (key, value) VALUES ('app_start_date', ?)`,
+      "INSERT INTO app_meta (key, value) VALUES ('app_start_date', ?)",
       [now]
     );
+    const streakDefault = 1;
+    console.log("inserting into current_streak:", streakDefault);
+    await db.runAsync(
+      "INSERT INTO app_meta (key, value) VALUES ('app_current_streak', 1)"
+    );
+
+    await db.runAsync(
+      "INSERT INTO app_meta (key, value) VALUES ('app_last_active', ?)",
+      [now]
+    );
+    const streak = await this.getStreak();
+    console.log(streak);
   }
 
   private static async seedDefaultCategories(db: SQLite.SQLiteDatabase) {
@@ -142,14 +169,12 @@ export default class DatabaseService {
   static async resetTables() {
     const db = await this.getDatabase();
 
-    await db.execAsync(`
-      DROP TABLE IF EXISTS transactions;
-      DROP TABLE IF EXISTS recurring_transactions;
-      DROP TABLE IF EXISTS categories;
-      DROP TABLE IF EXISTS salary;
-      DROP TABLE IF EXISTS badges;
-      DROP TABLE IF EXISTS app_meta;
-    `);
+    await db.execAsync(`DROP TABLE IF EXISTS transactions`);
+    await db.execAsync(`DROP TABLE IF EXISTS recurring_transactions`);
+    await db.execAsync(`DROP TABLE IF EXISTS categories`);
+    await db.execAsync(`DROP TABLE IF EXISTS salary`);
+    await db.execAsync(`DROP TABLE IF EXISTS badges`);
+    await db.execAsync(`DROP TABLE IF EXISTS app_meta`);
 
     await this.initalize();
   }
@@ -552,6 +577,18 @@ export default class DatabaseService {
     return await this.checkBadgeUnlocked(badgeKey);
   }
 
+  static async getBadges() {
+    const db = await this.getDatabase();
+
+    return await db.getAllAsync<AwardedBadge>(
+      `
+      SELECT badge_key, unlocked, unlocked_at
+      FROM badges
+      `
+    );
+  }
+
+  // App Meta Table Integration
   static async monthsSinceAppStart() {
     const db = await this.getDatabase();
 
@@ -572,14 +609,39 @@ export default class DatabaseService {
     }
   }
 
-  static async getBadges() {
+  static async getStreak() {
     const db = await this.getDatabase();
 
-    return await db.getAllAsync<AwardedBadge>(
-      `
-      SELECT badge_key, unlocked, unlocked_at
-      FROM badges
-    `
+    const row = await db.getFirstAsync<{ value: string }>(
+      "SELECT value FROM app_meta WHERE key = 'app_current_streak'"
+    );
+
+    return Number(row?.value || 0);
+  }
+
+  static async getLastActiveDate() {
+    const db = await this.getDatabase();
+
+    const row = await db.getFirstAsync<{ value: string }>(
+      "SELECT value FROM app_meta WHERE key = 'app_last_active'"
+    );
+
+    if (row) {
+      return new Date(row.value);
+    }
+  }
+
+  static async updateStreak(date: string, currentStreak: number) {
+    const db = await this.getDatabase();
+
+    await db.runAsync(
+      "UPDATE app_meta SET value = ? WHERE key = 'app_last_active'",
+      [date]
+    );
+
+    await db.runAsync(
+      "UPDATE app_meta SET value = ? WHERE key = 'app_last_active'",
+      [String(currentStreak)]
     );
   }
 }

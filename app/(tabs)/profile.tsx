@@ -52,7 +52,7 @@ export default function Profile() {
       <ScrollView contentContainerStyle={styles.container}>
         <ThemedView style={styles.main}>
           <CapsuleButton
-            text="RESET DATABASE"
+            text="RESET TRANSACTIONS"
             onPress={resetDatabase}
             bgFocused={btnColor}
           />

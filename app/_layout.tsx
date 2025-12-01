@@ -8,6 +8,7 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAuth } from "@/hooks/useAuth";
 import { useBadgeCheck } from "@/hooks/useBadgeCheck";
 import DatabaseService from "@/services/DatabaseService";
+import StreakService from "@/services/StreakService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   DarkTheme,
@@ -73,6 +74,9 @@ export default function RootLayout() {
 
         // add any recurring transactions that happened while app was closed
         await DatabaseService.addMissedRecurringTransactions();
+
+        // check and update streak
+        await StreakService.updateStreak();
 
         // check if user has completed onboarding
         const hasCompleted = await AsyncStorage.getItem("completedOnboarding");

@@ -28,6 +28,7 @@ import { ThemedText } from "@/components/themed-text";
 import BadgeModal from "@/components/ui/modal/badge-modal";
 import AppModal from "@/components/ui/modal/modal";
 import { useBadges } from "@/hooks/useBadges";
+import { useStreak } from "@/hooks/useStreak";
 import { BadgeType } from "@/types";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
@@ -50,18 +51,24 @@ export default function Rewards() {
     minimalist: MinimalistIcon,
   };
 
-  const { badges, loading, reload } = useBadges();
+  const { badges, loading: loadingBadges, reload: reloadBadges } = useBadges();
+  const {
+    currentStreak,
+    loading: loadingStreak,
+    reload: reloadStreak,
+  } = useStreak();
   const [showBadgeInfo, setShowBadgeInfo] = useState(false);
   const [selectedBadge, setSelectedBadge] = useState<BadgeType | null>(null);
 
   // check unlocked badges when user focuses tab
   useFocusEffect(
     useCallback(() => {
-      reload();
-    }, [reload])
+      reloadBadges();
+      reloadStreak();
+    }, [reloadBadges, reloadStreak])
   );
 
-  if (loading) {
+  if (loadingStreak || loadingBadges) {
     return <ActivityIndicator size="large" />;
   }
 
@@ -79,6 +86,7 @@ export default function Rewards() {
     <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
       <ScrollView contentContainerStyle={styles.container}>
         <ThemedView style={styles.main}>
+          <ThemedText>current streak: {currentStreak}</ThemedText>
           <ThemedView
             style={[
               {
