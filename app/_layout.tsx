@@ -1,4 +1,4 @@
-import { ModalProvider } from "@/components/ui/modal/modal-provider";
+import { ModalProvider } from "@/components/context/modal-provider";
 import {
   BadgeToast,
   ErrorToast,

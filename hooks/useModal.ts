@@ -1,3 +1,3 @@
-import { useContextModal } from "@/components/ui/modal/modal-provider";
+import { useContextModal } from "@/components/context/modal-provider";
 
 export const useModal = () => useContextModal();

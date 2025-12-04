@@ -6,7 +6,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import AppModal from "./modal";
+import AppModal from "../ui/modal/modal";
 
 // stores the open and close functions as values available to all children of context
 type ModalContextType = {
