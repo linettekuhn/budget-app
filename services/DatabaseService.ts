@@ -89,12 +89,14 @@ export default class DatabaseService {
       )
     `);
 
-    await this.seedDefaultAppData(db);
-    await this.seedDefaultCategories(db);
-    await this.seedDefaultBadges(db);
+    await this.seedDefaultAppData();
+    await this.seedDefaultCategories();
+    await this.seedDefaultBadges();
   }
 
-  private static async seedDefaultAppData(db: SQLite.SQLiteDatabase) {
+  private static async seedDefaultAppData() {
+    const db = await this.getDatabase();
+
     const existing = await db.getFirstAsync<{ value: string }>(
       "SELECT value FROM app_meta WHERE key = 'app_start_date'"
     );
@@ -120,7 +122,9 @@ export default class DatabaseService {
     console.log(streak);
   }
 
-  private static async seedDefaultCategories(db: SQLite.SQLiteDatabase) {
+  static async seedDefaultCategories() {
+    const db = await this.getDatabase();
+
     const existingCategories = await db.getAllAsync<CountResult>(
       "SELECT COUNT(*) as count FROM categories"
     );
@@ -142,7 +146,9 @@ export default class DatabaseService {
     }
   }
 
-  private static async seedDefaultBadges(db: SQLite.SQLiteDatabase) {
+  private static async seedDefaultBadges() {
+    const db = await this.getDatabase();
+
     const existing = await db.getAllAsync<CountResult>(
       "SELECT COUNT(*) AS count FROM badges"
     );
@@ -212,7 +218,10 @@ export default class DatabaseService {
       throw error;
     }
   }
-  static async insertCategories(categories: CategoryType[]) {
+  static async insertCategories(
+    categories: CategoryType[],
+    budgets: Record<number, { raw: string; display: string }>
+  ) {
     const db = await this.getDatabase();
 
     // (?, ?) for each category
@@ -221,7 +230,9 @@ export default class DatabaseService {
     // values to fill up parameter placeholders
     const values: (string | number)[] = [];
     categories.forEach((cat) => {
-      values.push(cat.name, cat.color, cat.type, cat.budget);
+      const budgetRaw = budgets[cat.id]?.raw || "0";
+      const budgetAmount = parseFloat((Number(budgetRaw) / 100).toFixed(2));
+      values.push(cat.name, cat.color, cat.type, budgetAmount);
     });
 
     const query = `INSERT INTO categories (name, color, type, budget, is_default) VALUES ${placeholders}`;
