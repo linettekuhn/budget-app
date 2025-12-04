@@ -18,6 +18,7 @@ export const Colors = {
     background: "#FFF1FE",
     text: "#170015",
     tabBackground: "#391A36",
+    error: "#A10000",
   },
 
   dark: {
@@ -37,6 +38,7 @@ export const Colors = {
     background: "#170015",
     text: "#FFF1FE",
     tabBackground: "#FFDEFD",
+    error: "#FF5C5C",
   },
 };
 

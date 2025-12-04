@@ -1,17 +1,41 @@
+import { useOnboarding } from "@/components/context/onboarding-provider";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import CapsuleButton from "@/components/ui/capsule-button";
 import { Colors } from "@/constants/theme";
+import DatabaseService from "@/services/DatabaseService";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useRouter } from "expo-router";
 import { StyleSheet, useColorScheme } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Toast } from "toastify-react-native";
 
 export default function WelcomeOnboarding() {
   const colorScheme = useColorScheme();
   const btnColor = Colors[colorScheme ?? "light"].secondary[500];
   const router = useRouter();
 
+  const { reset } = useOnboarding();
+  const startOnboardingProcess = async () => {
+    try {
+      await DatabaseService.clearCategories();
+      await DatabaseService.seedDefaultCategories();
+      reset();
+      router.push("/categories");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        Toast.show({
+          type: "error",
+          text1: error.message,
+        });
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "An error ocurred while starting onboarding",
+        });
+      }
+    }
+  };
   return (
     <SafeAreaView
       style={[
@@ -35,7 +59,7 @@ export default function WelcomeOnboarding() {
             iconName="arrow-right"
             IconComponent={Octicons}
             bgFocused={btnColor}
-            onPress={() => router.push("/categories")}
+            onPress={startOnboardingProcess}
           />
         </ThemedView>
       </ThemedView>

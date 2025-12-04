@@ -1,17 +1,16 @@
+import { useOnboarding } from "@/components/context/onboarding-provider";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import AmountDisplay from "@/components/ui/amount-display";
 import CapsuleButton from "@/components/ui/capsule-button";
+import TextButton from "@/components/ui/text-button";
 import { Colors } from "@/constants/theme";
-import { useCategories } from "@/hooks/useCategories";
-import DatabaseService from "@/services/DatabaseService";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
 import { formatAmountDisplay } from "@/utils/formatDisplay";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Keyboard,
   Platform,
   StyleSheet,
@@ -20,76 +19,76 @@ import {
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Toast } from "toastify-react-native";
 
 export default function BudgetOnboarding() {
   const colorScheme = useColorScheme();
   const btnColor = Colors[colorScheme ?? "light"].secondary[500];
   const router = useRouter();
 
-  const { loading, categories } = useCategories();
-
-  const [categoryAmounts, setCategoryAmounts] = useState<{
-    [key: number]: { raw: string; display: string };
-  }>({});
+  // get onboarding state's budgets
+  const { state, setState } = useOnboarding();
+  const categories = state.categories;
   const [total, setTotal] = useState(0);
+  const [isValid, setIsValid] = useState(false);
 
   useEffect(() => {
     if (!categories.length) return;
 
-    const initial: { [key: number]: { raw: string; display: string } } = {};
-    categories.forEach((cat) => {
-      const budget = cat.budget ?? 1;
+    setState((prev) => {
+      const newBudgets = { ...prev.budgets };
 
-      const raw = Math.round(budget * 100).toString();
-      const display = formatAmountDisplay(raw);
+      // remove budgets for unselected categories
+      Object.keys(newBudgets).forEach((budgetId) => {
+        const categoryExists = categories.some(
+          (cat) => cat.id === Number(budgetId)
+        );
+        if (!categoryExists) {
+          delete newBudgets[Number(budgetId)];
+        }
+      });
 
-      initial[cat.id] = { raw: raw, display: display };
+      // initalize budgets for new categories
+      categories.forEach((cat) => {
+        if (!newBudgets[cat.id]) {
+          const budget = cat.budget ?? 0;
+          const raw = Math.round(budget * 100).toString();
+          const display = formatAmountDisplay(raw);
+          newBudgets[cat.id] = { raw, display };
+        }
+      });
+
+      return { ...prev, budgets: newBudgets };
     });
-    setCategoryAmounts(initial);
-  }, [categories]);
+  }, [categories, setState]);
 
   const handleAmountChange = (categoryId: number, text: string) => {
     const numeric = text.replace(/[^0-9]/g, "");
     const formatted = formatAmountDisplay(numeric);
 
-    setCategoryAmounts((prev) => ({
+    setState((prev) => ({
       ...prev,
-      [categoryId]: { raw: numeric, display: formatted },
+      budgets: {
+        ...prev.budgets,
+        [categoryId]: { raw: numeric, display: formatted },
+      },
     }));
   };
 
-  const saveBudgets = async () => {
-    try {
-      await DatabaseService.updateCategoryBudgets(categoryAmounts);
-      router.push("/salary");
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        Toast.show({
-          type: "error",
-          text1: error.message,
-        });
-      } else {
-        Toast.show({
-          type: "error",
-          text1: "An error ocurred saving budgets",
-        });
-      }
-    }
-  };
-
   useEffect(() => {
-    const totalRaw = Object.values(categoryAmounts).reduce((sum, { raw }) => {
+    const totalRaw = Object.values(state.budgets).reduce((sum, { raw }) => {
       const value = parseFloat((Number(raw) / 100).toFixed(2));
       return sum + value;
     }, 0);
 
     setTotal(totalRaw);
-  }, [categoryAmounts]);
 
-  if (loading) {
-    return <ActivityIndicator size="large" />;
-  }
+    const validBudgets = categories.every((cat) => {
+      const rawValue = Number(state.budgets[cat.id]?.raw || "0");
+      return rawValue >= 100;
+    });
+
+    setIsValid(validBudgets);
+  }, [state.budgets, categories]);
 
   return (
     <SafeAreaView
@@ -106,6 +105,12 @@ export default function BudgetOnboarding() {
           contentContainerStyle={styles.container}
         >
           <ThemedView style={styles.main}>
+            <TextButton
+              text="Back"
+              iconName="arrow-left"
+              IconComponent={Octicons}
+              onPress={() => router.back()}
+            />
             <ThemedText type="h1">Set Your Monthly Budgets</ThemedText>
             <ThemedText type="h5" style={{ paddingHorizontal: 20 }}>
               Decide how much you want to spend in each category.
@@ -129,9 +134,9 @@ export default function BudgetOnboarding() {
                     <ThemedText type="bodyLarge">{category.name}</ThemedText>
                     <AmountDisplay
                       displayAmount={
-                        categoryAmounts[category.id]?.display || "0.00"
+                        state.budgets[category.id]?.display || "0.00"
                       }
-                      rawAmount={categoryAmounts[category.id]?.raw || "0"}
+                      rawAmount={state.budgets[category.id]?.raw || "0"}
                       onChangeText={(text) =>
                         handleAmountChange(category.id, text)
                       }
@@ -143,13 +148,25 @@ export default function BudgetOnboarding() {
             </ThemedView>
             <ThemedText type="h4">Total: ${total.toFixed(2)}</ThemedText>
 
-            <CapsuleButton
-              text="Next"
-              iconName="arrow-right"
-              IconComponent={Octicons}
-              bgFocused={btnColor}
-              onPress={saveBudgets}
-            />
+            {!isValid ? (
+              <ThemedText
+                type="overline"
+                style={{
+                  color: Colors[colorScheme ?? "light"].error,
+                  textAlign: "center",
+                }}
+              >
+                All budgets must be at least $1.00
+              </ThemedText>
+            ) : (
+              <CapsuleButton
+                text="Next"
+                iconName="arrow-right"
+                IconComponent={Octicons}
+                bgFocused={btnColor}
+                onPress={() => router.push("/salary")}
+              />
+            )}
           </ThemedView>
         </KeyboardAwareScrollView>
       </TouchableWithoutFeedback>

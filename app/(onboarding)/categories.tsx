@@ -1,3 +1,4 @@
+import { useOnboarding } from "@/components/context/onboarding-provider";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import CapsuleButton from "@/components/ui/capsule-button";
@@ -6,12 +7,11 @@ import CustomCategory from "@/components/ui/modal/category-modal";
 import { Colors } from "@/constants/theme";
 import { useCategories } from "@/hooks/useCategories";
 import { useModal } from "@/hooks/useModal";
-import DatabaseService from "@/services/DatabaseService";
 import { CategoryType } from "@/types";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -24,21 +24,31 @@ export default function CategoriesOnboarding() {
   const colorScheme = useColorScheme();
   const btnColor = Colors[colorScheme ?? "light"].secondary[500];
   const router = useRouter();
-  const [selectedCategories, setSelectedCategories] = useState<CategoryType[]>(
-    []
-  );
+
+  // get onboarding state's categories
+  const { state, setState } = useOnboarding();
+  const selectedCategories = state.categories;
 
   const toggleCategory = (category: CategoryType) => {
-    setSelectedCategories((prev) => {
-      const isSelected = prev.some((cat) => cat.id === category.id);
+    setState((prev) => {
+      const isSelected = prev.categories.some((cat) => cat.id === category.id);
 
+      let updatedCategories;
       if (isSelected) {
         // remove if selected
-        return prev.filter((cat) => cat.id !== category.id);
+        updatedCategories = prev.categories.filter(
+          (cat) => cat.id !== category.id
+        );
       } else {
         // add if not selected
-        return [...prev, category];
+        updatedCategories = [...prev.categories, category];
       }
+
+      // update state
+      return {
+        ...prev,
+        categories: updatedCategories,
+      };
     });
   };
 
@@ -47,14 +57,7 @@ export default function CategoriesOnboarding() {
       return;
     }
 
-    try {
-      await DatabaseService.clearCategories();
-      await DatabaseService.insertCategories(selectedCategories);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      router.push("/budget");
-    }
+    router.push("/budget");
   };
 
   const { openModal, closeModal } = useModal();

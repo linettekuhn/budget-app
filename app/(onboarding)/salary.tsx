@@ -1,11 +1,12 @@
+import { useOnboarding } from "@/components/context/onboarding-provider";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import AmountDisplay from "@/components/ui/amount-display";
 import CapsuleButton from "@/components/ui/capsule-button";
 import CapsuleNumberInput from "@/components/ui/capsule-input-number";
 import CapsuleToggle from "@/components/ui/capsule-toggle";
+import TextButton from "@/components/ui/text-button";
 import { Colors } from "@/constants/theme";
-import DatabaseService from "@/services/DatabaseService";
 import { formatAmountDisplay } from "@/utils/formatDisplay";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useRouter } from "expo-router";
@@ -20,19 +21,32 @@ import {
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Toast } from "toastify-react-native";
 
 export default function SalaryOnboarding() {
   const colorScheme = useColorScheme();
   const btnColor = Colors[colorScheme ?? "light"].secondary[500];
   const router = useRouter();
 
+  // get onboarding state's budgets
+  const { state, setState } = useOnboarding();
+  const salary = state.salary;
+
   const [salaryType, setSalaryType] = useState<
     "Hourly" | "Biweekly" | "Monthly" | "Yearly" | "Varies"
-  >("Hourly");
-  const [hoursRaw, setHoursRaw] = useState("0");
-  const [hoursDisplay, setHoursDisplay] = useState("0.00");
-  const [rawAmount, setRawAmount] = useState("0");
-  const [displayAmount, setDisplayAmount] = useState("0.00");
+  >(salary.type || "Hourly");
+  const [hoursRaw, setHoursRaw] = useState(
+    Math.round((salary.hoursPerWeek || 0) * 100).toString()
+  );
+  const [hoursDisplay, setHoursDisplay] = useState(
+    formatAmountDisplay(hoursRaw)
+  );
+  const [rawAmount, setRawAmount] = useState(
+    Math.round(salary.amount * 100).toString() || "0"
+  );
+  const [displayAmount, setDisplayAmount] = useState(
+    formatAmountDisplay(rawAmount)
+  );
 
   const handleAmountChange = (text: string) => {
     const numeric = text.replace(/[^0-9]/g, "");
@@ -49,46 +63,63 @@ export default function SalaryOnboarding() {
   };
 
   const saveSalary = async () => {
-    if (!rawAmount || parseFloat(rawAmount) === 0) {
-      throw new Error("Amount cannot be 0");
-    }
-
-    if (salaryType === "Hourly" && (!hoursRaw || parseFloat(hoursRaw) === 0)) {
-      throw new Error("Hours cannot be 0");
-    }
-
-    let monthlySalary = 0;
-    const hours = parseFloat((Number(hoursRaw) / 100).toFixed(2));
-    const amount = parseFloat((Number(rawAmount) / 100).toFixed(2));
-
-    switch (salaryType) {
-      case "Hourly":
-        monthlySalary = amount * hours * 4.33;
-        break;
-      case "Biweekly":
-        monthlySalary = amount * 2;
-        break;
-      case "Monthly":
-        monthlySalary = amount;
-        break;
-      case "Yearly":
-        monthlySalary = amount / 12;
-        break;
-      case "Varies":
-        monthlySalary = amount;
-        break;
-    }
     try {
-      await DatabaseService.saveSalary(
-        salaryType,
-        amount,
-        monthlySalary,
-        salaryType === "Hourly" ? hours : null
-      );
-    } catch (error) {
-      console.log(error);
-    } finally {
+      if (!rawAmount || parseFloat(rawAmount) < 1) {
+        throw new Error("Amount must be at least $1.00");
+      }
+
+      if (
+        salaryType === "Hourly" &&
+        (!hoursRaw || parseFloat(hoursRaw) === 0)
+      ) {
+        throw new Error("Hours cannot be 0");
+      }
+
+      let monthlySalary = 0;
+      const hours = parseFloat((Number(hoursRaw) / 100).toFixed(2));
+      const amount = parseFloat((Number(rawAmount) / 100).toFixed(2));
+
+      switch (salaryType) {
+        case "Hourly":
+          monthlySalary = amount * hours * 4.33;
+          break;
+        case "Biweekly":
+          monthlySalary = amount * 2;
+          break;
+        case "Monthly":
+          monthlySalary = amount;
+          break;
+        case "Yearly":
+          monthlySalary = amount / 12;
+          break;
+        case "Varies":
+          monthlySalary = amount;
+          break;
+      }
+
+      setState((prev) => ({
+        ...prev,
+        salary: {
+          type: salaryType,
+          amount,
+          monthly: Number(monthlySalary.toFixed(2)),
+          hoursPerWeek: salaryType === "Hourly" ? hours : 0,
+        },
+      }));
+
       router.push("/finish");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        Toast.show({
+          type: "error",
+          text1: error.message,
+        });
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "An error ocurred while completing onboarding",
+        });
+      }
     }
   };
   return (
@@ -106,6 +137,12 @@ export default function SalaryOnboarding() {
           contentContainerStyle={styles.container}
         >
           <ThemedView style={styles.main}>
+            <TextButton
+              text="Back"
+              iconName="arrow-left"
+              IconComponent={Octicons}
+              onPress={() => router.back()}
+            />
             <ThemedText type="h1">Add Your Income</ThemedText>
             <ThemedText type="h4">
               Entering your salary helps us calculate savings.
