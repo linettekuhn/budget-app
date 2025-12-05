@@ -5,7 +5,7 @@ import AmountDisplay from "@/components/ui/amount-display";
 import CapsuleButton from "@/components/ui/capsule-button";
 import CapsuleNumberInput from "@/components/ui/capsule-input-number";
 import CapsuleToggle from "@/components/ui/capsule-toggle";
-import TextButton from "@/components/ui/text-button";
+import OnboardingControls from "@/components/ui/onboarding-controls";
 import { Colors } from "@/constants/theme";
 import { formatAmountDisplay } from "@/utils/formatDisplay";
 import Octicons from "@expo/vector-icons/Octicons";
@@ -129,6 +129,7 @@ export default function SalaryOnboarding() {
         { backgroundColor: Colors[colorScheme ?? "light"].background },
       ]}
     >
+      <OnboardingControls />
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <KeyboardAwareScrollView
           keyboardShouldPersistTaps="handled"
@@ -137,12 +138,6 @@ export default function SalaryOnboarding() {
           contentContainerStyle={styles.container}
         >
           <ThemedView style={styles.main}>
-            <TextButton
-              text="Back"
-              iconName="arrow-left"
-              IconComponent={Octicons}
-              onPress={() => router.back()}
-            />
             <ThemedText type="h1">Add Your Income</ThemedText>
             <ThemedText type="h4">
               Entering your salary helps us calculate savings.
@@ -306,13 +301,14 @@ const styles = StyleSheet.create({
 
   container: {
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingTop: 70,
   },
 
   main: {
-    paddingVertical: 30,
+    paddingVertical: 8,
     flex: 1,
     gap: 20,
+    justifyContent: "flex-start",
   },
 
   horizontalContainer: {

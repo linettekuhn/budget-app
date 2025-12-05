@@ -1,7 +1,10 @@
+import DatabaseService from "@/services/DatabaseService";
 import { CategoryType } from "@/types";
+import { useRouter } from "expo-router";
 import React, { createContext, ReactNode, useContext, useState } from "react";
 
 type OnboardingState = {
+  name: string;
   categories: CategoryType[];
   budgets: Record<number, { raw: string; display: string }>;
   salary: {
@@ -17,12 +20,16 @@ type OnboardingContextType = {
   state: OnboardingState;
   setState: React.Dispatch<React.SetStateAction<OnboardingState>>;
   reset: () => void;
+  resetOnboarding: () => Promise<void>;
 };
 
 const OnboardingContext = createContext<OnboardingContextType | null>(null);
 
 export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
+  const router = useRouter();
+
   const [state, setState] = useState<OnboardingState>({
+    name: "",
     categories: [],
     budgets: {},
     salary: {
@@ -35,6 +42,7 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
 
   const reset = () => {
     setState({
+      name: "",
       categories: [],
       budgets: {},
       salary: {
@@ -46,8 +54,19 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const resetOnboarding = async () => {
+    await DatabaseService.clearCategories();
+    await DatabaseService.seedDefaultCategories();
+
+    reset();
+
+    router.replace("/welcome");
+  };
+
   return (
-    <OnboardingContext.Provider value={{ state, setState, reset }}>
+    <OnboardingContext.Provider
+      value={{ state, setState, reset, resetOnboarding }}
+    >
       {children}
     </OnboardingContext.Provider>
   );

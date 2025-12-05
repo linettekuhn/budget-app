@@ -4,6 +4,7 @@ import { ThemedView } from "@/components/themed-view";
 import CapsuleButton from "@/components/ui/capsule-button";
 import CapsuleToggle from "@/components/ui/capsule-toggle";
 import CustomCategory from "@/components/ui/modal/category-modal";
+import OnboardingControls from "@/components/ui/onboarding-controls";
 import { Colors } from "@/constants/theme";
 import { useCategories } from "@/hooks/useCategories";
 import { useModal } from "@/hooks/useModal";
@@ -89,6 +90,7 @@ export default function CategoriesOnboarding() {
         { backgroundColor: Colors[colorScheme ?? "light"].background },
       ]}
     >
+      <OnboardingControls />
       <ScrollView contentContainerStyle={styles.container}>
         <ThemedView style={styles.main}>
           <ThemedText type="h1" style={{ paddingHorizontal: 30 }}>
@@ -145,14 +147,15 @@ const styles = StyleSheet.create({
 
   container: {
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingTop: 70,
   },
 
   main: {
-    paddingVertical: 30,
+    paddingVertical: 8,
     flex: 1,
     gap: 30,
     alignItems: "center",
+    justifyContent: "flex-start",
   },
 
   horizontalContainer: {

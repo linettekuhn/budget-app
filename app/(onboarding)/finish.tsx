@@ -2,6 +2,7 @@ import { useOnboarding } from "@/components/context/onboarding-provider";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import CapsuleButton from "@/components/ui/capsule-button";
+import OnboardingControls from "@/components/ui/onboarding-controls";
 import { Colors } from "@/constants/theme";
 import DatabaseService from "@/services/DatabaseService";
 import Octicons from "@expo/vector-icons/Octicons";
@@ -18,7 +19,7 @@ export default function FinishOnboarding() {
 
   // get onboarding state's budgets
   const { state, reset } = useOnboarding();
-  const { categories, budgets, salary } = state;
+  const { name, categories, budgets, salary } = state;
   const total = Object.values(state.budgets).reduce((sum, { raw }) => {
     const value = parseFloat((Number(raw) / 100).toFixed(2));
     return sum + value;
@@ -68,9 +69,12 @@ export default function FinishOnboarding() {
         { backgroundColor: Colors[colorScheme ?? "light"].background },
       ]}
     >
+      <OnboardingControls />
       <ScrollView contentContainerStyle={styles.container}>
         <ThemedView style={styles.main}>
-          <ThemedText type="displayMedium">You&apos;re All Set!</ThemedText>
+          <ThemedText type="displayMedium">
+            You&apos;re All Set {name}!
+          </ThemedText>
           <ThemedText type="h4">Here&apos;s a quick recap:</ThemedText>
           <ThemedView style={styles.recap}>
             <View>
@@ -117,11 +121,11 @@ const styles = StyleSheet.create({
 
   container: {
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingTop: 70,
   },
 
   main: {
-    paddingVertical: 30,
+    paddingVertical: 8,
     flex: 1,
     gap: 20,
   },

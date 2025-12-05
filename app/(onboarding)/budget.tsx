@@ -3,7 +3,7 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import AmountDisplay from "@/components/ui/amount-display";
 import CapsuleButton from "@/components/ui/capsule-button";
-import TextButton from "@/components/ui/text-button";
+import OnboardingControls from "@/components/ui/onboarding-controls";
 import { Colors } from "@/constants/theme";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
 import { formatAmountDisplay } from "@/utils/formatDisplay";
@@ -97,6 +97,7 @@ export default function BudgetOnboarding() {
         { backgroundColor: Colors[colorScheme ?? "light"].background },
       ]}
     >
+      <OnboardingControls />
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <KeyboardAwareScrollView
           keyboardShouldPersistTaps="handled"
@@ -105,12 +106,6 @@ export default function BudgetOnboarding() {
           contentContainerStyle={styles.container}
         >
           <ThemedView style={styles.main}>
-            <TextButton
-              text="Back"
-              iconName="arrow-left"
-              IconComponent={Octicons}
-              onPress={() => router.back()}
-            />
             <ThemedText type="h1">Set Your Monthly Budgets</ThemedText>
             <ThemedText type="h5" style={{ paddingHorizontal: 20 }}>
               Decide how much you want to spend in each category.
@@ -181,12 +176,12 @@ const styles = StyleSheet.create({
 
   container: {
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingTop: 70,
   },
 
   main: {
-    paddingVertical: 10,
-    justifyContent: "space-evenly",
+    paddingVertical: 8,
+    justifyContent: "flex-start",
     flex: 1,
     gap: 20,
   },
