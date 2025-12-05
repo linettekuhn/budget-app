@@ -27,6 +27,9 @@ export default function FinishOnboarding() {
 
   const handleCompleteOnboarding = async () => {
     try {
+      // save name
+      await DatabaseService.insertName(name);
+
       // save categories
       await DatabaseService.clearCategories();
       await DatabaseService.insertCategories(categories, budgets);

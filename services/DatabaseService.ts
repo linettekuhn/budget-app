@@ -108,8 +108,7 @@ export default class DatabaseService {
       "INSERT INTO app_meta (key, value) VALUES ('app_start_date', ?)",
       [now]
     );
-    const streakDefault = 1;
-    console.log("inserting into current_streak:", streakDefault);
+
     await db.runAsync(
       "INSERT INTO app_meta (key, value) VALUES ('app_current_streak', 1)"
     );
@@ -118,8 +117,6 @@ export default class DatabaseService {
       "INSERT INTO app_meta (key, value) VALUES ('app_last_active', ?)",
       [now]
     );
-    const streak = await this.getStreak();
-    console.log(streak);
   }
 
   static async seedDefaultCategories() {
@@ -654,5 +651,26 @@ export default class DatabaseService {
       "UPDATE app_meta SET value = ? WHERE key = 'app_last_active'",
       [String(currentStreak)]
     );
+  }
+
+  static async insertName(name: string) {
+    const db = await this.getDatabase();
+
+    await db.runAsync(
+      "INSERT INTO app_meta (key, value) VALUES ('user_name', ?)",
+      [name]
+    );
+  }
+
+  static async getName() {
+    const db = await this.getDatabase();
+
+    const row = await db.getFirstAsync<{ value: string }>(
+      "SELECT value FROM app_meta WHERE key = 'user_name'"
+    );
+
+    if (row) {
+      return row.value;
+    }
   }
 }
