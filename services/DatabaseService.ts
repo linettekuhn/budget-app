@@ -639,6 +639,18 @@ export default class DatabaseService {
     }
   }
 
+  static async getAppStartDate() {
+    const db = await this.getDatabase();
+
+    const row = await db.getFirstAsync<{ value: string }>(
+      "SELECT value FROM app_meta WHERE key = 'app_start_date'"
+    );
+
+    if (row) {
+      return new Date(row.value);
+    }
+  }
+
   static async updateStreak(date: string, currentStreak: number) {
     const db = await this.getDatabase();
 
