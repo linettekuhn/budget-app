@@ -1,38 +1,63 @@
-import { PropsWithChildren, useState } from "react";
-import { StyleSheet, TouchableOpacity } from "react-native";
+import { ComponentType, PropsWithChildren, useState } from "react";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
-import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import Octicons from "@expo/vector-icons/Octicons";
+
+type Props = {
+  title: string;
+  IconComponent?: ComponentType<any>;
+  iconName?: string;
+};
 
 export function Collapsible({
   children,
   title,
-}: PropsWithChildren & { title: string }) {
+  IconComponent,
+  iconName,
+}: PropsWithChildren & Props) {
   const [isOpen, setIsOpen] = useState(false);
-  const theme = useColorScheme() ?? "light";
+  const colorScheme = useColorScheme();
+  const color = Colors[colorScheme ?? "light"].text;
 
   return (
-    <ThemedView>
+    <View
+      style={{
+        backgroundColor: Colors[colorScheme ?? "light"].primary[200],
+        borderRadius: 20,
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+      }}
+    >
       <TouchableOpacity
         style={styles.heading}
         onPress={() => setIsOpen((value) => !value)}
         activeOpacity={0.8}
       >
-        <IconSymbol
-          name="chevron.right"
-          size={18}
-          weight="medium"
-          color={theme === "light" ? Colors.light.text : Colors.dark.text}
-          style={{ transform: [{ rotate: isOpen ? "90deg" : "0deg" }] }}
+        <View
+          style={{
+            flexDirection: "row",
+            gap: 24,
+            alignItems: "center",
+          }}
+        >
+          {IconComponent && iconName && (
+            <IconComponent name={iconName} size={17} color={color} />
+          )}
+          <ThemedText type="bodyLarge" style={{ color: color }}>
+            {title}
+          </ThemedText>
+        </View>
+        <Octicons
+          name={isOpen ? "chevron-down" : "chevron-right"}
+          size={17}
+          color={color}
         />
-
-        <ThemedText type="h1">{title}</ThemedText>
       </TouchableOpacity>
-      {isOpen && <ThemedView style={styles.content}>{children}</ThemedView>}
-    </ThemedView>
+      {isOpen && <View style={styles.content}>{children}</View>}
+    </View>
   );
 }
 
@@ -41,9 +66,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
+    justifyContent: "space-between",
   },
   content: {
-    marginTop: 6,
-    marginLeft: 24,
+    marginTop: 4,
+    marginHorizontal: 2,
   },
 });

@@ -1,15 +1,16 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import Avatar from "@/components/ui/avatar";
-import ProfileButton from "@/components/ui/profile-button";
+import { Collapsible } from "@/components/ui/collapsible";
 import { Colors } from "@/constants/theme";
 import { useName } from "@/hooks/useName";
 import DatabaseService from "@/services/DatabaseService";
 import Octicons from "@expo/vector-icons/Octicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useState } from "react";
+import { PropsWithChildren, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Pressable,
   ScrollView,
   StyleSheet,
   useColorScheme,
@@ -17,6 +18,27 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Toast } from "toastify-react-native";
+
+function ProfileOption({
+  children,
+  text,
+  onPress,
+}: PropsWithChildren & { text: string; onPress: () => void }) {
+  const colorScheme = useColorScheme();
+  return (
+    <Pressable
+      style={{
+        borderTopWidth: 1,
+        borderColor: Colors[colorScheme ?? "light"].primary[300],
+        paddingVertical: 2,
+      }}
+      onPress={onPress}
+    >
+      <ThemedText type="body">{text}</ThemedText>
+      {children}
+    </Pressable>
+  );
+}
 
 export default function Profile() {
   const colorScheme = useColorScheme();
@@ -114,33 +136,56 @@ export default function Profile() {
               </View>
             </View>
             <View style={{ paddingHorizontal: 24, gap: 32 }}>
-              <ProfileButton
-                text="Account"
-                onPress={() => {}}
+              <Collapsible
+                title="Account"
                 IconComponent={Octicons}
                 iconName="person"
-              />
-              <ProfileButton
-                text="Notifications"
-                onPress={() => {}}
+              >
+                <View>
+                  <ProfileOption text="Change name" onPress={() => {}} />
+                  <ProfileOption text="Change password" onPress={() => {}} />
+                  <ProfileOption text="Delete account" onPress={() => {}} />
+                </View>
+              </Collapsible>
+              <Collapsible
+                title="Notifications"
                 IconComponent={Octicons}
                 iconName="bell"
-              />
-              <ProfileButton
-                text="Settings"
-                onPress={() => {}}
+              >
+                <View>
+                  <ProfileOption text="Push notifications" onPress={() => {}} />
+                  <ProfileOption
+                    text="In-app notifications"
+                    onPress={() => {}}
+                  />
+                </View>
+              </Collapsible>
+              <Collapsible
+                title="Settings"
                 IconComponent={Octicons}
                 iconName="gear"
-              />
-              <ProfileButton
-                text="Region"
-                onPress={() => {}}
+              >
+                <View>
+                  <ProfileOption text="Edit salary" onPress={() => {}} />
+                  <ProfileOption
+                    text="Manage recurring transactions"
+                    onPress={() => {}}
+                  />
+                  <ProfileOption text="Reset app" onPress={() => {}} />
+                </View>
+              </Collapsible>
+              <Collapsible
+                title="Region"
                 IconComponent={Octicons}
                 iconName="globe"
-              />
-              <ProfileButton
-                text="Logout"
-                onPress={() => {}}
+              >
+                <View>
+                  <ProfileOption text="Choose language" onPress={() => {}} />
+                  <ProfileOption text="Choose currency" onPress={() => {}} />
+                </View>
+              </Collapsible>
+              <Collapsible
+                title="Logout"
                 IconComponent={Octicons}
                 iconName="sign-out"
               />
