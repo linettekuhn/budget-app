@@ -13,6 +13,7 @@ export function useSalary() {
       const data = await DatabaseService.getSalary();
       if (data) {
         const salary: Salary = {
+          uuid: data.uuid,
           id: data.id,
           type: data.type,
           amount: data.amount,

@@ -68,6 +68,7 @@ export default function CategoryTransactions() {
       const savedTransactions = transactionsData.map((row) => {
         const transaction: TransactionType = {
           id: row.id,
+          uuid: row.uuid,
           name: row.name,
           amount: row.amount,
           type: row.type,

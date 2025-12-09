@@ -1,5 +1,6 @@
 export type CategoryType = {
   id: number;
+  uuid: string;
   name: string;
   color: string;
   budget: number;

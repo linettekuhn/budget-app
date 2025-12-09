@@ -16,6 +16,7 @@ export type BadgeType = {
 
 export type AwardedBadge = {
   badge_key: string;
+  uuid: string;
   unlocked: number;
   unlocked_at: string;
 };

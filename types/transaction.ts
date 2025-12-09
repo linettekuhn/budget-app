@@ -1,5 +1,6 @@
 export type TransactionType = {
   id: number;
+  uuid: string;
   name: string;
   amount: number;
   type: "income" | "expense";
@@ -11,6 +12,7 @@ export type TransactionType = {
 
 export type RecurringTransaction = {
   id: number;
+  uuid: string;
   name: string;
   amount: number;
   type: "income" | "expense";

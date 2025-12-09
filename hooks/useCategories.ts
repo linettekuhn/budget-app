@@ -14,6 +14,7 @@ export function useCategories() {
 
       const savedCategories = data.map((row) => ({
         id: row.id,
+        uuid: row.uuid,
         name: row.name,
         color: row.color,
         type: row.type,
