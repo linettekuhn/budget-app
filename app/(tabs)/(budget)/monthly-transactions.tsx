@@ -34,7 +34,6 @@ export default function MonthlyTransactions() {
       const savedTransactions = data.map((row) => {
         const transaction: TransactionType = {
           id: row.id,
-          uuid: row.uuid,
           name: row.name,
           amount: row.amount,
           type: row.type,
@@ -78,7 +77,7 @@ export default function MonthlyTransactions() {
         </ThemedText>
         <FlatList
           data={transactions}
-          keyExtractor={(item) => String(item.id)}
+          keyExtractor={(item) => item.id}
           refreshControl={
             <RefreshControl refreshing={loading} onRefresh={loadTransaction} />
           }

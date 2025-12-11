@@ -1,23 +1,21 @@
 export type TransactionType = {
-  id: number;
-  uuid: string;
+  id: string;
   name: string;
   amount: number;
   type: "income" | "expense";
   date: string;
-  categoryId: number;
+  categoryId: string;
   categoryColor?: string;
   categoryName?: string;
 };
 
 export type RecurringTransaction = {
-  id: number;
-  uuid: string;
+  id: string;
   name: string;
   amount: number;
   type: "income" | "expense";
   date: string;
-  categoryId: number;
+  categoryId: string;
   rrule: string;
   lastGenerated: string;
 };

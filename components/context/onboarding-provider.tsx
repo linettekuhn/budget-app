@@ -6,7 +6,7 @@ import React, { createContext, ReactNode, useContext, useState } from "react";
 type OnboardingState = {
   name: string;
   categories: CategoryType[];
-  budgets: Record<number, { raw: string; display: string }>;
+  budgets: Record<string, { raw: string; display: string }>;
   salary: {
     type: "Hourly" | "Biweekly" | "Monthly" | "Yearly" | "Varies";
     amount: number;

@@ -39,11 +39,9 @@ export default function BudgetOnboarding() {
 
       // remove budgets for unselected categories
       Object.keys(newBudgets).forEach((budgetId) => {
-        const categoryExists = categories.some(
-          (cat) => cat.id === Number(budgetId)
-        );
+        const categoryExists = categories.some((cat) => cat.id === budgetId);
         if (!categoryExists) {
-          delete newBudgets[Number(budgetId)];
+          delete newBudgets[budgetId];
         }
       });
 
@@ -61,7 +59,7 @@ export default function BudgetOnboarding() {
     });
   }, [categories, setState]);
 
-  const handleAmountChange = (categoryId: number, text: string) => {
+  const handleAmountChange = (categoryId: string, text: string) => {
     const numeric = text.replace(/[^0-9]/g, "");
     const formatted = formatAmountDisplay(numeric);
 

@@ -8,6 +8,7 @@ import {
   Salary,
   TransactionType,
 } from "@/types";
+import * as crypto from "expo-crypto";
 import * as SQLite from "expo-sqlite";
 import { rrulestr } from "rrule";
 const badges = badgesJson as BadgeDefinition[];
@@ -30,7 +31,6 @@ export default class DatabaseService {
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS app_meta (
         key TEXT PRIMARY KEY,
-        uuid TEXT UNIQUE,
         value TEXT,
         createdAt TEXT DEFAULT (CURRENT_TIMESTAMP),
         updatedAt TEXT DEFAULT (CURRENT_TIMESTAMP),
@@ -41,7 +41,6 @@ export default class DatabaseService {
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS badges (
         badge_key TEXT PRIMARY KEY,
-        uuid TEXT UNIQUE,
         unlocked INTEGER DEFAULT 0,
         unlocked_at TEXT,
         createdAt TEXT DEFAULT (CURRENT_TIMESTAMP),
@@ -52,8 +51,7 @@ export default class DatabaseService {
 
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS categories (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        uuid TEXT UNIQUE,
+        id TEXT PRIMARY KEY NOT NULL,
         name TEXT NOT NULL UNIQUE,
         color TEXT NOT NULL,
         type TEXT NOT NULL,
@@ -67,42 +65,39 @@ export default class DatabaseService {
 
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS transactions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        uuid TEXT UNIQUE,
+        id TEXT PRIMARY KEY NOT NULL,
         name TEXT NOT NULL,
         amount DECIMAL(13, 2) NOT NULL,
         type TEXT NOT NULL,
         date TEXT DEFAULT (CURRENT_TIMESTAMP),
-        categoryId INTEGER,
-        FOREIGN KEY (categoryId) REFERENCES categories(id),        
+        categoryId TEXT,
         createdAt TEXT DEFAULT (CURRENT_TIMESTAMP),
         updatedAt TEXT DEFAULT (CURRENT_TIMESTAMP),
-        deletedAt TEXT
+        deletedAt TEXT,
+        FOREIGN KEY (categoryId) REFERENCES categories(id)        
       )
     `);
 
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS recurring_transactions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        uuid TEXT UNIQUE,
+        id TEXT PRIMARY KEY NOT NULL,
         name TEXT NOT NULL,
         amount DECIMAL(13, 2) NOT NULL,
         type TEXT NOT NULL,
         date TEXT DEFAULT (CURRENT_TIMESTAMP),
-        categoryId INTEGER,
+        categoryId TEXT,
         rrule TEXT NOT NULL,
         lastGenerated TEXT DEFAULT (CURRENT_TIMESTAMP),
-        FOREIGN KEY (categoryId) REFERENCES categories(id),        
         createdAt TEXT DEFAULT (CURRENT_TIMESTAMP),
         updatedAt TEXT DEFAULT (CURRENT_TIMESTAMP),
-        deletedAt TEXT
+        deletedAt TEXT,
+        FOREIGN KEY (categoryId) REFERENCES categories(id)        
       )
     `);
 
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS salary (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        uuid TEXT UNIQUE,
+        id TEXT PRIMARY KEY NOT NULL,
         type TEXT NOT NULL,
         amount DECIMAL(13, 2) NOT NULL,
         monthly DECIMAL(13, 2) NOT NULL,
@@ -140,33 +135,38 @@ export default class DatabaseService {
     if (existing) return;
 
     const now = new Date().toISOString();
-    const uuidStartDate = crypto.randomUUID();
     await db.runAsync(
-      "INSERT INTO app_meta (key, uuid, value) VALUES ('app_start_date', ?, ?)",
-      [uuidStartDate, now]
+      "INSERT INTO app_meta (key, value) VALUES ('app_start_date', ?)",
+      [now]
     );
-    await this.logChange("app_meta", uuidStartDate, "create", {
+    await this.logChange("app_meta", "app_start_date", "create", {
       key: "app_start_date",
       value: now,
     });
 
-    const uuidCurrentStreak = crypto.randomUUID();
     await db.runAsync(
-      "INSERT INTO app_meta (key, uuid, value) VALUES ('app_current_streak', ?, 1)",
-      [uuidCurrentStreak]
+      "INSERT INTO app_meta (key, value) VALUES ('app_current_streak', 1)"
     );
-    await this.logChange("app_meta", uuidCurrentStreak, "create", {
+    await this.logChange("app_meta", "app_current_streak", "create", {
       key: "app_current_streak",
       value: 1,
     });
 
-    const uuidLastActive = crypto.randomUUID();
     await db.runAsync(
-      "INSERT INTO app_meta (key, uuid, value) VALUES ('app_last_active', ?, ?)",
-      [uuidLastActive, now]
+      "INSERT INTO app_meta (key, value) VALUES ('app_last_active', ?)",
+      [now]
     );
-    await this.logChange("app_meta", uuidLastActive, "create", {
+    await this.logChange("app_meta", "app_last_active", "create", {
       key: "app_last_active",
+      value: now,
+    });
+
+    await db.runAsync(
+      "INSERT INTO app_meta (key, value) VALUES ('app_last_sync', ?)",
+      [now]
+    );
+    await this.logChange("app_meta", "app_last_sync", "create", {
+      key: "app_last_sync",
       value: now,
     });
   }
@@ -193,16 +193,16 @@ export default class DatabaseService {
       ];
 
       for (const cat of categories) {
-        const uuid = crypto.randomUUID();
+        const id = crypto.randomUUID();
         await db.runAsync(
           `
-            INSERT INTO categories (uuid, name, color, type, is_default)
+            INSERT INTO categories (id, name, color, type, is_default)
             VALUES (?, ?, ?, ?, 1)
           `,
-          [uuid, cat.name, cat.color, cat.type]
+          [id, cat.name, cat.color, cat.type]
         );
 
-        await this.logChange("categories", uuid, "create", cat);
+        await this.logChange("categories", id, "create", cat);
       }
     }
   }
@@ -218,12 +218,11 @@ export default class DatabaseService {
       await db.execAsync("BEGIN TRANSACTION;");
 
       for (const badge of badges) {
-        const uuid = crypto.randomUUID();
         await db.runAsync(
-          `INSERT INTO badges (badge_key, uuid, unlocked, unlocked_at) VALUES (?, ?, 0, NULL)`,
-          [badge.key, uuid]
+          `INSERT INTO badges (badge_key, unlocked, unlocked_at) VALUES (?, 0, NULL)`,
+          [badge.key]
         );
-        await this.logChange("badges", uuid, "create", {
+        await this.logChange("badges", badge.key, "create", {
           badge_key: badge.key,
           unlocked: 0,
           unlocked_at: null,
@@ -269,29 +268,56 @@ export default class DatabaseService {
     );
   }
 
+  static async insertFromSync(table: string, id: string, data: any) {
+    const db = await this.getDatabase();
+
+    const keys = Object.keys(data);
+    const placeholders = keys.map(() => "?").join(", ");
+    const values = keys.map((key) => data[key]);
+
+    await db.runAsync(
+      `INSERT INTO ${table} (id, ${keys.join(
+        ", "
+      )}) VALUES (?, ${placeholders})`,
+      [id, ...values]
+    );
+  }
+
+  static async updateFromSync(table: string, id: string, data: any) {
+    const db = await this.getDatabase();
+
+    const keys = Object.keys(data);
+    const columns = keys.map((key) => `${key} = ?`).join(", ");
+    const values = keys.map((key) => data[key]);
+
+    await db.runAsync(`UPDATE ${table} SET ${columns} WHERE id = ?`, [
+      ...values,
+      id,
+    ]);
+  }
+
+  static async deleteFromSync(table: string, id: string) {
+    const db = await this.getDatabase();
+    await db.runAsync(
+      `UPDATE ${table} SET deletedAt = CURRENT_TIMESTAMP WHERE id = ?`,
+      [id]
+    );
+  }
+
   // Categories Table Interaction
   static async updateCategoryBudgets(
-    categoryAmounts: Record<number, { raw: string }>
+    categoryAmounts: Record<string, { raw: string }>
   ) {
     const db = await this.getDatabase();
     await db.execAsync("BEGIN TRANSACTION");
 
     try {
       const updates = Object.entries(categoryAmounts).map(async (cat) => {
-        const id = parseInt(cat[0]);
+        const id = cat[0];
         const rawAmount = cat[1].raw;
 
         if (parseFloat(rawAmount) === 0) {
           throw new Error("Budgets cannot be 0");
-        }
-
-        const row = await db.getFirstAsync<{ uuid: string }>(
-          "SELECT uuid FROM categories WHERE id = ? AND deletedAt IS NULL",
-          [id]
-        );
-
-        if (!row) {
-          throw new Error(`Category with id ${id} not found`);
         }
 
         const budgetAmount = parseFloat((Number(rawAmount) / 100).toFixed(2));
@@ -305,7 +331,7 @@ export default class DatabaseService {
           [budgetAmount, id]
         );
 
-        await this.logChange("categories", row.uuid, "update", {
+        await this.logChange("categories", id, "update", {
           budget: budgetAmount,
         });
       });
@@ -319,11 +345,11 @@ export default class DatabaseService {
   }
   static async insertCategories(
     categories: CategoryType[],
-    budgets: Record<number, { raw: string; display: string }>
+    budgets: Record<string, { raw: string; display: string }>
   ) {
     const db = await this.getDatabase();
 
-    const uuids = categories.map(() => crypto.randomUUID());
+    const ids = categories.map(() => crypto.randomUUID());
 
     // (?, ?) for each category
     const placeholders = categories.map(() => `(?, ?, ?, ?, ?, 1)`).join(", ");
@@ -333,16 +359,16 @@ export default class DatabaseService {
     categories.forEach((cat, index) => {
       const budgetRaw = budgets[cat.id]?.raw || "0";
       const budgetAmount = parseFloat((Number(budgetRaw) / 100).toFixed(2));
-      values.push(uuids[index], cat.name, cat.color, cat.type, budgetAmount);
+      values.push(ids[index], cat.name, cat.color, cat.type, budgetAmount);
     });
 
-    const query = `INSERT INTO categories (uuid, name, color, type, budget, is_default) VALUES ${placeholders}`;
+    const query = `INSERT INTO categories (id, name, color, type, budget, is_default) VALUES ${placeholders}`;
 
     await db.runAsync(query, values);
 
     for (let i = 0; i < categories.length; i++) {
       const category = categories[i];
-      await this.logChange("categories", uuids[i], "create", {
+      await this.logChange("categories", ids[i], "create", {
         name: category.name,
         color: category.color,
         type: category.type,
@@ -353,14 +379,12 @@ export default class DatabaseService {
 
   static async clearCategories() {
     const db = await this.getDatabase();
-    const categories = await db.getAllAsync<{ uuid: string }>(
-      "SELECT uuid FROM categories WHERE deletedAt IS NULL"
+    const categories = await db.getAllAsync<{ id: string }>(
+      "SELECT id FROM categories WHERE deletedAt IS NULL"
     );
-    await db.runAsync(
-      "UPDATE categories SET deletedAt = CURRENT_TIMESTAMP WHERE deletedAt IS NULL"
-    );
+    await db.runAsync(`DELETE FROM categories`);
     for (const cat of categories) {
-      await this.logChange("categories", cat.uuid, "delete", {});
+      await this.logChange("categories", cat.id, "delete", {});
     }
   }
 
@@ -371,13 +395,19 @@ export default class DatabaseService {
     budget: number
   ) {
     const db = await this.getDatabase();
-    const uuid = crypto.randomUUID();
+
+    const exists = await this.checkCategoryNameExists(name);
+    if (exists) {
+      throw new Error(`Category name "${name}" already exists`);
+    }
+
+    const id = crypto.randomUUID();
     await db.runAsync(
-      `INSERT INTO categories (uuid, name, color, type, budget, is_default) VALUES (?, ?, ?, ?, ?, 0)`,
-      [uuid, name, categoryColor, categoryType, budget]
+      `INSERT INTO categories (id, name, color, type, budget, is_default) VALUES (?, ?, ?, ?, ?, 0)`,
+      [id, name, categoryColor, categoryType, budget]
     );
 
-    await this.logChange("categories", uuid, "create", {
+    await this.logChange("categories", id, "create", {
       name,
       categoryColor,
       categoryType,
@@ -404,20 +434,9 @@ export default class DatabaseService {
     color: string,
     categoryType: "need" | "want",
     budget: number,
-    id: number
+    id: string
   ) {
     const db = await this.getDatabase();
-
-    const row = await db.getFirstAsync<{ uuid: string }>(
-      "SELECT uuid FROM categories WHERE id = ? AND deletedAt IS NULL",
-      [id]
-    );
-
-    if (!row) {
-      throw new Error(`Category with id ${id} not found`);
-    }
-
-    const uuid = row.uuid;
 
     await db.runAsync(
       `
@@ -428,7 +447,7 @@ export default class DatabaseService {
       [color, categoryType, budget, id]
     );
 
-    await this.logChange("categories", uuid, "update", {
+    await this.logChange("categories", id, "update", {
       color,
       categoryType,
       budget,
@@ -466,14 +485,14 @@ export default class DatabaseService {
   ) {
     const db = await this.getDatabase();
 
-    const uuid = crypto.randomUUID();
+    const id = crypto.randomUUID();
 
     await db.runAsync(
-      `INSERT INTO salary (uuid, type, amount, monthly, hoursPerWeek) VALUES (?, ?, ?, ?, ?)`,
-      [uuid, type, amount, monthly, hoursPerWeek]
+      `INSERT INTO salary (id, type, amount, monthly, hoursPerWeek) VALUES (?, ?, ?, ?, ?)`,
+      [id, type, amount, monthly, hoursPerWeek]
     );
 
-    await this.logChange("salary", uuid, "create", {
+    await this.logChange("salary", id, "create", {
       type,
       amount,
       monthly,
@@ -491,14 +510,12 @@ export default class DatabaseService {
   // Transactions Table Interaction
   static async clearTransactions() {
     const db = await this.getDatabase();
-    const transactions = await db.getAllAsync<{ uuid: string }>(
-      "SELECT uuid FROM transactions WHERE deletedAt IS NULL"
+    const transactions = await db.getAllAsync<{ id: string }>(
+      "SELECT id FROM transactions WHERE deletedAt IS NULL"
     );
-    await db.runAsync(
-      "UPDATE transactions SET deletedAt = CURRENT_TIMESTAMP WHERE deletedAt IS NULL"
-    );
+    await db.runAsync(`DELETE FROM transactions`);
     for (const transaction of transactions) {
-      await this.logChange("transactions", transaction.uuid, "delete", {});
+      await this.logChange("transactions", transaction.id, "delete", {});
     }
   }
 
@@ -506,16 +523,16 @@ export default class DatabaseService {
     name: string;
     amount: number;
     type: "income" | "expense";
-    categoryId: number;
+    categoryId: string;
     date: string;
   }) {
     const db = await this.getDatabase();
-    const uuid = crypto.randomUUID();
+    const id = crypto.randomUUID();
     await db.runAsync(
-      `INSERT INTO transactions (uuid, name, amount, type, categoryId, date)
+      `INSERT INTO transactions (id, name, amount, type, categoryId, date)
        VALUES (?, ?, ?, ?, ?, ?);`,
       [
-        uuid,
+        id,
         transaction.name,
         transaction.amount,
         transaction.type,
@@ -523,24 +540,24 @@ export default class DatabaseService {
         transaction.date,
       ]
     );
-    await this.logChange("transactions", uuid, "create", transaction);
+    await this.logChange("transactions", id, "create", transaction);
   }
 
   static async addRecurringTransaction(transaction: {
     name: string;
     amount: number;
     type: "income" | "expense";
-    categoryId: number;
+    categoryId: string;
     date: string;
     rrule: string;
   }) {
     const db = await this.getDatabase();
-    const uuid = crypto.randomUUID();
+    const id = crypto.randomUUID();
     await db.runAsync(
-      `INSERT INTO recurring_transactions (uuid, name, amount, type, categoryId, date, rrule, lastGenerated)
+      `INSERT INTO recurring_transactions (id, name, amount, type, categoryId, date, rrule, lastGenerated)
        VALUES (?, ?, ?, ?, ?, ?, ?);`,
       [
-        uuid,
+        id,
         transaction.name,
         transaction.amount,
         transaction.type,
@@ -550,7 +567,7 @@ export default class DatabaseService {
         transaction.date,
       ]
     );
-    await this.logChange("recurring_transactions", uuid, "create", transaction);
+    await this.logChange("recurring_transactions", id, "create", transaction);
     await this.addTransaction(transaction);
   }
 
@@ -590,14 +607,14 @@ export default class DatabaseService {
         [lastGenerated.toISOString(), recurring.id]
       );
 
-      await this.logChange("recurring_transactions", recurring.uuid, "update", {
+      await this.logChange("recurring_transactions", recurring.id, "update", {
         lastGenerated: lastGenerated.toISOString(),
       });
     }
   }
 
   static async getCategoryTransactions(
-    categoryId: number,
+    categoryId: string,
     year: number,
     month: number
   ) {
@@ -612,7 +629,6 @@ export default class DatabaseService {
       `
       SELECT
         t.id,
-        t.uuid,
         t.name,
         t.amount,
         t.type,
@@ -622,7 +638,7 @@ export default class DatabaseService {
         c.color AS categoryColor
       FROM transactions t
       INNER JOIN categories c ON t.categoryId = c.id
-      WHERE t.categoryId = ? AND deletedAt IS NULL
+      WHERE t.categoryId = ? AND t.deletedAt IS NULL
       AND t.date BETWEEN ? AND ?
       ORDER BY t.date DESC
     `,
@@ -640,7 +656,7 @@ export default class DatabaseService {
 
     return await db.getAllAsync<TransactionType>(
       `
-      SELECT uuid, id, name, amount, type, categoryId, date
+      SELECT id, name, amount, type, categoryId, date
       FROM transactions
       WHERE deletedAt IS NULL AND date BETWEEN ? AND ? 
       ORDER BY date DESC
@@ -654,7 +670,7 @@ export default class DatabaseService {
 
     return await db.getAllAsync<TransactionType>(
       `
-      SELECT uuid, id, name, amount, type, categoryId, date
+      SELECT id, name, amount, type, categoryId, date
       FROM transactions
       WHERE deletedAt IS NULL
       ORDER BY date DESC
@@ -686,14 +702,14 @@ export default class DatabaseService {
       LEFT JOIN transactions t 
           ON c.id = t.categoryId
           AND strftime('%Y-%m', t.date) = ?
-      WHERE deletedAt IS NULL
+      WHERE c.deletedAt IS NULL
       GROUP BY c.id
     `,
       [monthFilter]
     );
   }
 
-  static async getCategorySpend(categoryId: number, month?: string) {
+  static async getCategorySpend(categoryId: string, month?: string) {
     const db = await this.getDatabase();
     const monthFilter = month ? month : new Date().toISOString().slice(0, 7);
 
@@ -716,7 +732,7 @@ export default class DatabaseService {
       LEFT JOIN transactions t 
           ON c.id = t.categoryId
           AND strftime('%Y-%m', t.date) = ?
-      WHERE c.id = ? AND deletedAt IS NULL
+      WHERE c.id = ? AND c.deletedAt IS NULL
       GROUP BY c.id
     `,
       [monthFilter, categoryId]
@@ -748,22 +764,7 @@ export default class DatabaseService {
     const db = await this.getDatabase();
     const now = new Date().toISOString();
 
-    type BadgeDatabaseRow = {
-      badge_key: string;
-      unlocked: number;
-      unlocked_at: string;
-    };
-
-    const row = await db.getFirstAsync<{ uuid: string }>(
-      "SELECT uuid FROM badges WHERE badge_key = ? AND deletedAt IS NULL",
-      [badgeKey]
-    );
-
-    if (!row) {
-      throw new Error(`Badge with id ${badgeKey} not found`);
-    }
-
-    await db.getFirstAsync<BadgeDatabaseRow>(
+    await db.runAsync(
       ` 
         UPDATE badges
         SET unlocked = 1,
@@ -774,7 +775,7 @@ export default class DatabaseService {
       [now, badgeKey]
     );
 
-    await this.logChange("badges", row.uuid, "update", {
+    await this.logChange("badges", badgeKey, "update", {
       unlocked: 1,
       unlocked_at: now,
     });
@@ -856,39 +857,28 @@ export default class DatabaseService {
       "UPDATE app_meta SET value = ?, updatedAt = CURRENT_TIMESTAMP WHERE key = 'app_last_active'",
       [date]
     );
-    const lastActiveRow = await db.getFirstAsync<{ uuid: string }>(
-      "SELECT uuid FROM app_meta WHERE key = 'app_current_streak'"
-    );
-    if (lastActiveRow) {
-      await this.logChange("app_meta", lastActiveRow.uuid, "update", {
-        value: date,
-      });
-    }
+    await this.logChange("app_meta", "app_last_active", "update", {
+      value: date,
+    });
 
     await db.runAsync(
       "UPDATE app_meta SET value = ?, updatedAt = CURRENT_TIMESTAMP WHERE key = 'app_current_streak'",
       [String(currentStreak)]
     );
-    const streakRow = await db.getFirstAsync<{ uuid: string }>(
-      "SELECT uuid FROM app_meta WHERE key = 'app_current_streak'"
-    );
-    if (streakRow) {
-      await this.logChange("app_meta", streakRow.uuid, "update", {
-        value: currentStreak,
-      });
-    }
+    await this.logChange("app_meta", "app_current_streak", "update", {
+      value: currentStreak,
+    });
   }
 
   static async insertName(name: string) {
     const db = await this.getDatabase();
-    const uuid = crypto.randomUUID();
 
     await db.runAsync(
-      "INSERT INTO app_meta (key, uuid, value) VALUES ('user_name', ?, ?)",
-      [uuid, name]
+      "INSERT INTO app_meta (key, value) VALUES ('user_name', ?)",
+      [name]
     );
 
-    await this.logChange("app_meta", uuid, "create", {
+    await this.logChange("app_meta", "user_name", "create", {
       key: "user_name",
       value: name,
     });
@@ -904,5 +894,30 @@ export default class DatabaseService {
     if (row) {
       return row.value;
     }
+  }
+
+  static async getLastSyncDate() {
+    const db = await this.getDatabase();
+
+    const row = await db.getFirstAsync<{ value: string }>(
+      "SELECT value FROM app_meta WHERE key = 'app_last_sync' AND deletedAt IS NULL"
+    );
+
+    if (row) {
+      return new Date(row.value);
+    }
+  }
+
+  static async updateLastSyncDate(date: string) {
+    const db = await this.getDatabase();
+
+    await db.runAsync(
+      "UPDATE app_meta SET value = ?, updatedAt = CURRENT_TIMESTAMP WHERE key = 'app_last_sync'",
+      [date]
+    );
+
+    await this.logChange("app_meta", "app_last_sync", "update", {
+      value: date,
+    });
   }
 }

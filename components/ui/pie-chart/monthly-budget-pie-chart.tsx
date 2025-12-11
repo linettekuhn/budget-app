@@ -24,7 +24,7 @@ export default function MonthlyBudgetPieChart({ budgets }: Props) {
 
   if (otherTotal > 0) {
     displayBudgets.push({
-      id: -1,
+      id: "",
       name: "Other",
       color: adjustColorForScheme("#B6B6B6", colorScheme),
       budget: otherTotal,

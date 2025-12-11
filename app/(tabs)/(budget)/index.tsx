@@ -127,7 +127,7 @@ export default function Budget() {
               <CategoryBudgetPreview
                 key={-1}
                 category={{
-                  id: -1,
+                  id: "",
                   name: "Other",
                   budget: otherTotal,
                   totalSpent: otherTotalSpent,

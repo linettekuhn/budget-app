@@ -1,6 +1,7 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import Avatar from "@/components/ui/avatar";
+import CapsuleButton from "@/components/ui/capsule-button";
 import { Collapsible } from "@/components/ui/collapsible";
 import { Colors } from "@/constants/theme";
 import { useName } from "@/hooks/useName";
@@ -45,6 +46,7 @@ export default function Profile() {
   const { name, loading } = useName();
   const bgColor = Colors[colorScheme ?? "light"].background;
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const btnColor = Colors[colorScheme ?? "light"].secondary[500];
 
   useEffect(() => {
     const loadStartDate = async () => {
@@ -204,6 +206,21 @@ export default function Profile() {
               day: "2-digit",
             })}
           </ThemedText>
+          <CapsuleButton
+            text="RESET TRANSACTIONS"
+            onPress={resetDatabase}
+            bgFocused={btnColor}
+          />
+          <CapsuleButton
+            text="RESET ONBOARDING"
+            onPress={resetOnboarding}
+            bgFocused={btnColor}
+          />
+          <CapsuleButton
+            text="RESET APP"
+            onPress={resetApp}
+            bgFocused={btnColor}
+          />
         </ThemedView>
       </ScrollView>
     </SafeAreaView>

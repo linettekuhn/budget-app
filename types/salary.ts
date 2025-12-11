@@ -1,6 +1,5 @@
 export type Salary = {
-  id: number;
-  uuid: string;
+  id: string;
   type: string;
   amount: number;
   monthly: number;

@@ -92,7 +92,7 @@ export default function HomeScreen() {
                 router.push("/(tabs)/(budget)");
               }}
               category={{
-                id: -1,
+                id: "",
                 name: "Total Spent",
                 budget: totalBudget,
                 totalSpent: totalSpent,

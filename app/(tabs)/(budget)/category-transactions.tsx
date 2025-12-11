@@ -68,7 +68,6 @@ export default function CategoryTransactions() {
       const savedTransactions = transactionsData.map((row) => {
         const transaction: TransactionType = {
           id: row.id,
-          uuid: row.uuid,
           name: row.name,
           amount: row.amount,
           type: row.type,
@@ -140,7 +139,7 @@ export default function CategoryTransactions() {
               { backgroundColor: Colors[colorScheme ?? "light"].primary[200] },
             ]}
             data={transactions}
-            keyExtractor={(item) => String(item.id)}
+            keyExtractor={(item) => item.id}
             refreshControl={
               <RefreshControl
                 refreshing={loading}
