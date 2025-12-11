@@ -4,16 +4,20 @@ import Avatar from "@/components/ui/avatar";
 import CapsuleButton from "@/components/ui/capsule-button";
 import { Collapsible } from "@/components/ui/collapsible";
 import { Colors } from "@/constants/theme";
+import { auth } from "@/firebase/firebaseConfig";
 import { useName } from "@/hooks/useName";
 import DatabaseService from "@/services/DatabaseService";
 import Octicons from "@expo/vector-icons/Octicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
+import { signOut } from "firebase/auth";
 import { PropsWithChildren, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
+  TouchableOpacity,
   useColorScheme,
   View,
 } from "react-native";
@@ -47,6 +51,7 @@ export default function Profile() {
   const bgColor = Colors[colorScheme ?? "light"].background;
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const btnColor = Colors[colorScheme ?? "light"].secondary[500];
+  const color = Colors[colorScheme ?? "light"].text;
 
   useEffect(() => {
     const loadStartDate = async () => {
@@ -104,6 +109,30 @@ export default function Profile() {
         text1: "Error clearing app data",
       });
       console.error("Error clearing app data:", error);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      // sign out from firebase
+      await signOut(auth);
+
+      // clear offline mode
+      await AsyncStorage.removeItem("offlineMode");
+
+      // navigate to login
+      router.replace("/(auth)/login");
+
+      Toast.show({
+        type: "success",
+        text1: "Logged out successfully!",
+      });
+    } catch (error) {
+      console.error(error);
+      Toast.show({
+        type: "error",
+        text1: "Failed to log out",
+      });
     }
   };
 
@@ -186,11 +215,25 @@ export default function Profile() {
                   <ProfileOption text="Choose currency" onPress={() => {}} />
                 </View>
               </Collapsible>
-              <Collapsible
-                title="Logout"
-                IconComponent={Octicons}
-                iconName="sign-out"
-              />
+              <TouchableOpacity
+                onPress={logout}
+                activeOpacity={0.8}
+                style={[
+                  styles.wrapper,
+                  {
+                    backgroundColor:
+                      Colors[colorScheme ?? "light"].primary[200],
+                  },
+                ]}
+              >
+                <View style={styles.row}>
+                  <Octicons name="sign-out" size={17} color={color} />
+
+                  <ThemedText type="bodyLarge" style={{ color }}>
+                    Logout
+                  </ThemedText>
+                </View>
+              </TouchableOpacity>
             </View>
           </View>
           <ThemedText
@@ -297,5 +340,16 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
     gap: 32,
     borderRadius: 20,
+  },
+
+  wrapper: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 24,
   },
 });

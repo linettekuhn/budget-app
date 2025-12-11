@@ -174,25 +174,27 @@ export default class DatabaseService {
   static async seedDefaultCategories() {
     const db = await this.getDatabase();
 
-    const existingCategories = await db.getAllAsync<CountResult>(
-      "SELECT COUNT(*) as count FROM categories WHERE deletedAt IS NULL"
-    );
-    if (existingCategories[0].count === 0) {
-      const categories = [
-        { name: "Utilities", color: "#FF6B6B", type: "need" },
-        { name: "Transport", color: "#4ECDC4", type: "need" },
-        { name: "Groceries", color: "#FFD93D", type: "need" },
-        { name: "Rent", color: "#3DFF8B", type: "need" },
-        { name: "Insurance", color: "#6A4C93", type: "need" },
-        { name: "Debt", color: "#FF8C00", type: "need" },
-        { name: "Restaurants", color: "#b2d100ff", type: "want" },
-        { name: "Beauty", color: "#6980ffff", type: "want" },
-        { name: "Shopping", color: "#DA70D6", type: "want" },
-        { name: "Subscription", color: "#9370DB", type: "want" },
-        { name: "Entertainment", color: "#20B2AA", type: "want" },
-      ];
+    const categories = [
+      { name: "Utilities", color: "#FF6B6B", type: "need" },
+      { name: "Transport", color: "#4ECDC4", type: "need" },
+      { name: "Groceries", color: "#FFD93D", type: "need" },
+      { name: "Rent", color: "#3DFF8B", type: "need" },
+      { name: "Insurance", color: "#6A4C93", type: "need" },
+      { name: "Debt", color: "#FF8C00", type: "need" },
+      { name: "Restaurants", color: "#b2d100ff", type: "want" },
+      { name: "Beauty", color: "#6980ffff", type: "want" },
+      { name: "Shopping", color: "#DA70D6", type: "want" },
+      { name: "Subscription", color: "#9370DB", type: "want" },
+      { name: "Entertainment", color: "#20B2AA", type: "want" },
+    ];
 
-      for (const cat of categories) {
+    for (const cat of categories) {
+      const existing = await db.getAllAsync<CategoryType>(
+        "SELECT * FROM categories WHERE name = ?",
+        [cat.name]
+      );
+
+      if (!existing.length) {
         const id = crypto.randomUUID();
         await db.runAsync(
           `
@@ -201,8 +203,6 @@ export default class DatabaseService {
           `,
           [id, cat.name, cat.color, cat.type]
         );
-
-        await this.logChange("categories", id, "create", cat);
       }
     }
   }
@@ -247,6 +247,7 @@ export default class DatabaseService {
     await db.execAsync(`DROP TABLE IF EXISTS salary`);
     await db.execAsync(`DROP TABLE IF EXISTS badges`);
     await db.execAsync(`DROP TABLE IF EXISTS app_meta`);
+    await db.execAsync(`DROP TABLE IF EXISTS pending_changes`);
 
     await this.initalize();
   }
@@ -301,6 +302,14 @@ export default class DatabaseService {
     await db.runAsync(
       `UPDATE ${table} SET deletedAt = CURRENT_TIMESTAMP WHERE id = ?`,
       [id]
+    );
+  }
+
+  static async getPendingChanges() {
+    const db = await this.getDatabase();
+
+    return await db.getAllAsync(
+      `SELECT * FROM pending_changes WHERE tableName = "categories"`
     );
   }
 

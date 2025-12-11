@@ -3,10 +3,13 @@ import { ThemedView } from "@/components/themed-view";
 import CapsuleButton from "@/components/ui/capsule-button";
 import CapsuleInput from "@/components/ui/capsule-input-box";
 import { Colors } from "@/constants/theme";
+import { firebaseErrorMessages } from "@/firebase/errorMessages";
 import { auth } from "@/firebase/firebaseConfig";
+import SyncService from "@/services/SyncService";
 import Octicons from "@expo/vector-icons/Octicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import { FirebaseError } from "firebase/app";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { useState } from "react";
 import {
@@ -19,6 +22,7 @@ import {
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Toast } from "toastify-react-native";
 
 export default function Login() {
   const colorScheme = useColorScheme();
@@ -30,13 +34,35 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
+    if (loading) return;
+
+    setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      await SyncService.sync();
+
+      Toast.show({
+        type: "success",
+        text1: "Account logged in!",
+      });
       router.replace("/(tabs)");
-    } catch (err) {
-      console.log(err);
+    } catch (error: unknown) {
+      if (error instanceof FirebaseError) {
+        Toast.show({
+          type: "error",
+          text1: firebaseErrorMessages[error.code] ?? "Something went wrong",
+        });
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "An error ocurred logging in",
+        });
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -97,6 +123,7 @@ export default function Login() {
                 text="SIGN IN"
                 onPress={handleLogin}
                 bgFocused={btnColor}
+                disabled={loading}
               />
               <ThemedView style={styles.registerPrompt}>
                 <ThemedText type="body">Don&apos;t have an account?</ThemedText>

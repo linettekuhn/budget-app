@@ -11,6 +11,7 @@ type Props = {
   textColor?: string;
   IconComponent?: ComponentType<any>;
   iconName?: string;
+  disabled?: boolean;
 };
 
 export default function CapsuleButton({
@@ -21,6 +22,7 @@ export default function CapsuleButton({
   textColor,
   IconComponent,
   iconName,
+  disabled = false,
 }: Props) {
   const colorScheme = useColorScheme();
   const bgColor = bgDefault ?? Colors[colorScheme ?? "light"].primary[300];
@@ -28,11 +30,16 @@ export default function CapsuleButton({
 
   return (
     <Pressable
-      onPress={onPress}
+      onPress={disabled ? undefined : onPress}
       style={({ pressed }) => [
         styles.button,
         {
-          backgroundColor: pressed ? bgFocused : bgColor,
+          opacity: disabled ? 0.6 : 1,
+          backgroundColor: disabled
+            ? Colors[colorScheme ?? "light"].primary[200]
+            : pressed
+            ? bgFocused
+            : bgColor,
         },
       ]}
     >
