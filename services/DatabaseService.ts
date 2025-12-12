@@ -263,13 +263,9 @@ export default class DatabaseService {
   static async insertFromSync(table: string, id: string, data: any) {
     const db = await this.getDatabase();
 
-    console.log(`inserting in ${table} id: ${id}`);
     const keys = Object.keys(data);
     const placeholders = keys.map(() => "?").join(", ");
     const values = keys.map((id) => data[id]);
-    console.log(keys.join(", "));
-    console.log(placeholders);
-    console.log(values);
     await db.runAsync(
       `INSERT INTO ${table} (${keys.join(", ")}) VALUES (${placeholders})`,
       [...values]
@@ -279,12 +275,9 @@ export default class DatabaseService {
   static async updateFromSync(table: string, id: string, data: any) {
     const db = await this.getDatabase();
 
-    console.log(`updating ${table} id: ${id}`);
     const keys = Object.keys(data);
     const columns = keys.map((id) => `${id} = ?`).join(", ");
     const values = keys.map((id) => data[id]);
-    console.log(columns);
-    console.log(values);
 
     await db.runAsync(`UPDATE ${table} SET ${columns} WHERE id = ?`, [
       ...values,
@@ -365,7 +358,6 @@ export default class DatabaseService {
     categories.forEach((cat, index) => {
       const budgetRaw = budgets[cat.id]?.raw || "0";
       const budgetAmount = parseFloat((Number(budgetRaw) / 100).toFixed(2));
-      console.log(budgetAmount);
       values.push(ids[index], cat.name, cat.color, cat.type, budgetAmount);
     });
 

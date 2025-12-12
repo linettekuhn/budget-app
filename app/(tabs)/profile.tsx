@@ -53,6 +53,8 @@ export default function Profile() {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const btnColor = Colors[colorScheme ?? "light"].secondary[500];
   const color = Colors[colorScheme ?? "light"].text;
+  const user = auth.currentUser;
+  const email = user?.email ?? null;
 
   useEffect(() => {
     const loadStartDate = async () => {
@@ -158,7 +160,6 @@ export default function Profile() {
     return <ActivityIndicator size="large" />;
   }
 
-  // TODO: fix email
   // TODO: add button functionality
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
@@ -181,7 +182,9 @@ export default function Profile() {
               <Avatar name={name ?? ""} size={80} />
               <View style={styles.profile}>
                 <ThemedText type="h1">{name}</ThemedText>
-                <ThemedText type="bodySmall">linette.kuhn@gmail.com</ThemedText>
+                {email ? (
+                  <ThemedText type="bodySmall">{email}</ThemedText>
+                ) : null}
               </View>
             </View>
             <View style={{ paddingHorizontal: 24, gap: 32 }}>

@@ -108,7 +108,6 @@ export default class SyncService {
   private static async pullRemoteChanges() {
     const db = await DatabaseService.getDatabase();
     const user = auth.currentUser;
-    console.log("pulling remote changes..");
     const tables = [
       "app_meta",
       "badges",
@@ -146,15 +145,11 @@ export default class SyncService {
             const remote = doc.data();
             const id = remote.id;
 
-            console.log("remote data:", remote);
-
             // get local data
             const local = await db.getFirstAsync<LocalRow>(
               `SELECT * FROM ${table} WHERE id = ?`,
               [id]
             );
-
-            //console.log("local data:", local);
 
             if (!local) {
               // if doesnt exist locally insert row to database and not deleted
@@ -163,7 +158,6 @@ export default class SyncService {
               }
             } else {
               // if its not the first sync
-              console.log("lastSyncedAt:", lastSyncedAt);
               if (lastSyncedAt) {
                 // compare updatedAt times for local and remote doc
                 const remoteLastUpdated = new Date(
@@ -193,7 +187,6 @@ export default class SyncService {
             }
           }
         }
-        console.log("finished pulling remote changes");
       } catch (error) {
         console.error(`error getting ID token:`, error);
         throw error;
