@@ -69,6 +69,21 @@ export default function Login() {
   const handleOffline = async () => {
     try {
       await AsyncStorage.setItem("offlineMode", "true");
+
+      // check if user has completed onboarding
+      const hasCompleted = await AsyncStorage.getItem("completedOnboarding");
+      console.log("Onboarding complete:", hasCompleted);
+
+      // in offline mode check if onboarding has been completed
+      if (hasCompleted !== "true") {
+        if (hasCompleted === null) {
+          await AsyncStorage.setItem("completedOnboarding", "false");
+        }
+        router.replace("/(onboarding)/welcome");
+        return;
+      }
+
+      // if onboarding complete and offline, access app
       router.replace("/(tabs)");
     } catch (err) {
       console.log(err);

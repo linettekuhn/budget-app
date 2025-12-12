@@ -11,17 +11,17 @@ export function useBadges() {
   const loadBadges = useCallback(async () => {
     const badgesDefinitions = badgesJson as BadgeDefinition[];
     const definitionsMap = new Map(
-      badgesDefinitions.map((def) => [def.key, def])
+      badgesDefinitions.map((def) => [def.id, def])
     );
     try {
       const data = await DatabaseService.getBadges();
 
       // use data and badgesDefinitions to create badgeType
       const badges: BadgeType[] = data.map((row) => {
-        const badgeDefinition = definitionsMap.get(row.badge_key);
+        const badgeDefinition = definitionsMap.get(row.id);
 
         return {
-          key: row.badge_key,
+          id: row.id,
           title: badgeDefinition ? badgeDefinition.title : "",
           description: badgeDefinition ? badgeDefinition.description : "",
           unlocked: Boolean(row.unlocked),

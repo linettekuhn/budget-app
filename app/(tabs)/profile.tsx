@@ -7,6 +7,7 @@ import { Colors } from "@/constants/theme";
 import { auth } from "@/firebase/firebaseConfig";
 import { useName } from "@/hooks/useName";
 import DatabaseService from "@/services/DatabaseService";
+import SyncService from "@/services/SyncService";
 import Octicons from "@expo/vector-icons/Octicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
@@ -109,6 +110,23 @@ export default function Profile() {
         text1: "Error clearing app data",
       });
       console.error("Error clearing app data:", error);
+    }
+  };
+
+  const syncApp = async () => {
+    try {
+      await SyncService.sync();
+
+      Toast.show({
+        type: "success",
+        text1: "App synced successfully!",
+      });
+    } catch (error) {
+      Toast.show({
+        type: "success",
+        text1: "Error syncing app",
+      });
+      console.error("Error syncing app data:", error);
     }
   };
 
@@ -249,6 +267,11 @@ export default function Profile() {
               day: "2-digit",
             })}
           </ThemedText>
+          <CapsuleButton
+            text="SYNC APP"
+            onPress={syncApp}
+            bgFocused={btnColor}
+          />
           <CapsuleButton
             text="RESET TRANSACTIONS"
             onPress={resetDatabase}

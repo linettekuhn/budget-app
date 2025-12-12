@@ -60,14 +60,14 @@ export default class SyncService {
             if (action === "update" && payloadData.deletedAt) {
               await setDoc(
                 ref,
-                { uuid: rowUUID, ...payloadData },
+                { id: rowUUID, ...payloadData },
                 { merge: true }
               );
             } else {
               await setDoc(
                 ref,
                 {
-                  uuid: rowUUID,
+                  id: rowUUID,
                   ...payloadData,
                   updatedAt: new Date().toISOString(),
                 },
@@ -81,7 +81,7 @@ export default class SyncService {
             await setDoc(
               ref,
               {
-                uuid: rowUUID,
+                id: rowUUID,
                 deletedAt: new Date().toISOString(),
               },
               { merge: true }
@@ -108,7 +108,7 @@ export default class SyncService {
   private static async pullRemoteChanges() {
     const db = await DatabaseService.getDatabase();
     const user = auth.currentUser;
-
+    console.log("pulling remote changes..");
     const tables = [
       "app_meta",
       "badges",
@@ -122,17 +122,8 @@ export default class SyncService {
       id: string;
       updatedAt: string;
       deletedAt?: string | null;
-      [key: string]: any;
+      [id: string]: any;
     }
-
-    const primaryKeyMap: Record<string, string> = {
-      app_meta: "key",
-      badges: "badge_key",
-      categories: "id",
-      transactions: "id",
-      recurring_transactions: "id",
-      salary: "id",
-    };
 
     if (user) {
       try {
@@ -141,10 +132,11 @@ export default class SyncService {
 
         // for each table get firestore snapshot
         for (const table of tables) {
+          // TODO: HERES THE ERROR
           // filter out docs updated before last synced
           const collectionRef = query(
             collection(firestoreDb, `users/${userId}/${table}`),
-            where("updatedAt", ">", lastSyncedAt)
+            where("updatedAt", ">", lastSyncedAt ?? "1970-01-01T00:00:00.000Z")
           );
           const snapshot = await getDocs(collectionRef);
 
@@ -152,39 +144,56 @@ export default class SyncService {
           for (const doc of snapshot.docs) {
             // get remote data
             const remote = doc.data();
-            const uuid = remote.uuid;
+            const id = remote.id;
+
+            console.log("remote data:", remote);
 
             // get local data
             const local = await db.getFirstAsync<LocalRow>(
-              `SELECT * FROM ${table} WHERE ${primaryKeyMap[table]} = ?`,
-              [uuid]
+              `SELECT * FROM ${table} WHERE id = ?`,
+              [id]
             );
+
+            //console.log("local data:", local);
 
             if (!local) {
               // if doesnt exist locally insert row to database and not deleted
               if (!remote.deletedAt) {
-                DatabaseService.insertFromSync(table, uuid, remote);
+                DatabaseService.insertFromSync(table, id, remote);
               }
             } else {
-              // compare updatedAt times for local and remote doc
-              const remoteLastUpdated = new Date(
-                remote.updatedAt || 0
-              ).getTime();
-              const localLastUpdated = new Date(local.updatedAt).getTime();
+              // if its not the first sync
+              console.log("lastSyncedAt:", lastSyncedAt);
+              if (lastSyncedAt) {
+                // compare updatedAt times for local and remote doc
+                const remoteLastUpdated = new Date(
+                  remote.updatedAt || 0
+                ).getTime();
+                const localLastUpdated = new Date(local.updatedAt).getTime();
 
-              // most recent record wins
-              if (remoteLastUpdated > localLastUpdated) {
+                // most recent record wins
+                if (remoteLastUpdated > localLastUpdated) {
+                  if (remote.deletedAt) {
+                    // soft delete row from database
+                    DatabaseService.deleteFromSync(table, id);
+                  } else {
+                    // update row in database
+                    DatabaseService.updateFromSync(table, id, remote);
+                  }
+                }
+              } else {
                 if (remote.deletedAt) {
                   // soft delete row from database
-                  DatabaseService.deleteFromSync(table, uuid);
+                  DatabaseService.deleteFromSync(table, id);
                 } else {
                   // update row in database
-                  DatabaseService.updateFromSync(table, uuid, remote);
+                  DatabaseService.updateFromSync(table, id, remote);
                 }
               }
             }
           }
         }
+        console.log("finished pulling remote changes");
       } catch (error) {
         console.error(`error getting ID token:`, error);
         throw error;

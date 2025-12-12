@@ -155,7 +155,7 @@ export default function Rewards() {
                 badge.unlocked ? (
                   <Pressable
                     style={styles.badge}
-                    key={badge.key}
+                    key={badge.id}
                     onPress={() => {
                       openBadgeModal(badge);
                     }}
@@ -163,11 +163,11 @@ export default function Rewards() {
                     <Image
                       resizeMode="contain"
                       style={styles.badgeIcon}
-                      source={iconMap[badge.key]}
+                      source={iconMap[badge.id]}
                     />
                   </Pressable>
                 ) : (
-                  <View style={styles.badge} key={badge.key}>
+                  <View style={styles.badge} key={badge.id}>
                     <Image
                       resizeMode="contain"
                       style={styles.badgeIcon}
@@ -181,7 +181,7 @@ export default function Rewards() {
               <AppModal visible={showBadgeInfo} onClose={closeBadgeModal}>
                 <BadgeModal
                   badge={selectedBadge}
-                  icon={iconMap[selectedBadge.key]}
+                  icon={iconMap[selectedBadge.id]}
                 />
               </AppModal>
             )}

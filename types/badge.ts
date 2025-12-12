@@ -1,5 +1,5 @@
 export type BadgeDefinition = {
-  key: string;
+  id: string;
   title: string;
   description: string;
   criteria_type: BadgeCriteriaType;
@@ -7,7 +7,7 @@ export type BadgeDefinition = {
 };
 
 export type BadgeType = {
-  key: string;
+  id: string;
   title: string;
   description: string;
   unlocked: boolean;
@@ -15,8 +15,7 @@ export type BadgeType = {
 };
 
 export type AwardedBadge = {
-  badge_key: string;
-  uuid: string;
+  id: string;
   unlocked: number;
   unlocked_at: string;
 };

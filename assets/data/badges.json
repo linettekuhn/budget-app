@@ -1,72 +1,72 @@
 [
   {
-    "key": "first_transaction",
+    "id": "first_transaction",
     "title": "First Steps",
     "description": "Add your first transaction",
     "criteria_type": "first_transaction"
   },
   {
-    "key": "under_control",
+    "id": "under_control",
     "title": "Under Control",
     "description": "Didn’t overspend for a month",
     "criteria_type": "stayed_under_budget",
     "criteria_value": 1
   },
   {
-    "key": "cheap_life",
+    "id": "cheap_life",
     "title": "Cheap Life",
     "description": "Saved more than 50% of your monthly income",
     "criteria_type": "saved_over_percent",
     "criteria_value": 0.5
   },
   {
-    "key": "shopaholic",
+    "id": "shopaholic",
     "title": "Shopaholic",
     "description": "Spent more than 50% of your monthly earnings on wants",
     "criteria_type": "spent_over_percent_wants",
     "criteria_value": 0.5
   },
   {
-    "key": "custom_category",
+    "id": "custom_category",
     "title": "Like I Like It",
     "description": "Create your first custom category",
     "criteria_type": "created_category"
   },
   {
-    "key": "steady_planner",
+    "id": "steady_planner",
     "title": "Steady Planner",
     "description": "Stay within budget for three months consecutively",
     "criteria_type": "consecutive_months_under_budget",
     "criteria_value": 3
   },
   {
-    "key": "expert_planner",
+    "id": "expert_planner",
     "title": "Expert Planner",
     "description": "Stay within budget for the entire year",
     "criteria_type": "consecutive_months_under_budget",
     "criteria_value": 12
   },
   {
-    "key": "restaurant_top",
+    "id": "restaurant_top",
     "title": "A Little Treat",
     "description": "Have restaurants as your top category for one month",
     "criteria_type": "top_category",
     "criteria_value": "Restaurants"
   },
   {
-    "key": "smart_spender",
+    "id": "smart_spender",
     "title": "Smart Spender",
     "description": "Spent more on needs than wants in a month",
     "criteria_type": "needs_over_wants"
   },
   {
-    "key": "perfectionist",
+    "id": "perfectionist",
     "title": "Perfectionist",
     "description": "Spent exactly what was budgeted in a month",
     "criteria_type": "exact_budget_match"
   },
   {
-    "key": "minimalist",
+    "id": "minimalist",
     "title": "Minimalist",
     "description": "Zero expenses in the shopping category for a whole month",
     "criteria_type": "zero_spend_category",

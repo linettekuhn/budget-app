@@ -9,14 +9,17 @@ import { useAuth } from "@/hooks/useAuth";
 import { useBadgeCheck } from "@/hooks/useBadgeCheck";
 import DatabaseService from "@/services/DatabaseService";
 import StreakService from "@/services/StreakService";
+import SyncService from "@/services/SyncService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   DarkTheme,
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
+import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
 import { useFonts } from "expo-font";
 import { Stack, router } from "expo-router";
+import * as SQLite from "expo-sqlite";
 import { SQLiteDatabase, SQLiteProvider } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -47,6 +50,9 @@ export default function RootLayout() {
   const { checkBadges } = useBadgeCheck();
   const [dbReady, setDbReady] = useState<boolean>(false);
   const initialCheckDone = useRef(false);
+
+  const studioDb = SQLite.openDatabaseSync("app.db");
+  useDrizzleStudio(studioDb);
 
   const createDatabase = useCallback(async (db: SQLiteDatabase) => {
     try {
@@ -81,33 +87,37 @@ export default function RootLayout() {
         // check if user has completed onboarding
         const hasCompleted = await AsyncStorage.getItem("completedOnboarding");
         console.log("Onboarding complete:", hasCompleted);
-        if (hasCompleted !== "true") {
-          if (hasCompleted === null) {
-            await AsyncStorage.setItem("completedOnboarding", "false");
-          }
-          router.replace("/(onboarding)/welcome");
-          return;
-        }
 
-        // after onboarding is complete check if user is logged in
+        // if already authenticated, sync changes and access app
         if (user) {
+          SyncService.sync();
           router.replace("/(tabs)");
           return;
-        }
+        } else {
+          // if user is not logged in check for offline mode
+          const offlineMode = await AsyncStorage.getItem("offlineMode");
+          console.log("Offline mode:", offlineMode);
+          if (offlineMode === null) {
+            await AsyncStorage.setItem("offlineMode", "false");
+          }
+          if (offlineMode === "true") {
+            // in offline mode check if onboarding has been completed
+            if (hasCompleted !== "true") {
+              if (hasCompleted === null) {
+                await AsyncStorage.setItem("completedOnboarding", "false");
+              }
+              router.replace("/(onboarding)/welcome");
+              return;
+            }
 
-        // if user is not logged in check for offline mode
-        const offlineMode = await AsyncStorage.getItem("offlineMode");
-        console.log("Offline mode:", offlineMode);
-        if (offlineMode === null) {
-          await AsyncStorage.setItem("offlineMode", "false");
-        }
-        if (offlineMode === "true") {
-          router.replace("/(tabs)");
-          return;
-        }
+            // if onboarding complete and offline, access app
+            router.replace("/(tabs)");
+            return;
+          }
 
-        // not logged in, not offline mode: try to authenticate user
-        router.replace("/(auth)/login");
+          // not logged in, not offline mode: try to authenticate user
+          router.replace("/(auth)/login");
+        }
       } catch (error) {
         console.log(error);
       }

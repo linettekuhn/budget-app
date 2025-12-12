@@ -5,6 +5,7 @@ import CapsuleButton from "@/components/ui/capsule-button";
 import OnboardingControls from "@/components/ui/onboarding-controls";
 import { Colors } from "@/constants/theme";
 import DatabaseService from "@/services/DatabaseService";
+import SyncService from "@/services/SyncService";
 import Octicons from "@expo/vector-icons/Octicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
@@ -48,8 +49,11 @@ export default function FinishOnboarding() {
       // reset onboarding state
       reset();
 
+      // sync changes after onboarding
+      await SyncService.sync();
+
       // access app
-      router.replace("/(auth)/login");
+      router.replace("/(tabs)");
     } catch (error: unknown) {
       if (error instanceof Error) {
         Toast.show({

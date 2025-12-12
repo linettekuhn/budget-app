@@ -38,7 +38,7 @@ export class BadgeService {
 
       const award = await handler(badge);
       if (award) {
-        await DatabaseService.unlockBadge(badge.key);
+        await DatabaseService.unlockBadge(badge.id);
         Toast.show({
           type: "badge",
           text1: `Badge Earned: ${badge.title}`,
@@ -49,7 +49,7 @@ export class BadgeService {
 }
 
 async function checkFirstTransaction(badge: BadgeDefinition) {
-  if (await DatabaseService.checkBadgeUnlocked(badge.key)) {
+  if (await DatabaseService.checkBadgeUnlocked(badge.id)) {
     return false;
   }
   // check transactions count
@@ -65,7 +65,7 @@ async function checkFirstTransaction(badge: BadgeDefinition) {
 
 async function checkStayedUnderBudget(badge: BadgeDefinition) {
   // check if badge already earned
-  if (await DatabaseService.checkBadgeUnlocked(badge.key)) {
+  if (await DatabaseService.checkBadgeUnlocked(badge.id)) {
     return false;
   }
 
@@ -105,7 +105,7 @@ async function checkStayedUnderBudget(badge: BadgeDefinition) {
 
 async function checkSavedOverPercent(badge: BadgeDefinition) {
   // check if badge already earned
-  if (await DatabaseService.checkBadgeUnlocked(badge.key)) {
+  if (await DatabaseService.checkBadgeUnlocked(badge.id)) {
     return false;
   }
 
@@ -157,7 +157,7 @@ async function checkSavedOverPercent(badge: BadgeDefinition) {
 
 async function checkSpentOverPercentWants(badge: BadgeDefinition) {
   // check if badge already earned
-  if (await DatabaseService.checkBadgeUnlocked(badge.key)) {
+  if (await DatabaseService.checkBadgeUnlocked(badge.id)) {
     return false;
   }
 
@@ -203,7 +203,7 @@ async function checkSpentOverPercentWants(badge: BadgeDefinition) {
 
 async function checkCreatedCategory(badge: BadgeDefinition) {
   // check if badge already earned
-  if (await DatabaseService.checkBadgeUnlocked(badge.key)) {
+  if (await DatabaseService.checkBadgeUnlocked(badge.id)) {
     return false;
   }
 
@@ -214,7 +214,7 @@ async function checkCreatedCategory(badge: BadgeDefinition) {
 
 async function checkConsecutiveMonths(badge: BadgeDefinition) {
   // check if badge already earned
-  if (await DatabaseService.checkBadgeUnlocked(badge.key)) {
+  if (await DatabaseService.checkBadgeUnlocked(badge.id)) {
     return false;
   }
 
@@ -259,7 +259,7 @@ async function checkConsecutiveMonths(badge: BadgeDefinition) {
 
 async function checkTopCategory(badge: BadgeDefinition) {
   // check if badge already earned
-  if (await DatabaseService.checkBadgeUnlocked(badge.key)) {
+  if (await DatabaseService.checkBadgeUnlocked(badge.id)) {
     return false;
   }
 
@@ -296,7 +296,7 @@ async function checkTopCategory(badge: BadgeDefinition) {
 
 async function checkNeedsOverWants(badge: BadgeDefinition) {
   // check if badge already earned
-  if (await DatabaseService.checkBadgeUnlocked(badge.key)) {
+  if (await DatabaseService.checkBadgeUnlocked(badge.id)) {
     return false;
   }
 
@@ -331,7 +331,7 @@ async function checkNeedsOverWants(badge: BadgeDefinition) {
 
 async function checkExactBudgetMatch(badge: BadgeDefinition) {
   // check if badge already earned
-  if (await DatabaseService.checkBadgeUnlocked(badge.key)) {
+  if (await DatabaseService.checkBadgeUnlocked(badge.id)) {
     return false;
   }
 
@@ -356,7 +356,7 @@ async function checkExactBudgetMatch(badge: BadgeDefinition) {
 
 async function checkZeroSpendInCategory(badge: BadgeDefinition) {
   // check if badge already earned
-  if (await DatabaseService.checkBadgeUnlocked(badge.key)) {
+  if (await DatabaseService.checkBadgeUnlocked(badge.id)) {
     return false;
   }
 

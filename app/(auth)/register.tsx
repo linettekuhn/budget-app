@@ -7,6 +7,7 @@ import { firebaseErrorMessages } from "@/firebase/errorMessages";
 import { auth } from "@/firebase/firebaseConfig";
 import SyncService from "@/services/SyncService";
 import Octicons from "@expo/vector-icons/Octicons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { FirebaseError } from "firebase/app";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
@@ -50,6 +51,20 @@ export default function Register() {
       const user = userCred.user;
 
       await updateProfile(user, { displayName: name });
+
+      // check if user has completed onboarding
+      const hasCompleted = await AsyncStorage.getItem("completedOnboarding");
+      console.log("Onboarding complete:", hasCompleted);
+
+      // redirect to onboarding if necessary
+      if (hasCompleted !== "true") {
+        if (hasCompleted === null) {
+          await AsyncStorage.setItem("completedOnboarding", "false");
+        }
+        router.replace("/(onboarding)/welcome");
+        return;
+      }
+
       await SyncService.sync();
 
       Toast.show({
