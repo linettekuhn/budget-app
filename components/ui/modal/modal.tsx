@@ -2,10 +2,13 @@ import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
 import {
   Dimensions,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   useColorScheme,
+  View,
 } from "react-native";
 import Modal from "react-native-modal";
 type Props = {
@@ -21,28 +24,38 @@ export default function AppModal({ onClose, visible, children }: Props) {
   return (
     <Modal
       isVisible={visible}
-      onBackdropPress={onClose}
       animationIn="slideInUp"
       animationOut="slideOutDown"
       animationInTiming={300}
       backdropOpacity={0.5}
       style={styles.modalContainer}
       backdropColor={Colors[colorScheme ?? "light"].primary[300]}
+      avoidKeyboard={false}
     >
-      <Pressable
-        onPress={(e) => e.stopPropagation()}
-        style={{ maxHeight: height * 0.85 }}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardContainer}
       >
-        <ThemedView style={styles.contentWrapper}>
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-            bounces={false}
-          >
-            {children}
-          </ScrollView>
-        </ThemedView>
-      </Pressable>
+        {/* backdrop */}
+        <Pressable onPress={onClose} style={styles.backdrop} />
+        {/* modal content */}
+        <View
+          style={{
+            maxHeight: height * 0.85,
+            justifyContent: "flex-end",
+          }}
+        >
+          <ThemedView style={styles.contentWrapper}>
+            <ScrollView
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+              bounces={false}
+            >
+              {children}
+            </ScrollView>
+          </ThemedView>
+        </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -54,6 +67,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     margin: 0,
   },
+
+  keyboardContainer: {
+    flex: 1,
+    width: "100%",
+    justifyContent: "flex-end",
+    alignItems: "center",
+  },
+
+  backdrop: {
+    flex: 1,
+    width: "100%",
+  },
+
   contentWrapper: {
     width: width,
     borderTopLeftRadius: 25,

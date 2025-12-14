@@ -893,6 +893,19 @@ export default class DatabaseService {
     }
   }
 
+  static async updateName(name: string) {
+    const db = await this.getDatabase();
+
+    await db.runAsync(
+      "UPDATE app_meta SET value = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = 'user_name'",
+      [name]
+    );
+
+    await this.logChange("app_meta", "user_name", "update", {
+      value: name,
+    });
+  }
+
   static async getLastSyncDate() {
     const db = await this.getDatabase();
 

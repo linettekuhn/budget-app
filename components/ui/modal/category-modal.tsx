@@ -6,15 +6,7 @@ import DatabaseService from "@/services/DatabaseService";
 import { CategorySpend } from "@/types";
 import { formatAmountDisplay } from "@/utils/formatDisplay";
 import { useState } from "react";
-import {
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  TouchableWithoutFeedback,
-  useColorScheme,
-  View,
-} from "react-native";
+import { Keyboard, StyleSheet, useColorScheme, View } from "react-native";
 import ColorPicker, {
   BrightnessSlider,
   ColorFormatsObject,
@@ -116,113 +108,103 @@ export default function CustomCategory({
   };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{ paddingVertical: 0 }}
-      >
-        <ThemedView style={styles.categoryForm}>
-          <ThemedText style={styles.heading} type="h1">
-            Create a Category
-          </ThemedText>
-          <ThemedView style={styles.options}>
-            <ThemedText style={styles.heading} type="h2">
-              Name
-            </ThemedText>
-            <CapsuleInput
-              value={categoryName}
-              onChangeText={setCategoryName}
-              placeholder="Enter category name"
-              keyboardType="default"
-            />
-          </ThemedView>
-          <ThemedView style={styles.budgetPreview}>
-            <ThemedText style={styles.heading} type="h2">
-              Budget
-            </ThemedText>
-            <AmountDisplay
-              displayAmount={displayAmount}
-              rawAmount={rawAmount}
-              onChangeText={handleAmountChange}
-              textType="h2"
-            />
-          </ThemedView>
-          <ThemedView style={styles.options}>
-            <ThemedText style={styles.heading} type="h2">
-              Type
-            </ThemedText>
-            <ThemedView style={styles.horizontalContainer}>
-              <CapsuleToggle
-                text="NEED"
-                bgFocused={Colors[colorScheme ?? "light"].primary[300]}
-                selected={typeSelected === "NEED"}
-                onPress={() => {
-                  Keyboard.dismiss();
-                  setType("NEED");
-                }}
-              />
-              <CapsuleToggle
-                text="WANT"
-                bgFocused={Colors[colorScheme ?? "light"].primary[300]}
-                selected={typeSelected === "WANT"}
-                onPress={() => {
-                  Keyboard.dismiss();
-                  setType("WANT");
-                }}
-              />
-            </ThemedView>
-          </ThemedView>
-          <ThemedView style={styles.options}>
-            <ColorPicker
-              style={styles.colorPicker}
-              value={categoryColor}
-              onChangeJS={handleColorChange}
-            >
-              <ThemedView style={styles.colorPreviewWrapper}>
-                <ThemedText type="h2">Color</ThemedText>
-                <View
-                  style={[
-                    styles.colorPreview,
-                    { backgroundColor: categoryColor },
-                  ]}
-                ></View>
-              </ThemedView>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 25,
-                }}
-              >
-                <Panel3
-                  centerChannel="saturation"
-                  style={{ maxHeight: 150, maxWidth: 150, flex: 1 }}
-                />
-                <BrightnessSlider vertical />
-              </View>
-              <Swatches
-                colors={[
-                  "#F44336",
-                  "#E91E63",
-                  "#9C27B0",
-                  "#3F51B5",
-                  "#00BCD4",
-                  "#009688",
-                  "#8BC34A",
-                  "#CDDC39",
-                ]}
-              />
-            </ColorPicker>
-          </ThemedView>
-          <CapsuleButton
-            text="ADD CATEGORY"
-            onPress={handleAddCategory}
-            bgFocused={categoryColor}
+    <ThemedView style={styles.categoryForm}>
+      <ThemedText style={styles.heading} type="h1">
+        Create a Category
+      </ThemedText>
+      <ThemedView style={styles.options}>
+        <ThemedText style={styles.heading} type="h2">
+          Name
+        </ThemedText>
+        <CapsuleInput
+          value={categoryName}
+          onChangeText={setCategoryName}
+          placeholder="Enter category name"
+          keyboardType="default"
+        />
+      </ThemedView>
+      <ThemedView style={styles.budgetPreview}>
+        <ThemedText style={styles.heading} type="h2">
+          Budget
+        </ThemedText>
+        <AmountDisplay
+          displayAmount={displayAmount}
+          rawAmount={rawAmount}
+          onChangeText={handleAmountChange}
+          textType="h2"
+        />
+      </ThemedView>
+      <ThemedView style={styles.options}>
+        <ThemedText style={styles.heading} type="h2">
+          Type
+        </ThemedText>
+        <ThemedView style={styles.horizontalContainer}>
+          <CapsuleToggle
+            text="NEED"
+            bgFocused={Colors[colorScheme ?? "light"].primary[300]}
+            selected={typeSelected === "NEED"}
+            onPress={() => {
+              Keyboard.dismiss();
+              setType("NEED");
+            }}
+          />
+          <CapsuleToggle
+            text="WANT"
+            bgFocused={Colors[colorScheme ?? "light"].primary[300]}
+            selected={typeSelected === "WANT"}
+            onPress={() => {
+              Keyboard.dismiss();
+              setType("WANT");
+            }}
           />
         </ThemedView>
-      </KeyboardAvoidingView>
-    </TouchableWithoutFeedback>
+      </ThemedView>
+      <ThemedView style={styles.options}>
+        <ColorPicker
+          style={styles.colorPicker}
+          value={categoryColor}
+          onChangeJS={handleColorChange}
+        >
+          <ThemedView style={styles.colorPreviewWrapper}>
+            <ThemedText type="h2">Color</ThemedText>
+            <View
+              style={[styles.colorPreview, { backgroundColor: categoryColor }]}
+            ></View>
+          </ThemedView>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 25,
+            }}
+          >
+            <Panel3
+              centerChannel="saturation"
+              style={{ maxHeight: 150, maxWidth: 150, flex: 1 }}
+            />
+            <BrightnessSlider vertical />
+          </View>
+          <Swatches
+            colors={[
+              "#F44336",
+              "#E91E63",
+              "#9C27B0",
+              "#3F51B5",
+              "#00BCD4",
+              "#009688",
+              "#8BC34A",
+              "#CDDC39",
+            ]}
+          />
+        </ColorPicker>
+      </ThemedView>
+      <CapsuleButton
+        text="ADD CATEGORY"
+        onPress={handleAddCategory}
+        bgFocused={categoryColor}
+      />
+    </ThemedView>
   );
 }
 

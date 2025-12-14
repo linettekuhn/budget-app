@@ -28,20 +28,39 @@ export function useName() {
     }
   }, []);
 
+  const reload = useCallback(() => setReloadFlag((flag) => !flag), []);
+
+  const updateName = useCallback(
+    async (newName: string) => {
+      try {
+        await DatabaseService.updateName(newName);
+        reload();
+      } catch (error: unknown) {
+        Toast.show({
+          type: "error",
+          text1:
+            error instanceof Error
+              ? error.message
+              : "An error occurred updating name",
+        });
+      }
+    },
+    [reload]
+  );
+
   useEffect(() => {
     loadName();
   }, [loadName]);
 
   useEffect(() => {
     loadName();
-  }, [reloadFlag, loadName]);
-
-  const reload = useCallback(() => setReloadFlag((flag) => !flag), []);
+  }, [reloadFlag]);
 
   return {
     name,
     loading,
     reload,
     setName,
+    updateName,
   };
 }

@@ -1,3 +1,5 @@
+import ChangeNameOption from "@/components/profile/change-name-option";
+import ProfileOption from "@/components/profile/profile-option";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import Avatar from "@/components/ui/avatar";
@@ -12,10 +14,9 @@ import Octicons from "@expo/vector-icons/Octicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { signOut } from "firebase/auth";
-import { PropsWithChildren, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -25,36 +26,16 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Toast } from "toastify-react-native";
 
-function ProfileOption({
-  children,
-  text,
-  onPress,
-}: PropsWithChildren & { text: string; onPress: () => void }) {
-  const colorScheme = useColorScheme();
-  return (
-    <Pressable
-      style={{
-        borderTopWidth: 1,
-        borderColor: Colors[colorScheme ?? "light"].primary[300],
-        paddingVertical: 2,
-      }}
-      onPress={onPress}
-    >
-      <ThemedText type="body">{text}</ThemedText>
-      {children}
-    </Pressable>
-  );
-}
-
 export default function Profile() {
   const colorScheme = useColorScheme();
-  const { name, loading } = useName();
   const bgColor = Colors[colorScheme ?? "light"].background;
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const btnColor = Colors[colorScheme ?? "light"].secondary[500];
   const color = Colors[colorScheme ?? "light"].text;
   const user = auth.currentUser;
   const email = user?.email ?? null;
+
+  const { name, loading, reload } = useName();
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
 
   useEffect(() => {
     const loadStartDate = async () => {
@@ -194,9 +175,31 @@ export default function Profile() {
                 iconName="person"
               >
                 <View>
-                  <ProfileOption text="Change name" onPress={() => {}} />
-                  <ProfileOption text="Change password" onPress={() => {}} />
-                  <ProfileOption text="Delete account" onPress={() => {}} />
+                  <ChangeNameOption onChange={reload} />
+                  {user ? (
+                    <>
+                      <ProfileOption
+                        text="Change password"
+                        onPress={() => {}}
+                      />
+                      <ProfileOption text="Delete account" onPress={() => {}} />
+                    </>
+                  ) : (
+                    <>
+                      <ProfileOption
+                        text="Log in"
+                        onPress={() => {
+                          router.replace("/(auth)/login");
+                        }}
+                      />
+                      <ProfileOption
+                        text="Create account"
+                        onPress={() => {
+                          router.replace("/(auth)/register");
+                        }}
+                      />
+                    </>
+                  )}
                 </View>
               </Collapsible>
               <Collapsible
