@@ -1,4 +1,5 @@
 import ChangeNameOption from "@/components/profile/change-name-option";
+import EditSalaryOption from "@/components/profile/edit-salary-option";
 import ProfileOption from "@/components/profile/profile-option";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -221,7 +222,7 @@ export default function Profile() {
                 iconName="gear"
               >
                 <View>
-                  <ProfileOption text="Edit salary" onPress={() => {}} />
+                  <EditSalaryOption />
                   <ProfileOption
                     text="Manage recurring transactions"
                     onPress={() => {}}

@@ -482,7 +482,7 @@ export default class DatabaseService {
   ) {
     const db = await this.getDatabase();
 
-    const id = crypto.randomUUID();
+    const id = "primary_salary";
 
     await db.runAsync(
       `INSERT INTO salary (id, type, amount, monthly, hoursPerWeek) VALUES (?, ?, ?, ?, ?)`,
@@ -502,6 +502,33 @@ export default class DatabaseService {
     return db.getFirstAsync<Salary>(
       "SELECT * FROM salary WHERE deletedAt IS NULL"
     );
+  }
+
+  static async updateSalary(
+    type: string,
+    amount: number,
+    monthly: number,
+    hoursPerWeek: number | null
+  ) {
+    const db = await this.getDatabase();
+
+    const id = "primary_salary";
+
+    await db.runAsync(
+      `
+      UPDATE salary 
+      SET type = ?, amount = ?, monthly = ?, hoursPerWeek = ?
+      WHERE id = ?
+      `,
+      [type, amount, monthly, hoursPerWeek, id]
+    );
+
+    await this.logChange("salary", id, "update", {
+      type,
+      amount,
+      monthly,
+      hoursPerWeek,
+    });
   }
 
   // Transactions Table Interaction

@@ -47,5 +47,33 @@ export function useSalary() {
   }, [reloadFlag, loadSalary]);
 
   const reload = useCallback(() => setReloadFlag((flag) => !flag), []);
-  return { salary, loading, setSalary, reload };
+
+  const updateSalary = useCallback(
+    async (
+      type: string,
+      amount: number,
+      monthly: number,
+      hoursPerWeek: number | null
+    ) => {
+      try {
+        await DatabaseService.updateSalary(type, amount, monthly, hoursPerWeek);
+        reload();
+        Toast.show({
+          type: "success",
+          text1: "Salary updated!",
+        });
+      } catch (error: unknown) {
+        Toast.show({
+          type: "error",
+          text1:
+            error instanceof Error
+              ? error.message
+              : "An error occurred updating salary",
+        });
+      }
+    },
+    [reload]
+  );
+
+  return { salary, loading, setSalary, reload, updateSalary };
 }

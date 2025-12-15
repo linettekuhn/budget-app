@@ -35,6 +35,10 @@ export function useName() {
       try {
         await DatabaseService.updateName(newName);
         reload();
+        Toast.show({
+          type: "success",
+          text1: "Name updated!",
+        });
       } catch (error: unknown) {
         Toast.show({
           type: "error",

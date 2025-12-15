@@ -22,7 +22,7 @@ export default function HomeScreen() {
   const colorScheme = useColorScheme();
   const router = useRouter();
   const bgColor = Colors[colorScheme ?? "light"].background;
-  const { salary, loading: loadingSalary } = useSalary();
+  const { salary, loading: loadingSalary, reload: reloadSalary } = useSalary();
   const {
     budgets,
     loading: loadingBudgets,
@@ -35,7 +35,8 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       reloadSpend();
-    }, [reloadSpend])
+      reloadSalary();
+    }, [reloadSpend, reloadSalary])
   );
 
   // TODO: adjust saved if overflow in spending

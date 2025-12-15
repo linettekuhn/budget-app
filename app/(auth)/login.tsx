@@ -146,9 +146,12 @@ export default function Login() {
                   <ThemedText type="link">Sign up</ThemedText>
                 </Pressable>
               </ThemedView>
-              <Pressable onPress={handleOffline}>
-                <ThemedText type="link">Continue Offline</ThemedText>
-              </Pressable>
+              <ThemedView style={styles.registerPrompt}>
+                <ThemedText type="body">Sign in later?</ThemedText>
+                <Pressable onPress={handleOffline}>
+                  <ThemedText type="link">Continue Offline</ThemedText>
+                </Pressable>
+              </ThemedView>
             </ThemedView>
           </ThemedView>
         </KeyboardAwareScrollView>
