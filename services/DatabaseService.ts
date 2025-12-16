@@ -577,22 +577,24 @@ export default class DatabaseService {
   }) {
     const db = await this.getDatabase();
     const id = crypto.randomUUID();
+
+    const { rrule, ...transactionData } = transaction;
     await db.runAsync(
       `INSERT INTO recurring_transactions (id, name, amount, type, categoryId, date, rrule, lastGenerated)
-       VALUES (?, ?, ?, ?, ?, ?, ?);`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
       [
         id,
-        transaction.name,
-        transaction.amount,
-        transaction.type,
-        transaction.categoryId,
-        transaction.date,
-        transaction.rrule,
-        transaction.date,
+        transactionData.name,
+        transactionData.amount,
+        transactionData.type,
+        transactionData.categoryId,
+        transactionData.date,
+        rrule,
+        transactionData.date,
       ]
     );
     await this.logChange("recurring_transactions", id, "create", transaction);
-    await this.addTransaction(transaction);
+    await this.addTransaction(transactionData);
   }
 
   static async addMissedRecurringTransactions() {
@@ -635,6 +637,17 @@ export default class DatabaseService {
         lastGenerated: lastGenerated.toISOString(),
       });
     }
+  }
+
+  static async getAllRecurringTransactions() {
+    const db = await this.getDatabase();
+    return await db.getAllAsync<RecurringTransaction>(
+      `
+      SELECT * FROM recurring_transactions 
+      WHERE deletedAt IS NULL
+      ORDER BY date DESC
+      `
+    );
   }
 
   static async getCategoryTransactions(

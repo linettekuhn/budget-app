@@ -225,7 +225,11 @@ export default function Profile() {
                   <EditSalaryOption />
                   <ProfileOption
                     text="Manage recurring transactions"
-                    onPress={() => {}}
+                    onPress={() => {
+                      router.push(
+                        "/(tabs)/(profile)/manage-recurring-transactions"
+                      );
+                    }}
                   />
                   <ProfileOption text="Reset app" onPress={() => {}} />
                 </View>
