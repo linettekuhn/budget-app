@@ -1,5 +1,4 @@
 import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
 import { PropsWithChildren } from "react";
 import { StyleSheet, useColorScheme, View } from "react-native";
@@ -21,7 +20,7 @@ export default function SettingsModal({
   const btnColor = Colors[colorScheme ?? "light"].primary[500];
 
   return (
-    <ThemedView style={styles.modalContent}>
+    <View style={styles.modalContent}>
       <ThemedText style={styles.heading} type="h1">
         {title}
       </ThemedText>
@@ -34,7 +33,7 @@ export default function SettingsModal({
           bgFocused={btnColor}
         />
       </View>
-    </ThemedView>
+    </View>
   );
 }
 

@@ -639,6 +639,42 @@ export default class DatabaseService {
     }
   }
 
+  static async updateRecurringTransaction(transaction: {
+    id: string;
+    name: string;
+    amount: number;
+    type: "income" | "expense";
+    date: string;
+    categoryId: string;
+    rrule: string;
+    lastGenerated: string;
+  }) {
+    const db = await this.getDatabase();
+    const { rrule, ...transactionData } = transaction;
+    await db.runAsync(
+      `
+      UPDATE recurring_transactions 
+      SET name = ?, amount = ?, type = ?, categoryId = ?, date = ?, rrule = ?
+      WHERE id = ?;
+      `,
+      [
+        transactionData.name,
+        transactionData.amount,
+        transactionData.type,
+        transactionData.categoryId,
+        transactionData.date,
+        rrule,
+        transaction.id,
+      ]
+    );
+    await this.logChange(
+      "recurring_transactions",
+      transaction.id,
+      "update",
+      transaction
+    );
+  }
+
   static async getAllRecurringTransactions() {
     const db = await this.getDatabase();
     return await db.getAllAsync<RecurringTransaction>(

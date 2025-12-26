@@ -46,8 +46,8 @@ export default function HomeScreen() {
       0
     );
     const budget = [...budgets].reduce((sum, budget) => sum + budget.budget, 0);
-    setTotalSpent(spent);
-    setTotalBudget(budget);
+    setTotalSpent(Number(spent.toFixed(2)));
+    setTotalBudget(Number(budget.toFixed(2)));
 
     if (salary) {
       const saved = salary.monthly - budget;

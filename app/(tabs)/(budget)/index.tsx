@@ -45,14 +45,16 @@ export default function Budget() {
     }, [reloadSpend])
   );
 
-  const totalBudget = budgets.reduce(
-    (sum, category) => sum + category.budget,
-    0
-  );
-  const totalSpent = budgets.reduce(
+  let totalBudget = budgets.reduce((sum, category) => sum + category.budget, 0);
+  totalBudget =
+    totalBudget % 2 === 0 ? totalBudget : Number(totalBudget.toFixed(2));
+
+  let totalSpent = budgets.reduce(
     (sum, category) => sum + category.totalSpent,
     0
   );
+  totalSpent =
+    totalSpent % 2 === 0 ? totalSpent : Number(totalSpent.toFixed(2));
 
   const sortedBudgets = [...budgets].sort((a, b) => b.budget - a.budget);
   const topThree = sortedBudgets.slice(0, 3);
