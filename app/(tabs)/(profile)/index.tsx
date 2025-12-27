@@ -1,4 +1,5 @@
 import ChangeNameOption from "@/components/profile/change-name-option";
+import DeleteAccountOption from "@/components/profile/delete-account-option";
 import EditSalaryOption from "@/components/profile/edit-salary-option";
 import ProfileOption from "@/components/profile/profile-option";
 import { ThemedText } from "@/components/themed-text";
@@ -89,7 +90,7 @@ export default function Profile() {
       });
     } catch (error) {
       Toast.show({
-        type: "success",
+        type: "error",
         text1: "Error syncing app",
       });
       console.error("Error syncing app data:", error);
@@ -145,7 +146,7 @@ export default function Profile() {
               });
             } catch (error) {
               Toast.show({
-                type: "success",
+                type: "error",
                 text1: "Error clearing app data",
               });
               console.error("Error clearing app data:", error);
@@ -202,7 +203,7 @@ export default function Profile() {
                         text="Change password"
                         onPress={() => {}}
                       />
-                      <ProfileOption text="Delete account" onPress={() => {}} />
+                      <DeleteAccountOption />
                     </>
                   ) : (
                     <>

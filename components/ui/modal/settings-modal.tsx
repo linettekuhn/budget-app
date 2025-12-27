@@ -8,6 +8,7 @@ type Props = {
   onComplete: () => void;
   onCancel: () => void;
   title: string;
+  proceedLabel?: string;
 };
 
 export default function SettingsModal({
@@ -15,6 +16,7 @@ export default function SettingsModal({
   onCancel,
   title,
   children,
+  proceedLabel = "SAVE CHANGES",
 }: Props & PropsWithChildren) {
   const colorScheme = useColorScheme();
   const btnColor = Colors[colorScheme ?? "light"].primary[500];
@@ -28,7 +30,7 @@ export default function SettingsModal({
       <View style={styles.horizontalContainer}>
         <CapsuleButton text="CANCEL" onPress={onCancel} bgFocused={btnColor} />
         <CapsuleButton
-          text="SAVE CHANGES"
+          text={proceedLabel}
           onPress={onComplete}
           bgFocused={btnColor}
         />
