@@ -1,4 +1,5 @@
 import ChangeNameOption from "@/components/profile/change-name-option";
+import ChangePasswordOption from "@/components/profile/change-password-option";
 import DeleteAccountOption from "@/components/profile/delete-account-option";
 import EditSalaryOption from "@/components/profile/edit-salary-option";
 import ProfileOption from "@/components/profile/profile-option";
@@ -199,10 +200,7 @@ export default function Profile() {
                   <ChangeNameOption onChange={reload} />
                   {user ? (
                     <>
-                      <ProfileOption
-                        text="Change password"
-                        onPress={() => {}}
-                      />
+                      <ChangePasswordOption />
                       <DeleteAccountOption />
                     </>
                   ) : (
@@ -260,29 +258,30 @@ export default function Profile() {
                 iconName="globe"
               >
                 <View>
-                  <ProfileOption text="Choose language" onPress={() => {}} />
                   <ProfileOption text="Choose currency" onPress={() => {}} />
                 </View>
               </Collapsible>
-              <TouchableOpacity
-                onPress={logout}
-                activeOpacity={0.8}
-                style={[
-                  styles.wrapper,
-                  {
-                    backgroundColor:
-                      Colors[colorScheme ?? "light"].primary[200],
-                  },
-                ]}
-              >
-                <View style={styles.row}>
-                  <Octicons name="sign-out" size={17} color={color} />
+              {user && (
+                <TouchableOpacity
+                  onPress={logout}
+                  activeOpacity={0.8}
+                  style={[
+                    styles.wrapper,
+                    {
+                      backgroundColor:
+                        Colors[colorScheme ?? "light"].primary[200],
+                    },
+                  ]}
+                >
+                  <View style={styles.row}>
+                    <Octicons name="sign-out" size={17} color={color} />
 
-                  <ThemedText type="bodyLarge" style={{ color }}>
-                    Logout
-                  </ThemedText>
-                </View>
-              </TouchableOpacity>
+                    <ThemedText type="bodyLarge" style={{ color }}>
+                      Logout
+                    </ThemedText>
+                  </View>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
           <ThemedText

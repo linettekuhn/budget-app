@@ -1,4 +1,5 @@
 import { auth, firestoreDb } from "@/firebase/firebaseConfig";
+import { sendPasswordResetEmail, updatePassword } from "firebase/auth";
 import { collection, deleteDoc, doc, getDocs } from "firebase/firestore";
 
 const subcollections = [
@@ -34,5 +35,21 @@ export class AccountService {
 
     // delete firebase auth account
     await user.delete();
+  }
+
+  static async changeUserPassword(newPassword: string) {
+    const user = auth.currentUser;
+    if (!user) {
+      throw new Error("No user logged in.");
+    }
+    await updatePassword(user, newPassword);
+  }
+
+  static async sendPasswordReset() {
+    const user = auth.currentUser;
+    if (!user || !user.email) {
+      throw new Error("No user logged in.");
+    }
+    await sendPasswordResetEmail(auth, user.email);
   }
 }
