@@ -18,6 +18,7 @@ import { signOut } from "firebase/auth";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -78,25 +79,6 @@ export default function Profile() {
     });
   };
 
-  const resetApp = async () => {
-    try {
-      await AsyncStorage.clear();
-
-      await DatabaseService.resetTables();
-
-      Toast.show({
-        type: "success",
-        text1: "App data cleared successfully!",
-      });
-    } catch (error) {
-      Toast.show({
-        type: "success",
-        text1: "Error clearing app data",
-      });
-      console.error("Error clearing app data:", error);
-    }
-  };
-
   const syncApp = async () => {
     try {
       await SyncService.sync();
@@ -136,6 +118,43 @@ export default function Profile() {
         text1: "Failed to log out",
       });
     }
+  };
+
+  const resetApp = async () => {
+    Alert.alert(
+      "Reset App Data",
+      "Are you sure you want to reset the app? All local data will be deleted. Cloud data linked to your account won't be affected.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await AsyncStorage.clear();
+
+              await DatabaseService.resetTables();
+
+              await signOut(auth);
+
+              router.replace("/(auth)/login");
+
+              Toast.show({
+                type: "success",
+                text1: "App data cleared successfully!",
+              });
+            } catch (error) {
+              Toast.show({
+                type: "success",
+                text1: "Error clearing app data",
+              });
+              console.error("Error clearing app data:", error);
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
   };
 
   if (loading || !startDate) {
@@ -231,7 +250,7 @@ export default function Profile() {
                       );
                     }}
                   />
-                  <ProfileOption text="Reset app" onPress={() => {}} />
+                  <ProfileOption text="Reset app" onPress={resetApp} />
                 </View>
               </Collapsible>
               <Collapsible
