@@ -675,6 +675,21 @@ export default class DatabaseService {
     );
   }
 
+  static async deleteRecurringTransaction(id: string) {
+    const db = await this.getDatabase();
+
+    await db.runAsync(
+      `
+      UPDATE recurring_transactions
+      SET deletedAt = CURRENT_TIMESTAMP, updatedAt = CURRENT_TIMESTAMP
+      WHERE id = ?
+      `,
+      [id]
+    );
+
+    await this.logChange("recurring_transactions", id, "delete", {});
+  }
+
   static async getAllRecurringTransactions() {
     const db = await this.getDatabase();
     return await db.getAllAsync<RecurringTransaction>(
