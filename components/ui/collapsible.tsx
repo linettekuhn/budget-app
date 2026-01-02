@@ -1,10 +1,17 @@
-import { ComponentType, PropsWithChildren, useState } from "react";
+import { ComponentType, PropsWithChildren } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
+import { Motion } from "@/constants/motion";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import Octicons from "@expo/vector-icons/Octicons";
+import Animated, {
+  useAnimatedStyle,
+  useDerivedValue,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 
 type Props = {
   title: string;
@@ -18,9 +25,30 @@ export function Collapsible({
   IconComponent,
   iconName,
 }: PropsWithChildren & Props) {
-  const [isOpen, setIsOpen] = useState(false);
   const colorScheme = useColorScheme();
   const color = Colors[colorScheme ?? "light"].text;
+
+  const isExpanded = useSharedValue(false);
+  const contentHeight = useSharedValue(0);
+
+  const rotation = useDerivedValue(() =>
+    withTiming(isExpanded.value ? 90 : 0, {
+      duration: Motion.duration.normal,
+    })
+  );
+
+  const animatedHeight = useDerivedValue(() =>
+    withTiming(contentHeight.value * Number(isExpanded.value), {
+      duration: Motion.duration.normal,
+    })
+  );
+
+  const animatedContentStyle = useAnimatedStyle(() => ({
+    height: animatedHeight.value,
+  }));
+  const animatedArrowStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${rotation.value}deg` }],
+  }));
 
   return (
     <View
@@ -33,7 +61,9 @@ export function Collapsible({
     >
       <TouchableOpacity
         style={styles.heading}
-        onPress={() => setIsOpen((value) => !value)}
+        onPress={() => {
+          isExpanded.value = !isExpanded.value;
+        }}
         activeOpacity={0.8}
       >
         <View
@@ -50,13 +80,27 @@ export function Collapsible({
             {title}
           </ThemedText>
         </View>
-        <Octicons
-          name={isOpen ? "chevron-down" : "chevron-right"}
-          size={17}
-          color={color}
-        />
+        <Animated.View style={animatedArrowStyle}>
+          <Octicons name={"chevron-right"} size={17} color={color} />
+        </Animated.View>
       </TouchableOpacity>
-      {isOpen && <View style={styles.content}>{children}</View>}
+
+      <Animated.View style={[animatedContentStyle, { overflow: "hidden" }]}>
+        <View
+          onLayout={(e) => {
+            contentHeight.value = e.nativeEvent.layout.height;
+          }}
+          style={[
+            styles.content,
+            {
+              position: "absolute",
+              width: "100%",
+            },
+          ]}
+        >
+          {children}
+        </View>
+      </Animated.View>
     </View>
   );
 }
