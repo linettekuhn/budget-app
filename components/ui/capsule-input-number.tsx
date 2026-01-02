@@ -1,8 +1,13 @@
 import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
+import { Motion } from "@/constants/motion";
 import { Colors } from "@/constants/theme";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, TextInput, useColorScheme } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import tinycolor from "tinycolor2";
 
 type Props = {
@@ -43,18 +48,65 @@ export default function CapsuleNumberInput({
       ? tinycolor(bgColor).lighten(10).toHexString()
       : tinycolor(bgColor).darken(10).toHexString();
   const [focused, setFocused] = useState(false);
+  const [clearOnType, setClearOnType] = useState(false);
+
+  const handleChange = (text: string) => {
+    if (clearOnType) {
+      setClearOnType(false);
+      text = text.slice(-1);
+    }
+
+    // keep only whole numbers
+    let filtered = text.replace(/[^0-9]/g, "");
+
+    if (filtered === "") {
+      onChangeText("");
+      return;
+    }
+
+    let numeric = parseInt(filtered, 10);
+
+    onChangeText(numeric.toString());
+  };
+
+  const baseScale = useSharedValue(Motion.scale.default);
+  const pressScale = useSharedValue(Motion.scale.default);
+
+  useEffect(() => {
+    baseScale.value = withTiming(
+      focused ? Motion.scale.focus : Motion.scale.default,
+      { duration: Motion.duration.fast }
+    );
+  }, [focused, baseScale]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: baseScale.value * pressScale.value }],
+  }));
 
   return (
-    <ThemedView
+    <Animated.View
       style={[
         styles.amountWrapper,
+        animatedStyle,
         {
           backgroundColor: bgColor,
           borderColor: focused ? focusColor : bgColor,
         },
       ]}
     >
-      <Pressable onPress={() => inputRef.current?.focus()}>
+      <Pressable
+        onPress={() => inputRef.current?.focus()}
+        onPressIn={() => {
+          pressScale.value = withTiming(Motion.scale.press, {
+            duration: Motion.duration.fast,
+          });
+        }}
+        onPressOut={() => {
+          pressScale.value = withTiming(Motion.scale.default, {
+            duration: Motion.duration.fast,
+          });
+        }}
+      >
         <ThemedText
           numberOfLines={1}
           adjustsFontSizeToFit
@@ -69,13 +121,19 @@ export default function CapsuleNumberInput({
       <TextInput
         ref={inputRef}
         value={rawAmount}
-        onChangeText={onChangeText}
+        onChangeText={handleChange}
         keyboardType="numeric"
         style={styles.hiddenInput}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
+        onFocus={() => {
+          setFocused(true);
+          setClearOnType(true);
+        }}
+        onBlur={() => {
+          setFocused(false);
+          setClearOnType(false);
+        }}
       />
-    </ThemedView>
+    </Animated.View>
   );
 }
 

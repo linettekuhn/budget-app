@@ -1,6 +1,12 @@
+import { Motion } from "@/constants/motion";
 import { Colors } from "@/constants/theme";
-import { ComponentType } from "react";
+import { ComponentType, useEffect } from "react";
 import { Pressable, StyleSheet, useColorScheme } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { ThemedText } from "../themed-text";
 
 type Props = {
@@ -26,23 +32,51 @@ export default function CapsuleToggle({
   const bgColor = Colors[colorScheme ?? "light"].background;
   const color = Colors[colorScheme ?? "light"].text;
 
+  const baseScale = useSharedValue(Motion.scale.default);
+  const pressScale = useSharedValue(Motion.scale.default);
+
+  useEffect(() => {
+    baseScale.value = withTiming(
+      selected ? Motion.scale.focus : Motion.scale.default,
+      { duration: Motion.duration.fast }
+    );
+  }, [selected, baseScale]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: baseScale.value * pressScale.value }],
+  }));
+
   return (
     <Pressable
       onPress={onPress}
-      style={[
-        styles.button,
-        {
-          backgroundColor: selected ? bgFocused : bgColor,
-          borderColor: bgFocused,
-        },
-      ]}
+      onPressIn={() => {
+        pressScale.value = withTiming(Motion.scale.press, {
+          duration: Motion.duration.fast,
+        });
+      }}
+      onPressOut={() => {
+        pressScale.value = withTiming(Motion.scale.default, {
+          duration: Motion.duration.fast,
+        });
+      }}
     >
-      {IconComponent && iconName && (
-        <IconComponent name={iconName} size={17} color={textColor ?? color} />
-      )}
-      <ThemedText type="bodyLarge" style={{ color: textColor ?? color }}>
-        {text}
-      </ThemedText>
+      <Animated.View
+        style={[
+          styles.button,
+          animatedStyle,
+          {
+            backgroundColor: selected ? bgFocused : bgColor,
+            borderColor: bgFocused,
+          },
+        ]}
+      >
+        {IconComponent && iconName && (
+          <IconComponent name={iconName} size={17} color={textColor ?? color} />
+        )}
+        <ThemedText type="bodyLarge" style={{ color: textColor ?? color }}>
+          {text}
+        </ThemedText>
+      </Animated.View>
     </Pressable>
   );
 }

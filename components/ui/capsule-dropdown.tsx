@@ -1,7 +1,13 @@
+import { Motion } from "@/constants/motion";
 import { Colors } from "@/constants/theme";
 import Octicons from "@expo/vector-icons/Octicons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, useColorScheme, View } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import tinycolor from "tinycolor2";
 import { ThemedText } from "../themed-text";
 import AppModal from "./modal/modal";
@@ -49,27 +55,48 @@ export default function CapsuleDropdown({
     colorScheme === "dark"
       ? tinycolor(bgColor).lighten(10).toHexString()
       : tinycolor(bgColor).darken(10).toHexString();
+
+  const baseScale = useSharedValue(Motion.scale.default);
+  const pressScale = useSharedValue(Motion.scale.default);
+  const rotate = useSharedValue(0);
+
+  useEffect(() => {
+    baseScale.value = withTiming(
+      open ? Motion.scale.focus : Motion.scale.default,
+      { duration: Motion.duration.fast }
+    );
+    rotate.value = withTiming(open ? 180 : 0, {
+      duration: Motion.duration.normal,
+    });
+  }, [open, baseScale, rotate]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: baseScale.value * pressScale.value }],
+  }));
+  const animatedArrowStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${rotate.value}deg` }],
+  }));
   return (
     <View style={{ zIndex: 10 }}>
-      <Pressable
-        style={[
-          styles.button,
-          {
-            backgroundColor: bgColor,
-            borderColor: open ? focusColor : bgColor,
-          },
-        ]}
-        onPress={() => setOpen((prev) => !prev)}
-      >
-        <ThemedText type={textType} style={{ color: color }}>
-          {selectedLabel}
-        </ThemedText>
-        {open ? (
-          <Octicons name="chevron-up" size={17} color={color} />
-        ) : (
-          <Octicons name="chevron-down" size={17} color={color} />
-        )}
-      </Pressable>
+      <Animated.View style={[animatedStyle]}>
+        <Pressable
+          style={[
+            styles.button,
+            {
+              backgroundColor: bgColor,
+              borderColor: open ? focusColor : bgColor,
+            },
+          ]}
+          onPress={() => setOpen((prev) => !prev)}
+        >
+          <ThemedText type={textType} style={{ color: color }}>
+            {selectedLabel}
+          </ThemedText>
+          <Animated.View style={animatedArrowStyle}>
+            <Octicons name="chevron-down" size={17} color={color} />
+          </Animated.View>
+        </Pressable>
+      </Animated.View>
       <AppModal visible={open} onClose={() => setOpen(false)}>
         <View style={[styles.dropdown]}>
           {options.map((item) => (

@@ -1,13 +1,13 @@
 import { ThemedText } from "@/components/themed-text";
+import { Motion } from "@/constants/motion";
 import { Colors } from "@/constants/theme";
-import { useRef, useState } from "react";
-import {
-  Pressable,
-  StyleSheet,
-  TextInput,
-  useColorScheme,
-  View,
-} from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Pressable, StyleSheet, TextInput, useColorScheme } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import tinycolor from "tinycolor2";
 
 type AmountDisplayProps = {
@@ -49,18 +49,44 @@ export default function AmountDisplay({
       : tinycolor(bgColor).darken(10).toHexString();
   const [focused, setFocused] = useState(false);
 
+  const baseScale = useSharedValue(Motion.scale.default);
+  const pressScale = useSharedValue(Motion.scale.default);
+
+  useEffect(() => {
+    baseScale.value = withTiming(
+      focused ? Motion.scale.focus : Motion.scale.default,
+      { duration: Motion.duration.fast }
+    );
+  }, [focused, baseScale]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: baseScale.value * pressScale.value }],
+  }));
+
   return (
-    <View>
+    <Animated.View
+      style={[
+        styles.amountWrapper,
+        animatedStyle,
+        {
+          backgroundColor: bgColor,
+          borderColor: focused ? focusColor : bgColor,
+        },
+      ]}
+    >
       <Pressable
-        style={[
-          styles.amountWrapper,
-          {
-            backgroundColor: bgColor,
-            borderColor: focused ? focusColor : bgColor,
-          },
-        ]}
         onPress={() => {
           inputRef.current?.focus();
+        }}
+        onPressIn={() => {
+          pressScale.value = withTiming(Motion.scale.press, {
+            duration: Motion.duration.fast,
+          });
+        }}
+        onPressOut={() => {
+          pressScale.value = withTiming(Motion.scale.default, {
+            duration: Motion.duration.fast,
+          });
         }}
       >
         <ThemedText
@@ -83,7 +109,7 @@ export default function AmountDisplay({
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
       />
-    </View>
+    </Animated.View>
   );
 }
 

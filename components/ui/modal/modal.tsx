@@ -1,16 +1,23 @@
 import { ThemedView } from "@/components/themed-view";
+import { Motion } from "@/constants/motion";
 import { Colors } from "@/constants/theme";
+import { useEffect, useState } from "react";
 import {
   Dimensions,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   useColorScheme,
-  View,
 } from "react-native";
-import Modal from "react-native-modal";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 type Props = {
   onClose: () => void;
   visible: boolean;
@@ -21,29 +28,89 @@ const { width, height } = Dimensions.get("window");
 
 export default function AppModal({ onClose, visible, children }: Props) {
   const colorScheme = useColorScheme();
+
+  const [isModalMounted, setIsModalMounted] = useState(visible);
+
+  const opacity = useSharedValue(Motion.opacity.hidden);
+  const translateY = useSharedValue(height);
+
+  const handleUnmount = () => {
+    setIsModalMounted(false);
+  };
+
+  useEffect(() => {
+    if (visible) {
+      // mount modal
+      setIsModalMounted(true);
+      // entry animation
+      opacity.value = withTiming(Motion.opacity.backdrop, {
+        duration: Motion.duration.slow,
+      });
+      translateY.value = withTiming(0, {
+        duration: Motion.duration.normal,
+      });
+    } else if (isModalMounted) {
+      // exit animation
+      opacity.value = withTiming(Motion.opacity.hidden, {
+        duration: Motion.duration.slow,
+      });
+      translateY.value = withTiming(
+        height,
+        {
+          duration: Motion.duration.normal,
+        },
+        // THEN unmount modal (bridge from UI thread to JS thread)
+        (finished) => {
+          if (finished) {
+            scheduleOnRN(handleUnmount);
+          }
+        }
+      );
+    }
+  }, [visible, opacity, translateY, isModalMounted]);
+
+  const animatedBackdropStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
+  const animatedContentStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  if (!isModalMounted) return null;
+
   return (
     <Modal
-      isVisible={visible}
-      animationIn="slideInUp"
-      animationOut="slideOutDown"
-      animationInTiming={300}
-      backdropOpacity={0.5}
-      style={styles.modalContainer}
-      backdropColor={Colors[colorScheme ?? "light"].primary[300]}
-      avoidKeyboard={false}
+      visible={isModalMounted}
+      transparent
+      animationType="none"
+      onRequestClose={onClose}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardContainer}
       >
         {/* backdrop */}
-        <Pressable onPress={onClose} style={styles.backdrop} />
+        <Animated.View
+          style={[
+            styles.backdrop,
+            animatedBackdropStyle,
+            { backgroundColor: Colors[colorScheme ?? "light"].primary[300] },
+          ]}
+        >
+          <Pressable onPress={onClose} style={StyleSheet.absoluteFill} />
+        </Animated.View>
+
         {/* modal content */}
-        <View
-          style={{
-            maxHeight: height * 0.85,
-            justifyContent: "flex-end",
-          }}
+        <Animated.View
+          style={[
+            {
+              maxHeight: height * 0.85,
+              width: "100%",
+              justifyContent: "flex-end",
+            },
+            animatedContentStyle,
+          ]}
         >
           <ThemedView style={styles.contentWrapper}>
             <ScrollView
@@ -54,20 +121,13 @@ export default function AppModal({ onClose, visible, children }: Props) {
               {children}
             </ScrollView>
           </ThemedView>
-        </View>
+        </Animated.View>
       </KeyboardAvoidingView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  modalContainer: {
-    flex: 1,
-    justifyContent: "flex-end",
-    alignItems: "center",
-    margin: 0,
-  },
-
   keyboardContainer: {
     flex: 1,
     width: "100%",
@@ -76,8 +136,7 @@ const styles = StyleSheet.create({
   },
 
   backdrop: {
-    flex: 1,
-    width: "100%",
+    ...StyleSheet.absoluteFillObject,
   },
 
   contentWrapper: {
