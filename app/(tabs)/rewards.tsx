@@ -4,7 +4,6 @@ import {
   ActivityIndicator,
   Image,
   ImageSourcePropType,
-  Pressable,
   ScrollView,
   StyleSheet,
   useColorScheme,
@@ -26,6 +25,7 @@ import SmartSpenderIcon from "@/assets/icons/badges/Smart_Spender_Icon.png";
 import SteadyPlannerIcon from "@/assets/icons/badges/Steady_Planner_Icon.png";
 import FireStreakIcon from "@/assets/icons/streak_icon.png";
 import { ThemedText } from "@/components/themed-text";
+import BadgeButton from "@/components/ui/badge-button";
 import BadgeModal from "@/components/ui/modal/badge-modal";
 import AppModal from "@/components/ui/modal/modal";
 import { useBadges } from "@/hooks/useBadges";
@@ -51,6 +51,7 @@ export default function Rewards() {
     smart_spender: SmartSpenderIcon,
     perfectionist: PerfectionistIcon,
     minimalist: MinimalistIcon,
+    locked: LockedIcon,
   };
 
   const { badges, loading: loadingBadges, reload: reloadBadges } = useBadges();
@@ -151,31 +152,14 @@ export default function Rewards() {
             ]}
           >
             <View style={styles.badgesWrapper}>
-              {badges.map((badge) =>
-                badge.unlocked ? (
-                  <Pressable
-                    style={styles.badge}
-                    key={badge.id}
-                    onPress={() => {
-                      openBadgeModal(badge);
-                    }}
-                  >
-                    <Image
-                      resizeMode="contain"
-                      style={styles.badgeIcon}
-                      source={iconMap[badge.id]}
-                    />
-                  </Pressable>
-                ) : (
-                  <View style={styles.badge} key={badge.id}>
-                    <Image
-                      resizeMode="contain"
-                      style={styles.badgeIcon}
-                      source={LockedIcon}
-                    />
-                  </View>
-                )
-              )}
+              {badges.map((badge) => (
+                <BadgeButton
+                  key={badge.id}
+                  badge={badge}
+                  onPress={() => openBadgeModal(badge)}
+                  iconMap={iconMap}
+                />
+              ))}
             </View>
             {showBadgeInfo && selectedBadge && (
               <AppModal visible={showBadgeInfo} onClose={closeBadgeModal}>
@@ -240,18 +224,5 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     justifyContent: "center",
     gap: 12,
-  },
-
-  badge: {
-    flexBasis: "29.33%",
-    width: 120,
-    height: 120,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  badgeIcon: {
-    height: "100%",
-    width: "100%",
   },
 });
