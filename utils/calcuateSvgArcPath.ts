@@ -5,6 +5,8 @@ export default function calculateSvgArcPath(
   cx: number = 0,
   cy: number = 0
 ): string {
+  "worklet";
+
   const startAngle = prevEndAngle;
   const endAngle = startAngle + angleSpan;
 

@@ -1,9 +1,11 @@
+import { Colors } from "@/constants/theme";
 import { CategorySpend } from "@/types";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
 import calculateSvgArcPath from "@/utils/calcuateSvgArcPath";
 import { useColorScheme } from "react-native";
-import Svg, { G, Path } from "react-native-svg";
+import Svg, { G } from "react-native-svg";
 import tinycolor from "tinycolor2";
+import AnimatedArc from "./animated-arc";
 
 type Props = {
   budgets: CategorySpend[];
@@ -46,12 +48,15 @@ export default function MonthlyBudgetPieChart({ budgets }: Props) {
   return (
     <Svg width={size} height={size}>
       <G>
-        {displayBudgets.map((category) => {
+        {displayBudgets.map((category, index) => {
           const categoryColor = adjustColorForScheme(
             category.color,
             colorScheme
           );
-          const bgColor = tinycolor(categoryColor).setAlpha(0.4).toRgbString();
+          const screenBgColor = Colors[colorScheme ?? "light"].background;
+          const bgColor = tinycolor
+            .mix(screenBgColor, categoryColor, 40)
+            .toHexString();
 
           const budgetPercent = category.budget / total;
           const totalAngleSpan = budgetPercent * (2 * Math.PI);
@@ -80,52 +85,26 @@ export default function MonthlyBudgetPieChart({ budgets }: Props) {
             center
           );
 
-          const fillArcPath = calculateSvgArcPath(
-            startAngle,
-            radius,
-            fillAngleSpan,
-            center,
-            center
-          );
-
-          const overflowArcPath = calculateSvgArcPath(
-            startAngle,
-            radius,
-            overflowAngleSpan,
-            center,
-            center
-          );
-
+          const currentStartAngle = startAngle;
           startAngle += totalAngleSpan;
 
           return (
-            <G key={category.id}>
-              <Path
-                d={bgArcPath}
-                stroke={bgColor}
-                strokeWidth={strokeWidth}
-                fill="none"
-                strokeLinecap="round"
-              />
-              {spentPercent > 0 && (
-                <Path
-                  d={fillArcPath}
-                  stroke={categoryColor}
-                  strokeWidth={strokeWidth}
-                  fill="none"
-                  strokeLinecap="round"
-                />
-              )}
-              {overflowPercent > 0 && (
-                <Path
-                  d={overflowArcPath}
-                  stroke="red"
-                  strokeWidth={strokeWidth}
-                  fill="none"
-                  strokeLinecap="round"
-                />
-              )}
-            </G>
+            <AnimatedArc
+              key={category.id}
+              categoryColor={categoryColor}
+              bgColor={bgColor}
+              bgArcPath={bgArcPath}
+              startAngle={currentStartAngle}
+              radius={radius}
+              centerX={center}
+              centerY={center}
+              strokeWidth={strokeWidth}
+              fillAngleSpan={fillAngleSpan}
+              overflowAngleSpan={overflowAngleSpan}
+              spentPercent={spentPercent}
+              overflowPercent={overflowPercent}
+              index={index}
+            />
           );
         })}
       </G>

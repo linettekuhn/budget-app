@@ -97,7 +97,7 @@ function getLabelPosition({
   radius,
   strokeWidth,
 }: Props) {
-  const gap = 8;
+  const gap = 6;
   const isLeft = Math.abs(middleAngle) > Math.PI / 2;
   const labelRadius = radius + strokeWidth / 2 + gap;
   const lineLength = 12;

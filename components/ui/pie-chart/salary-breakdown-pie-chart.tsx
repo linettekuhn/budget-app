@@ -1,9 +1,11 @@
+import { Colors } from "@/constants/theme";
 import { CategorySpend, Salary } from "@/types";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
 import calculateArcData from "@/utils/calculateArcData";
 import { useColorScheme, View } from "react-native";
-import Svg, { G, Path } from "react-native-svg";
+import Svg, { G } from "react-native-svg";
 import tinycolor from "tinycolor2";
+import AnimatedArc from "./animated-arc";
 import {
   PieChartLabelConnectorLine,
   PieChartLabelText,
@@ -41,6 +43,7 @@ export default function SalaryBreakdownPieChart({ budgets, salary }: Props) {
     0
   );
 
+  const screenBgColor = Colors[colorScheme ?? "light"].background;
   const gap = 0.3;
   const size = 240;
   const radius = (size - 50) / 2;
@@ -53,7 +56,9 @@ export default function SalaryBreakdownPieChart({ budgets, salary }: Props) {
 
   // Needs Arc
   const needsColor = adjustColorForScheme("#3BACE4", colorScheme, 0.2);
-  const needsBgColor = tinycolor(needsColor).setAlpha(0.4).toRgbString();
+  const needsBgColor = tinycolor
+    .mix(screenBgColor, needsColor, 40)
+    .toHexString();
   const needsPercent = needsTotal / salary.monthly;
   const needsAngleSpan = needsPercent * (2 * Math.PI);
   const needsMiddleAngle = startAngle + needsAngleSpan / 2;
@@ -67,11 +72,14 @@ export default function SalaryBreakdownPieChart({ budgets, salary }: Props) {
     centerX: centerX,
     centerY: centerY,
   });
+  const needsStartAngle = startAngle;
   startAngle += needsAngleSpan;
 
   // Wants Arc
   const wantsColor = adjustColorForScheme("#8F53C7", colorScheme, 0.2);
-  const wantsBgColor = tinycolor(wantsColor).setAlpha(0.4).toRgbString();
+  const wantsBgColor = tinycolor
+    .mix(screenBgColor, wantsColor, 40)
+    .toHexString();
   const wantsPercent = wantsTotal / salary.monthly;
   const wantsAngleSpan = wantsPercent * (2 * Math.PI);
   const wantsMiddleAngle = startAngle + wantsAngleSpan / 2;
@@ -85,6 +93,7 @@ export default function SalaryBreakdownPieChart({ budgets, salary }: Props) {
     centerX: centerX,
     centerY: centerY,
   });
+  const wantsStartAngle = startAngle;
   startAngle += wantsAngleSpan;
 
   // Saved Arc
@@ -103,6 +112,7 @@ export default function SalaryBreakdownPieChart({ budgets, salary }: Props) {
     centerX: centerX,
     centerY: centerY,
   });
+  const savedStartAngle = startAngle;
 
   return (
     <View style={{ width: viewBoxWidth, height: size, position: "relative" }}>
@@ -116,33 +126,25 @@ export default function SalaryBreakdownPieChart({ budgets, salary }: Props) {
                 centerY={centerY}
                 radius={radius}
                 strokeWidth={strokeWidth}
-                color={needsColor}
+                color={
+                  needsArcData.spentPercent > 0.5 ? needsColor : needsBgColor
+                }
               />
-              <Path
-                d={needsArcData.bgArcPath}
-                stroke={needsBgColor}
+              <AnimatedArc
+                categoryColor={needsColor}
+                bgColor={needsBgColor}
+                bgArcPath={needsArcData.bgArcPath}
+                startAngle={needsStartAngle}
+                radius={radius}
+                centerX={centerX}
+                centerY={centerY}
                 strokeWidth={strokeWidth}
-                fill="none"
-                strokeLinecap="round"
+                fillAngleSpan={needsArcData.fillAngleSpan}
+                overflowAngleSpan={needsArcData.overflowAngleSpan}
+                spentPercent={needsArcData.spentPercent}
+                overflowPercent={needsArcData.overflowPercent}
+                index={0}
               />
-              {needsArcData.spentPercent > 0 && (
-                <Path
-                  d={needsArcData.fillArcPath}
-                  stroke={needsColor}
-                  strokeWidth={strokeWidth}
-                  fill="none"
-                  strokeLinecap="round"
-                />
-              )}
-              {needsArcData.overflowPercent > 0 && (
-                <Path
-                  d={needsArcData.overflowArcPath}
-                  stroke="red"
-                  strokeWidth={strokeWidth}
-                  fill="none"
-                  strokeLinecap="round"
-                />
-              )}
             </G>
           )}
 
@@ -154,33 +156,25 @@ export default function SalaryBreakdownPieChart({ budgets, salary }: Props) {
                 centerY={centerY}
                 radius={radius}
                 strokeWidth={strokeWidth}
-                color={wantsColor}
+                color={
+                  wantsArcData.spentPercent > 0.5 ? wantsColor : wantsBgColor
+                }
               />
-              <Path
-                d={wantsArcData.bgArcPath}
-                stroke={wantsBgColor}
+              <AnimatedArc
+                categoryColor={wantsColor}
+                bgColor={wantsBgColor}
+                bgArcPath={wantsArcData.bgArcPath}
+                startAngle={wantsStartAngle}
+                radius={radius}
+                centerX={centerX}
+                centerY={centerY}
                 strokeWidth={strokeWidth}
-                fill="none"
-                strokeLinecap="round"
+                fillAngleSpan={wantsArcData.fillAngleSpan}
+                overflowAngleSpan={wantsArcData.overflowAngleSpan}
+                spentPercent={wantsArcData.spentPercent}
+                overflowPercent={wantsArcData.overflowPercent}
+                index={1}
               />
-              {wantsArcData.spentPercent > 0 && (
-                <Path
-                  d={wantsArcData.fillArcPath}
-                  stroke={wantsColor}
-                  strokeWidth={strokeWidth}
-                  fill="none"
-                  strokeLinecap="round"
-                />
-              )}
-              {wantsArcData.overflowPercent > 0 && (
-                <Path
-                  d={wantsArcData.overflowArcPath}
-                  stroke="red"
-                  strokeWidth={strokeWidth}
-                  fill="none"
-                  strokeLinecap="round"
-                />
-              )}
             </G>
           )}
 
@@ -194,31 +188,21 @@ export default function SalaryBreakdownPieChart({ budgets, salary }: Props) {
                 strokeWidth={strokeWidth}
                 color={savedColor}
               />
-              <Path
-                d={savedArcData.bgArcPath}
-                stroke={savedBgColor}
+              <AnimatedArc
+                categoryColor={savedColor}
+                bgColor={savedBgColor}
+                bgArcPath={savedArcData.bgArcPath}
+                startAngle={savedStartAngle}
+                radius={radius}
+                centerX={centerX}
+                centerY={centerY}
                 strokeWidth={strokeWidth}
-                fill="none"
-                strokeLinecap="round"
+                fillAngleSpan={savedArcData.fillAngleSpan}
+                overflowAngleSpan={savedArcData.overflowAngleSpan}
+                spentPercent={savedArcData.spentPercent}
+                overflowPercent={savedArcData.overflowPercent}
+                index={2}
               />
-              {savedArcData.spentPercent > 0 && (
-                <Path
-                  d={savedArcData.fillArcPath}
-                  stroke={savedColor}
-                  strokeWidth={strokeWidth}
-                  fill="none"
-                  strokeLinecap="round"
-                />
-              )}
-              {savedArcData.overflowPercent > 0 && (
-                <Path
-                  d={savedArcData.overflowArcPath}
-                  stroke="red"
-                  strokeWidth={strokeWidth}
-                  fill="none"
-                  strokeLinecap="round"
-                />
-              )}
             </G>
           )}
         </G>
@@ -241,7 +225,7 @@ export default function SalaryBreakdownPieChart({ budgets, salary }: Props) {
           centerY={centerY}
           radius={radius}
           strokeWidth={strokeWidth}
-          color={wantsColor}
+          color={wantsArcData.spentPercent > 0.5 ? wantsColor : wantsBgColor}
           label="Wants"
         />
       )}
@@ -252,7 +236,7 @@ export default function SalaryBreakdownPieChart({ budgets, salary }: Props) {
           centerY={centerY}
           radius={radius}
           strokeWidth={strokeWidth}
-          color={needsColor}
+          color={needsArcData.spentPercent > 0.5 ? needsColor : needsBgColor}
           label="Needs"
         />
       )}

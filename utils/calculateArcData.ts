@@ -68,5 +68,7 @@ export default function calculateArcData({
     fillArcPath,
     overflowArcPath,
     overflowPercent,
+    fillAngleSpan,
+    overflowAngleSpan,
   };
 }
