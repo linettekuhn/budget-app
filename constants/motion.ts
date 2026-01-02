@@ -2,7 +2,7 @@ export const Motion = {
   duration: {
     fast: 120,
     normal: 200,
-    slow: 280,
+    slow: 500,
   },
 
   scale: {

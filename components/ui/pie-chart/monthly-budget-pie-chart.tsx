@@ -51,7 +51,8 @@ export default function MonthlyBudgetPieChart({ budgets }: Props) {
         {displayBudgets.map((category, index) => {
           const categoryColor = adjustColorForScheme(
             category.color,
-            colorScheme
+            colorScheme,
+            30
           );
           const screenBgColor = Colors[colorScheme ?? "light"].background;
           const bgColor = tinycolor

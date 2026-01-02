@@ -1,4 +1,5 @@
 import calculateSvgArcPath from "@/utils/calcuateSvgArcPath";
+import mixColors from "@/utils/mixColors";
 import { useEffect } from "react";
 import Animated, {
   useAnimatedProps,
@@ -86,6 +87,8 @@ export default function AnimatedArc({
     return { d: path };
   });
 
+  const overflowColor = mixColors(categoryColor, "#ff0000", 70);
+
   return (
     <G>
       <Path
@@ -107,7 +110,7 @@ export default function AnimatedArc({
       {overflowPercent > 0 && (
         <AnimatedPath
           animatedProps={overflowAnimatedProps}
-          stroke="red"
+          stroke={overflowColor}
           strokeWidth={strokeWidth}
           fill="none"
           strokeLinecap="round"
