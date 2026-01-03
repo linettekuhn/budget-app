@@ -1,6 +1,7 @@
 import { useOnboarding } from "@/components/context/onboarding-provider";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import AnimatedScreen from "@/components/ui/animated-screen";
 import CapsuleButton from "@/components/ui/capsule-button";
 import OnboardingControls from "@/components/ui/onboarding-controls";
 import { Colors } from "@/constants/theme";
@@ -70,54 +71,55 @@ export default function FinishOnboarding() {
   };
 
   return (
-    <SafeAreaView
-      style={[
-        styles.safeArea,
-        { backgroundColor: Colors[colorScheme ?? "light"].background },
-      ]}
-    >
-      <OnboardingControls />
-      <ScrollView contentContainerStyle={styles.container}>
-        <ThemedView style={styles.main}>
-          <ThemedText type="displayMedium">
-            You&apos;re All Set {name}!
-          </ThemedText>
-          <ThemedText type="h4">Here&apos;s a quick recap:</ThemedText>
-          <ThemedView style={styles.recap}>
-            <View>
-              <ThemedText type="h3">Category Budgets</ThemedText>
-              {categories.map((cat) => {
-                const amount = budgets[cat.id]?.display ?? "0.00";
-                return (
-                  <ThemedText type="h6" key={cat.id}>
-                    <Octicons name="dot-fill" color={cat.color} size={20} />{" "}
-                    {cat.name} - ${amount}
-                  </ThemedText>
-                );
-              })}
-            </View>
-
-            <ThemedText type="h3">
-              Monthly Budget: ${total.toFixed(2)}
+    <AnimatedScreen>
+      <SafeAreaView
+        style={[
+          styles.safeArea,
+          { backgroundColor: Colors[colorScheme ?? "light"].background },
+        ]}
+      >
+        <OnboardingControls />
+        <ScrollView contentContainerStyle={styles.container}>
+          <ThemedView style={styles.main}>
+            <ThemedText type="displayMedium">
+              You&apos;re All Set {name}!
             </ThemedText>
-            <ThemedText type="h3">
-              Monthly Salary: ${salary.monthly.toFixed(2)}
+            <ThemedText type="h4">Here&apos;s a quick recap:</ThemedText>
+            <ThemedView style={styles.recap}>
+              <View>
+                <ThemedText type="h3">Category Budgets</ThemedText>
+                {categories.map((cat) => {
+                  const amount = budgets[cat.id]?.display ?? "0.00";
+                  return (
+                    <ThemedText type="h6" key={cat.id}>
+                      <Octicons name="dot-fill" color={cat.color} size={20} />{" "}
+                      {cat.name} - ${amount}
+                    </ThemedText>
+                  );
+                })}
+              </View>
+              <ThemedText type="h3">
+                Monthly Budget: ${total.toFixed(2)}
+              </ThemedText>
+              <ThemedText type="h3">
+                Monthly Salary: ${salary.monthly.toFixed(2)}
+              </ThemedText>
+            </ThemedView>
+            <ThemedText type="h4">
+              You can now start tracking your spending and building better money
+              habits!
             </ThemedText>
+            <CapsuleButton
+              text="See Dashboard"
+              iconName="arrow-right"
+              IconComponent={Octicons}
+              bgFocused={btnColor}
+              onPress={handleCompleteOnboarding}
+            />
           </ThemedView>
-          <ThemedText type="h4">
-            You can now start tracking your spending and building better money
-            habits!
-          </ThemedText>
-          <CapsuleButton
-            text="See Dashboard"
-            iconName="arrow-right"
-            IconComponent={Octicons}
-            bgFocused={btnColor}
-            onPress={handleCompleteOnboarding}
-          />
-        </ThemedView>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </AnimatedScreen>
   );
 }
 

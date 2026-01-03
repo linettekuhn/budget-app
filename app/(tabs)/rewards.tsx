@@ -25,6 +25,7 @@ import SmartSpenderIcon from "@/assets/icons/badges/Smart_Spender_Icon.png";
 import SteadyPlannerIcon from "@/assets/icons/badges/Steady_Planner_Icon.png";
 import FireStreakIcon from "@/assets/icons/streak_icon.png";
 import { ThemedText } from "@/components/themed-text";
+import AnimatedScreen from "@/components/ui/animated-screen";
 import BadgeButton from "@/components/ui/badge-button";
 import BadgeModal from "@/components/ui/modal/badge-modal";
 import AppModal from "@/components/ui/modal/modal";
@@ -100,79 +101,81 @@ export default function Rewards() {
   const streakFontSize = calculateStreakFontSize(currentStreak);
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
-      <ScrollView contentContainerStyle={styles.container}>
-        <ThemedView style={styles.main}>
-          <ThemedView style={styles.streakHeader}>
-            <View style={styles.streakWrapper}>
-              <Image
-                resizeMode="contain"
-                style={[styles.streakIcon, StyleSheet.absoluteFill]}
-                source={FireStreakIcon}
-              />
-              <Svg height={80} width={80} style={[styles.streak]}>
-                <Text
-                  fill={"none"}
-                  stroke={bgColor}
-                  strokeWidth={10}
-                  strokeLinejoin="round"
-                  fontSize={streakFontSize}
-                  fontFamily="Onest-Black"
-                  textAnchor="middle"
-                  x="50%"
-                  y="100%"
-                  alignmentBaseline="ideographic"
-                >
-                  {String(currentStreak)}
-                </Text>
-                <Text
-                  fill={Colors[colorScheme ?? "light"].text}
-                  stroke={"none"}
-                  fontSize={streakFontSize}
-                  fontFamily="Onest-Black"
-                  textAnchor="middle"
-                  x="50%"
-                  y="100%"
-                  alignmentBaseline="ideographic"
-                >
-                  {String(currentStreak)}
-                </Text>
-              </Svg>
-            </View>
-            <ThemedText type="h2">Smart Spending Streak</ThemedText>
-          </ThemedView>
-          <ThemedView
-            style={[
-              {
-                backgroundColor: Colors[colorScheme ?? "light"].primary[200],
-                gap: 12,
-                borderRadius: 24,
-                paddingVertical: 8,
-              },
-            ]}
-          >
-            <View style={styles.badgesWrapper}>
-              {badges.map((badge) => (
-                <BadgeButton
-                  key={badge.id}
-                  badge={badge}
-                  onPress={() => openBadgeModal(badge)}
-                  iconMap={iconMap}
+    <AnimatedScreen>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
+        <ScrollView contentContainerStyle={styles.container}>
+          <ThemedView style={styles.main}>
+            <ThemedView style={styles.streakHeader}>
+              <View style={styles.streakWrapper}>
+                <Image
+                  resizeMode="contain"
+                  style={[styles.streakIcon, StyleSheet.absoluteFill]}
+                  source={FireStreakIcon}
                 />
-              ))}
-            </View>
-            {showBadgeInfo && selectedBadge && (
-              <AppModal visible={showBadgeInfo} onClose={closeBadgeModal}>
-                <BadgeModal
-                  badge={selectedBadge}
-                  icon={iconMap[selectedBadge.id]}
-                />
-              </AppModal>
-            )}
+                <Svg height={80} width={80} style={[styles.streak]}>
+                  <Text
+                    fill={"none"}
+                    stroke={bgColor}
+                    strokeWidth={10}
+                    strokeLinejoin="round"
+                    fontSize={streakFontSize}
+                    fontFamily="Onest-Black"
+                    textAnchor="middle"
+                    x="50%"
+                    y="100%"
+                    alignmentBaseline="ideographic"
+                  >
+                    {String(currentStreak)}
+                  </Text>
+                  <Text
+                    fill={Colors[colorScheme ?? "light"].text}
+                    stroke={"none"}
+                    fontSize={streakFontSize}
+                    fontFamily="Onest-Black"
+                    textAnchor="middle"
+                    x="50%"
+                    y="100%"
+                    alignmentBaseline="ideographic"
+                  >
+                    {String(currentStreak)}
+                  </Text>
+                </Svg>
+              </View>
+              <ThemedText type="h2">Smart Spending Streak</ThemedText>
+            </ThemedView>
+            <ThemedView
+              style={[
+                {
+                  backgroundColor: Colors[colorScheme ?? "light"].primary[200],
+                  gap: 12,
+                  borderRadius: 24,
+                  paddingVertical: 8,
+                },
+              ]}
+            >
+              <View style={styles.badgesWrapper}>
+                {badges.map((badge) => (
+                  <BadgeButton
+                    key={badge.id}
+                    badge={badge}
+                    onPress={() => openBadgeModal(badge)}
+                    iconMap={iconMap}
+                  />
+                ))}
+              </View>
+              {showBadgeInfo && selectedBadge && (
+                <AppModal visible={showBadgeInfo} onClose={closeBadgeModal}>
+                  <BadgeModal
+                    badge={selectedBadge}
+                    icon={iconMap[selectedBadge.id]}
+                  />
+                </AppModal>
+              )}
+            </ThemedView>
           </ThemedView>
-        </ThemedView>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </AnimatedScreen>
   );
 }
 

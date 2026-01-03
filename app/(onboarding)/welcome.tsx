@@ -1,6 +1,7 @@
 import { useOnboarding } from "@/components/context/onboarding-provider";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import AnimatedScreen from "@/components/ui/animated-screen";
 import CapsuleButton from "@/components/ui/capsule-button";
 import CapsuleInput from "@/components/ui/capsule-input-box";
 import { Colors } from "@/constants/theme";
@@ -43,54 +44,56 @@ export default function WelcomeOnboarding() {
     }
   };
   return (
-    <SafeAreaView
-      style={[
-        styles.safeArea,
-        { backgroundColor: Colors[colorScheme ?? "light"].background },
-      ]}
-    >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <KeyboardAwareScrollView
-          keyboardShouldPersistTaps="handled"
-          extraScrollHeight={Platform.OS === "ios" ? 80 : 100}
-          enableOnAndroid={true}
-          contentContainerStyle={styles.container}
-        >
-          <ThemedView style={styles.main}>
-            <ThemedText type="displayMedium">
-              Welcome{state.name ? ` ${state.name}` : ""}!
-            </ThemedText>
-            <ThemedText type="h4">
-              Take control of your money, track your spending, and reach your
-              financial goals
-            </ThemedText>
-            <ThemedText type="h4">
-              Let&apos;s set things up to get you started!
-            </ThemedText>
-
-            <ThemedText type="h3">First, what should we call you?</ThemedText>
-            <CapsuleInput
-              value={state.name}
-              onChangeText={(text) =>
-                setState((prev) => ({
-                  ...prev,
-                  name:
-                    text.trim().charAt(0).toUpperCase() + text.trim().slice(1),
-                }))
-              }
-              placeholder="Enter name here"
-            />
-            <CapsuleButton
-              text="Get Started"
-              iconName="arrow-right"
-              IconComponent={Octicons}
-              bgFocused={btnColor}
-              onPress={startOnboardingProcess}
-            />
-          </ThemedView>
-        </KeyboardAwareScrollView>
-      </TouchableWithoutFeedback>
-    </SafeAreaView>
+    <AnimatedScreen>
+      <SafeAreaView
+        style={[
+          styles.safeArea,
+          { backgroundColor: Colors[colorScheme ?? "light"].background },
+        ]}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+          <KeyboardAwareScrollView
+            keyboardShouldPersistTaps="handled"
+            extraScrollHeight={Platform.OS === "ios" ? 80 : 100}
+            enableOnAndroid={true}
+            contentContainerStyle={styles.container}
+          >
+            <ThemedView style={styles.main}>
+              <ThemedText type="displayMedium">
+                Welcome{state.name ? ` ${state.name}` : ""}!
+              </ThemedText>
+              <ThemedText type="h4">
+                Take control of your money, track your spending, and reach your
+                financial goals
+              </ThemedText>
+              <ThemedText type="h4">
+                Let&apos;s set things up to get you started!
+              </ThemedText>
+              <ThemedText type="h3">First, what should we call you?</ThemedText>
+              <CapsuleInput
+                value={state.name}
+                onChangeText={(text) =>
+                  setState((prev) => ({
+                    ...prev,
+                    name:
+                      text.trim().charAt(0).toUpperCase() +
+                      text.trim().slice(1),
+                  }))
+                }
+                placeholder="Enter name here"
+              />
+              <CapsuleButton
+                text="Get Started"
+                iconName="arrow-right"
+                IconComponent={Octicons}
+                bgFocused={btnColor}
+                onPress={startOnboardingProcess}
+              />
+            </ThemedView>
+          </KeyboardAwareScrollView>
+        </TouchableWithoutFeedback>
+      </SafeAreaView>
+    </AnimatedScreen>
   );
 }
 

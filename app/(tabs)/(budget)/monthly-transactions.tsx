@@ -1,9 +1,12 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import AnimatedScreen from "@/components/ui/animated-screen";
+import TextButton from "@/components/ui/text-button";
 import { Colors } from "@/constants/theme";
 import DatabaseService from "@/services/DatabaseService";
 import { TransactionType } from "@/types";
-import { useLocalSearchParams } from "expo-router";
+import Octicons from "@expo/vector-icons/Octicons";
+import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -69,47 +72,58 @@ export default function MonthlyTransactions() {
   }
   // TODO: show all months with headers for each month
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
-      <ThemedView style={styles.container}>
-        <ThemedText type="displayMedium" style={styles.header}>
-          {new Date().toLocaleDateString("en-US", { month: "long" })}{" "}
-          Transactions
-        </ThemedText>
-        <FlatList
-          data={transactions}
-          keyExtractor={(item) => item.id}
-          refreshControl={
-            <RefreshControl refreshing={loading} onRefresh={loadTransaction} />
-          }
-          renderItem={({ item }) => {
-            const date = new Date(item.date);
-            const typeColor = item.type === "income" ? "#2EA64E" : "#CF3D3D";
-            return (
-              <ThemedView
-                style={[
-                  styles.transactionWrapper,
-                  { backgroundColor: transactinBgColor },
-                ]}
-              >
-                <ThemedView style={{ backgroundColor: transactinBgColor }}>
-                  <ThemedText style={{ color: bgColor }}>
-                    {item.name}
-                  </ThemedText>
-                  <ThemedText type="caption" style={{ color: bgColor }}>
-                    {date.toLocaleDateString()}
-                  </ThemedText>
+    <AnimatedScreen>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
+        <ThemedView style={styles.container}>
+          <TextButton
+            text="Back"
+            iconName="arrow-left"
+            IconComponent={Octicons}
+            onPress={() => router.back()}
+          />
+          <ThemedText type="displayMedium" style={styles.header}>
+            {new Date().toLocaleDateString("en-US", { month: "long" })}{" "}
+            Transactions
+          </ThemedText>
+          <FlatList
+            data={transactions}
+            keyExtractor={(item) => item.id}
+            refreshControl={
+              <RefreshControl
+                refreshing={loading}
+                onRefresh={loadTransaction}
+              />
+            }
+            renderItem={({ item }) => {
+              const date = new Date(item.date);
+              const typeColor = item.type === "income" ? "#2EA64E" : "#CF3D3D";
+              return (
+                <ThemedView
+                  style={[
+                    styles.transactionWrapper,
+                    { backgroundColor: transactinBgColor },
+                  ]}
+                >
+                  <ThemedView style={{ backgroundColor: transactinBgColor }}>
+                    <ThemedText style={{ color: bgColor }}>
+                      {item.name}
+                    </ThemedText>
+                    <ThemedText type="caption" style={{ color: bgColor }}>
+                      {date.toLocaleDateString()}
+                    </ThemedText>
+                  </ThemedView>
+                  <ThemedText
+                    style={[styles.transactionAmount, { color: typeColor }]}
+                    type="bodyLarge"
+                  >{`$${item.amount.toFixed(2)}`}</ThemedText>
                 </ThemedView>
-                <ThemedText
-                  style={[styles.transactionAmount, { color: typeColor }]}
-                  type="bodyLarge"
-                >{`$${item.amount.toFixed(2)}`}</ThemedText>
-              </ThemedView>
-            );
-          }}
-          ListEmptyComponent={<ThemedText>No transactions found</ThemedText>}
-        />
-      </ThemedView>
-    </SafeAreaView>
+              );
+            }}
+            ListEmptyComponent={<ThemedText>No transactions found</ThemedText>}
+          />
+        </ThemedView>
+      </SafeAreaView>
+    </AnimatedScreen>
   );
 }
 

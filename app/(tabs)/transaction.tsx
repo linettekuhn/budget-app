@@ -1,3 +1,4 @@
+import AnimatedScreen from "@/components/ui/animated-screen";
 import CapsuleButton from "@/components/ui/capsule-button";
 import TransactionForm from "@/components/ui/transaction-form";
 import { Colors } from "@/constants/theme";
@@ -93,31 +94,33 @@ export default function Transaction() {
   };
 
   return (
-    <SafeAreaView
-      style={[
-        styles.safeArea,
-        { backgroundColor: Colors[colorScheme ?? "light"].background },
-      ]}
-    >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <KeyboardAwareScrollView
-          keyboardShouldPersistTaps="handled"
-          extraScrollHeight={Platform.OS === "ios" ? 80 : 100}
-          enableOnAndroid={true}
-          contentContainerStyle={styles.container}
-        >
-          <TransactionForm onChange={setFormData} />
-          <CapsuleButton
-            text="ADD TRANSACTION"
-            onPress={() => {
-              Keyboard.dismiss();
-              handleTransaction();
-            }}
-            bgFocused={btnColor}
-          />
-        </KeyboardAwareScrollView>
-      </TouchableWithoutFeedback>
-    </SafeAreaView>
+    <AnimatedScreen>
+      <SafeAreaView
+        style={[
+          styles.safeArea,
+          { backgroundColor: Colors[colorScheme ?? "light"].background },
+        ]}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+          <KeyboardAwareScrollView
+            keyboardShouldPersistTaps="handled"
+            extraScrollHeight={Platform.OS === "ios" ? 80 : 100}
+            enableOnAndroid={true}
+            contentContainerStyle={styles.container}
+          >
+            <TransactionForm onChange={setFormData} />
+            <CapsuleButton
+              text="ADD TRANSACTION"
+              onPress={() => {
+                Keyboard.dismiss();
+                handleTransaction();
+              }}
+              bgFocused={btnColor}
+            />
+          </KeyboardAwareScrollView>
+        </TouchableWithoutFeedback>
+      </SafeAreaView>
+    </AnimatedScreen>
   );
 }
 

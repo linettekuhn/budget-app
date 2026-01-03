@@ -1,5 +1,6 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import AnimatedScreen from "@/components/ui/animated-screen";
 import CategoryBudgetPreview from "@/components/ui/category-budget-preview";
 import MonthSelect from "@/components/ui/month-select";
 import MonthlyBudgetPieChart from "@/components/ui/pie-chart/monthly-budget-pie-chart";
@@ -75,72 +76,33 @@ export default function Budget() {
   }
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
-      <ScrollView contentContainerStyle={styles.container}>
-        <ThemedView style={styles.main}>
-          <Pressable
-            onPress={() =>
-              router.push({
-                pathname: "/monthly-transactions",
-                params: { date: JSON.stringify(selectedDate) },
-              })
-            }
-          >
-            <ThemedView style={styles.pieChartWrapper}>
-              <MonthlyBudgetPieChart budgets={budgets} />
-              <View style={styles.monthWrapper}>
-                <ThemedText type="captionLarge">
-                  ${totalSpent} / ${totalBudget}
-                </ThemedText>
-                <MonthSelect
-                  handleDateChange={updateMonthData}
-                  initialDate={selectedDate}
-                />
-              </View>
-            </ThemedView>
-          </Pressable>
-
-          <ThemedView style={styles.categoryPreviews}>
-            {topThree
-              .slice()
-              .sort((a, b) => {
-                const aPercent = a.totalSpent / a.budget;
-                const bPercent = b.totalSpent / b.budget;
-                return bPercent - aPercent;
-              })
-              .map((category) => {
-                return (
-                  <CategoryBudgetPreview
-                    key={category.id}
-                    category={category}
-                    onPress={() =>
-                      router.push({
-                        pathname: "/category-transactions",
-                        params: {
-                          category: JSON.stringify(category),
-                          date: JSON.stringify(selectedDate),
-                        },
-                      })
-                    }
+    <AnimatedScreen>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
+        <ScrollView contentContainerStyle={styles.container}>
+          <ThemedView style={styles.main}>
+            <Pressable
+              onPress={() =>
+                router.push({
+                  pathname: "/monthly-transactions",
+                  params: { date: JSON.stringify(selectedDate) },
+                })
+              }
+            >
+              <ThemedView style={styles.pieChartWrapper}>
+                <MonthlyBudgetPieChart budgets={budgets} />
+                <View style={styles.monthWrapper}>
+                  <ThemedText type="captionLarge">
+                    ${totalSpent} / ${totalBudget}
+                  </ThemedText>
+                  <MonthSelect
+                    handleDateChange={updateMonthData}
+                    initialDate={selectedDate}
                   />
-                );
-              })}
-            {!seeAll && (
-              <CategoryBudgetPreview
-                key={-1}
-                category={{
-                  id: "",
-                  name: "Other",
-                  budget: otherTotal,
-                  totalSpent: otherTotalSpent,
-                  color: adjustColorForScheme("#B6B6B6", colorScheme),
-                  type: "need",
-                }}
-                onPress={() => setSeeAll(true)}
-              />
-            )}
-            {seeAll &&
-              other
+                </View>
+              </ThemedView>
+            </Pressable>
+            <ThemedView style={styles.categoryPreviews}>
+              {topThree
                 .slice()
                 .sort((a, b) => {
                   const aPercent = a.totalSpent / a.budget;
@@ -164,25 +126,65 @@ export default function Budget() {
                     />
                   );
                 })}
+              {!seeAll && (
+                <CategoryBudgetPreview
+                  key={-1}
+                  category={{
+                    id: "",
+                    name: "Other",
+                    budget: otherTotal,
+                    totalSpent: otherTotalSpent,
+                    color: adjustColorForScheme("#B6B6B6", colorScheme),
+                    type: "need",
+                  }}
+                  onPress={() => setSeeAll(true)}
+                />
+              )}
+              {seeAll &&
+                other
+                  .slice()
+                  .sort((a, b) => {
+                    const aPercent = a.totalSpent / a.budget;
+                    const bPercent = b.totalSpent / b.budget;
+                    return bPercent - aPercent;
+                  })
+                  .map((category) => {
+                    return (
+                      <CategoryBudgetPreview
+                        key={category.id}
+                        category={category}
+                        onPress={() =>
+                          router.push({
+                            pathname: "/category-transactions",
+                            params: {
+                              category: JSON.stringify(category),
+                              date: JSON.stringify(selectedDate),
+                            },
+                          })
+                        }
+                      />
+                    );
+                  })}
+            </ThemedView>
+            {seeAll ? (
+              <Pressable
+                style={{ alignSelf: "center" }}
+                onPress={() => setSeeAll(false)}
+              >
+                <ThemedText type="link">See Less Categories</ThemedText>
+              </Pressable>
+            ) : (
+              <Pressable
+                style={{ alignSelf: "center" }}
+                onPress={() => setSeeAll(true)}
+              >
+                <ThemedText type="link">See More Categories</ThemedText>
+              </Pressable>
+            )}
           </ThemedView>
-          {seeAll ? (
-            <Pressable
-              style={{ alignSelf: "center" }}
-              onPress={() => setSeeAll(false)}
-            >
-              <ThemedText type="link">See Less Categories</ThemedText>
-            </Pressable>
-          ) : (
-            <Pressable
-              style={{ alignSelf: "center" }}
-              onPress={() => setSeeAll(true)}
-            >
-              <ThemedText type="link">See More Categories</ThemedText>
-            </Pressable>
-          )}
-        </ThemedView>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </AnimatedScreen>
   );
 }
 

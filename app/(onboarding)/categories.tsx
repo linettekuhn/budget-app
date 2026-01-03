@@ -1,6 +1,7 @@
 import { useOnboarding } from "@/components/context/onboarding-provider";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import AnimatedScreen from "@/components/ui/animated-screen";
 import CapsuleButton from "@/components/ui/capsule-button";
 import CapsuleToggle from "@/components/ui/capsule-toggle";
 import CustomCategory from "@/components/ui/modal/category-modal";
@@ -84,59 +85,59 @@ export default function CategoriesOnboarding() {
   }
 
   return (
-    <SafeAreaView
-      style={[
-        styles.safeArea,
-        { backgroundColor: Colors[colorScheme ?? "light"].background },
-      ]}
-    >
-      <OnboardingControls />
-      <ScrollView contentContainerStyle={styles.container}>
-        <ThemedView style={styles.main}>
-          <ThemedText type="h1" style={{ paddingHorizontal: 30 }}>
-            Choose or Add Your Categories
-          </ThemedText>
-          <ThemedText type="h5" style={{ paddingHorizontal: 20 }}>
-            We&apos;ve added a few default categories to get you started.
-          </ThemedText>
-
-          <ThemedView style={styles.horizontalContainer}>
-            {categories.map((category) => {
-              const categoryColor = adjustColorForScheme(
-                category.color,
-                colorScheme
-              );
-              return (
-                <CapsuleToggle
-                  key={category.id}
-                  text={category.name}
-                  bgFocused={categoryColor}
-                  selected={selectedCategories.some(
-                    (cat) => cat.id === category.id
-                  )}
-                  onPress={() => toggleCategory(category)}
-                />
-              );
-            })}
+    <AnimatedScreen entering="slideRight">
+      <SafeAreaView
+        style={[
+          styles.safeArea,
+          { backgroundColor: Colors[colorScheme ?? "light"].background },
+        ]}
+      >
+        <OnboardingControls />
+        <ScrollView contentContainerStyle={styles.container}>
+          <ThemedView style={styles.main}>
+            <ThemedText type="h1" style={{ paddingHorizontal: 30 }}>
+              Choose or Add Your Categories
+            </ThemedText>
+            <ThemedText type="h5" style={{ paddingHorizontal: 20 }}>
+              We&apos;ve added a few default categories to get you started.
+            </ThemedText>
+            <ThemedView style={styles.horizontalContainer}>
+              {categories.map((category) => {
+                const categoryColor = adjustColorForScheme(
+                  category.color,
+                  colorScheme
+                );
+                return (
+                  <CapsuleToggle
+                    key={category.id}
+                    text={category.name}
+                    bgFocused={categoryColor}
+                    selected={selectedCategories.some(
+                      (cat) => cat.id === category.id
+                    )}
+                    onPress={() => toggleCategory(category)}
+                  />
+                );
+              })}
+              <CapsuleButton
+                onPress={handleOpen}
+                text="NEW CATEGORY"
+                bgFocused={btnColor}
+                IconComponent={Octicons}
+                iconName="plus"
+              />
+            </ThemedView>
             <CapsuleButton
-              onPress={handleOpen}
-              text="NEW CATEGORY"
-              bgFocused={btnColor}
+              text="Next"
+              iconName="arrow-right"
               IconComponent={Octicons}
-              iconName="plus"
+              bgFocused={btnColor}
+              onPress={saveSelectedCategories}
             />
           </ThemedView>
-
-          <CapsuleButton
-            text="Next"
-            iconName="arrow-right"
-            IconComponent={Octicons}
-            bgFocused={btnColor}
-            onPress={saveSelectedCategories}
-          />
-        </ThemedView>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </AnimatedScreen>
   );
 }
 

@@ -1,5 +1,6 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import AnimatedScreen from "@/components/ui/animated-screen";
 import CategoryBudgetPreview from "@/components/ui/category-budget-preview";
 import SalaryBreakdownPieChart from "@/components/ui/pie-chart/salary-breakdown-pie-chart";
 import { Colors } from "@/constants/theme";
@@ -60,60 +61,64 @@ export default function HomeScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
-      <ScrollView contentContainerStyle={styles.container}>
-        <ThemedView style={styles.main}>
-          <View>
-            <ThemedText type="displayLarge">Monthly Report</ThemedText>
-            <ThemedText type="h6">
-              Here&apos;s a quick look at where your money went and what you
-              kept!
-            </ThemedText>
-          </View>
-          <ThemedView style={styles.pieChartWrapper}>
-            <SalaryBreakdownPieChart budgets={budgets} salary={salary} />
-            <View style={styles.savedWrapper}>
-              <ThemedText type="displayMedium" style={styles.percent}>
-                ${saved}
-              </ThemedText>
-              <ThemedText type="h5" style={styles.saved}>
-                saved!
+    <AnimatedScreen>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
+        <ScrollView contentContainerStyle={styles.container}>
+          <ThemedView style={styles.main}>
+            <View>
+              <ThemedText type="displayLarge">Monthly Report</ThemedText>
+              <ThemedText type="h6">
+                Here&apos;s a quick look at where your money went and what you
+                kept!
               </ThemedText>
             </View>
-          </ThemedView>
-          <View
-            style={[
-              styles.spendingTrackerWrapper,
-              { backgroundColor: Colors[colorScheme ?? "light"].primary[200] },
-            ]}
-          >
-            <ThemedText type="displayMedium">Spending Tracker</ThemedText>
-            <CategoryBudgetPreview
-              onPress={() => {
-                router.push("/(tabs)/(budget)");
-              }}
-              category={{
-                id: "",
-                name: "Total Spent",
-                budget: totalBudget,
-                totalSpent: totalSpent,
-                color: Colors[colorScheme ?? "light"].primary[500],
-                type: "need",
-              }}
-            />
-            <Pressable
-              onPress={() => {
-                router.push("/(tabs)/(budget)");
-              }}
+            <ThemedView style={styles.pieChartWrapper}>
+              <SalaryBreakdownPieChart budgets={budgets} salary={salary} />
+              <View style={styles.savedWrapper}>
+                <ThemedText type="displayMedium" style={styles.percent}>
+                  ${saved}
+                </ThemedText>
+                <ThemedText type="h5" style={styles.saved}>
+                  saved!
+                </ThemedText>
+              </View>
+            </ThemedView>
+            <View
+              style={[
+                styles.spendingTrackerWrapper,
+                {
+                  backgroundColor: Colors[colorScheme ?? "light"].primary[200],
+                },
+              ]}
             >
-              <ThemedText type="link" style={{ textAlign: "center" }}>
-                Check your monthly budget →
-              </ThemedText>
-            </Pressable>
-          </View>
-        </ThemedView>
-      </ScrollView>
-    </SafeAreaView>
+              <ThemedText type="displayMedium">Spending Tracker</ThemedText>
+              <CategoryBudgetPreview
+                onPress={() => {
+                  router.push("/(tabs)/(budget)");
+                }}
+                category={{
+                  id: "",
+                  name: "Total Spent",
+                  budget: totalBudget,
+                  totalSpent: totalSpent,
+                  color: Colors[colorScheme ?? "light"].primary[500],
+                  type: "need",
+                }}
+              />
+              <Pressable
+                onPress={() => {
+                  router.push("/(tabs)/(budget)");
+                }}
+              >
+                <ThemedText type="link" style={{ textAlign: "center" }}>
+                  Check your monthly budget →
+                </ThemedText>
+              </Pressable>
+            </View>
+          </ThemedView>
+        </ScrollView>
+      </SafeAreaView>
+    </AnimatedScreen>
   );
 }
 

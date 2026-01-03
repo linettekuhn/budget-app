@@ -2,6 +2,7 @@ import { useOnboarding } from "@/components/context/onboarding-provider";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import AmountDisplay from "@/components/ui/amount-display";
+import AnimatedScreen from "@/components/ui/animated-screen";
 import CapsuleButton from "@/components/ui/capsule-button";
 import OnboardingControls from "@/components/ui/onboarding-controls";
 import { Colors } from "@/constants/theme";
@@ -89,81 +90,80 @@ export default function BudgetOnboarding() {
   }, [state.budgets, categories]);
 
   return (
-    <SafeAreaView
-      style={[
-        styles.safeArea,
-        { backgroundColor: Colors[colorScheme ?? "light"].background },
-      ]}
-    >
-      <OnboardingControls />
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <KeyboardAwareScrollView
-          keyboardShouldPersistTaps="handled"
-          extraScrollHeight={Platform.OS === "ios" ? 80 : 100}
-          enableOnAndroid={true}
-          contentContainerStyle={styles.container}
-        >
-          <ThemedView style={styles.main}>
-            <ThemedText type="h1">Set Your Monthly Budgets</ThemedText>
-            <ThemedText type="h5" style={{ paddingHorizontal: 20 }}>
-              Decide how much you want to spend in each category.
-            </ThemedText>
-
-            <ThemedView style={styles.categoriesWrapper}>
-              {categories.map((category) => {
-                const categoryColor = adjustColorForScheme(
-                  category.color,
-                  colorScheme
-                );
-
-                return (
-                  <ThemedView
-                    style={[
-                      styles.categoryBudget,
-                      { borderColor: categoryColor },
-                    ]}
-                    key={category.id}
-                  >
-                    <ThemedText type="bodyLarge">{category.name}</ThemedText>
-                    <AmountDisplay
-                      displayAmount={
-                        state.budgets[category.id]?.display || "0.00"
-                      }
-                      rawAmount={state.budgets[category.id]?.raw || "0"}
-                      onChangeText={(text) =>
-                        handleAmountChange(category.id, text)
-                      }
-                      textType="bodyLarge"
-                    />
-                  </ThemedView>
-                );
-              })}
-            </ThemedView>
-            <ThemedText type="h4">Total: ${total.toFixed(2)}</ThemedText>
-
-            {!isValid ? (
-              <ThemedText
-                type="overline"
-                style={{
-                  color: Colors[colorScheme ?? "light"].error,
-                  textAlign: "center",
-                }}
-              >
-                All budgets must be at least $1.00
+    <AnimatedScreen entering="slideRight">
+      <SafeAreaView
+        style={[
+          styles.safeArea,
+          { backgroundColor: Colors[colorScheme ?? "light"].background },
+        ]}
+      >
+        <OnboardingControls />
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+          <KeyboardAwareScrollView
+            keyboardShouldPersistTaps="handled"
+            extraScrollHeight={Platform.OS === "ios" ? 80 : 100}
+            enableOnAndroid={true}
+            contentContainerStyle={styles.container}
+          >
+            <ThemedView style={styles.main}>
+              <ThemedText type="h1">Set Your Monthly Budgets</ThemedText>
+              <ThemedText type="h5" style={{ paddingHorizontal: 20 }}>
+                Decide how much you want to spend in each category.
               </ThemedText>
-            ) : (
-              <CapsuleButton
-                text="Next"
-                iconName="arrow-right"
-                IconComponent={Octicons}
-                bgFocused={btnColor}
-                onPress={() => router.push("/salary")}
-              />
-            )}
-          </ThemedView>
-        </KeyboardAwareScrollView>
-      </TouchableWithoutFeedback>
-    </SafeAreaView>
+              <ThemedView style={styles.categoriesWrapper}>
+                {categories.map((category) => {
+                  const categoryColor = adjustColorForScheme(
+                    category.color,
+                    colorScheme
+                  );
+                  return (
+                    <ThemedView
+                      style={[
+                        styles.categoryBudget,
+                        { borderColor: categoryColor },
+                      ]}
+                      key={category.id}
+                    >
+                      <ThemedText type="bodyLarge">{category.name}</ThemedText>
+                      <AmountDisplay
+                        displayAmount={
+                          state.budgets[category.id]?.display || "0.00"
+                        }
+                        rawAmount={state.budgets[category.id]?.raw || "0"}
+                        onChangeText={(text) =>
+                          handleAmountChange(category.id, text)
+                        }
+                        textType="bodyLarge"
+                      />
+                    </ThemedView>
+                  );
+                })}
+              </ThemedView>
+              <ThemedText type="h4">Total: ${total.toFixed(2)}</ThemedText>
+              {!isValid ? (
+                <ThemedText
+                  type="overline"
+                  style={{
+                    color: Colors[colorScheme ?? "light"].error,
+                    textAlign: "center",
+                  }}
+                >
+                  All budgets must be at least $1.00
+                </ThemedText>
+              ) : (
+                <CapsuleButton
+                  text="Next"
+                  iconName="arrow-right"
+                  IconComponent={Octicons}
+                  bgFocused={btnColor}
+                  onPress={() => router.push("/salary")}
+                />
+              )}
+            </ThemedView>
+          </KeyboardAwareScrollView>
+        </TouchableWithoutFeedback>
+      </SafeAreaView>
+    </AnimatedScreen>
   );
 }
 

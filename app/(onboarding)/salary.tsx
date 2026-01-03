@@ -2,6 +2,7 @@ import { useOnboarding } from "@/components/context/onboarding-provider";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import AmountDisplay from "@/components/ui/amount-display";
+import AnimatedScreen from "@/components/ui/animated-screen";
 import CapsuleButton from "@/components/ui/capsule-button";
 import CapsuleNumberInput from "@/components/ui/capsule-input-number";
 import CapsuleToggle from "@/components/ui/capsule-toggle";
@@ -123,77 +124,108 @@ export default function SalaryOnboarding() {
     }
   };
   return (
-    <SafeAreaView
-      style={[
-        styles.safeArea,
-        { backgroundColor: Colors[colorScheme ?? "light"].background },
-      ]}
-    >
-      <OnboardingControls />
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <KeyboardAwareScrollView
-          keyboardShouldPersistTaps="handled"
-          extraScrollHeight={Platform.OS === "ios" ? 80 : 100}
-          enableOnAndroid={true}
-          contentContainerStyle={styles.container}
-        >
-          <ThemedView style={styles.main}>
-            <ThemedText type="h1">Add Your Income</ThemedText>
-            <ThemedText type="h4">
-              Entering your salary helps us calculate savings.
-            </ThemedText>
-            <ThemedText type="h3">How do you usually get paid?</ThemedText>
-
-            <ThemedView style={styles.horizontalContainer}>
-              <CapsuleToggle
-                text={"Hourly"}
-                bgFocused={Colors[colorScheme ?? "light"].primary[500]}
-                selected={salaryType === "Hourly"}
-                onPress={() => {
-                  Keyboard.dismiss();
-                  setSalaryType("Hourly");
-                }}
-              />
-              <CapsuleToggle
-                text={"Biweekly"}
-                bgFocused={Colors[colorScheme ?? "light"].primary[500]}
-                selected={salaryType === "Biweekly"}
-                onPress={() => {
-                  Keyboard.dismiss();
-                  setSalaryType("Biweekly");
-                }}
-              />
-              <CapsuleToggle
-                text={"Monthly"}
-                bgFocused={Colors[colorScheme ?? "light"].primary[500]}
-                selected={salaryType === "Monthly"}
-                onPress={() => {
-                  Keyboard.dismiss();
-                  setSalaryType("Monthly");
-                }}
-              />
-              <CapsuleToggle
-                text={"Yearly"}
-                bgFocused={Colors[colorScheme ?? "light"].primary[500]}
-                selected={salaryType === "Yearly"}
-                onPress={() => {
-                  Keyboard.dismiss();
-                  setSalaryType("Yearly");
-                }}
-              />
-              <CapsuleToggle
-                text={"Varies"}
-                bgFocused={Colors[colorScheme ?? "light"].primary[500]}
-                selected={salaryType === "Varies"}
-                onPress={() => {
-                  Keyboard.dismiss();
-                  setSalaryType("Varies");
-                }}
-              />
-            </ThemedView>
-            {salaryType === "Hourly" && (
-              <ThemedView style={styles.hourlyWrapper}>
-                <View style={styles.quantityWrapper}>
+    <AnimatedScreen entering="slideRight">
+      <SafeAreaView
+        style={[
+          styles.safeArea,
+          { backgroundColor: Colors[colorScheme ?? "light"].background },
+        ]}
+      >
+        <OnboardingControls />
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+          <KeyboardAwareScrollView
+            keyboardShouldPersistTaps="handled"
+            extraScrollHeight={Platform.OS === "ios" ? 80 : 100}
+            enableOnAndroid={true}
+            contentContainerStyle={styles.container}
+          >
+            <ThemedView style={styles.main}>
+              <ThemedText type="h1">Add Your Income</ThemedText>
+              <ThemedText type="h4">
+                Entering your salary helps us calculate savings.
+              </ThemedText>
+              <ThemedText type="h3">How do you usually get paid?</ThemedText>
+              <ThemedView style={styles.horizontalContainer}>
+                <CapsuleToggle
+                  text={"Hourly"}
+                  bgFocused={Colors[colorScheme ?? "light"].primary[500]}
+                  selected={salaryType === "Hourly"}
+                  onPress={() => {
+                    Keyboard.dismiss();
+                    setSalaryType("Hourly");
+                  }}
+                />
+                <CapsuleToggle
+                  text={"Biweekly"}
+                  bgFocused={Colors[colorScheme ?? "light"].primary[500]}
+                  selected={salaryType === "Biweekly"}
+                  onPress={() => {
+                    Keyboard.dismiss();
+                    setSalaryType("Biweekly");
+                  }}
+                />
+                <CapsuleToggle
+                  text={"Monthly"}
+                  bgFocused={Colors[colorScheme ?? "light"].primary[500]}
+                  selected={salaryType === "Monthly"}
+                  onPress={() => {
+                    Keyboard.dismiss();
+                    setSalaryType("Monthly");
+                  }}
+                />
+                <CapsuleToggle
+                  text={"Yearly"}
+                  bgFocused={Colors[colorScheme ?? "light"].primary[500]}
+                  selected={salaryType === "Yearly"}
+                  onPress={() => {
+                    Keyboard.dismiss();
+                    setSalaryType("Yearly");
+                  }}
+                />
+                <CapsuleToggle
+                  text={"Varies"}
+                  bgFocused={Colors[colorScheme ?? "light"].primary[500]}
+                  selected={salaryType === "Varies"}
+                  onPress={() => {
+                    Keyboard.dismiss();
+                    setSalaryType("Varies");
+                  }}
+                />
+              </ThemedView>
+              {salaryType === "Hourly" && (
+                <ThemedView style={styles.hourlyWrapper}>
+                  <View style={styles.quantityWrapper}>
+                    <ThemedText type="h2">How much?</ThemedText>
+                    <ThemedView style={styles.salaryAmount}>
+                      <AmountDisplay
+                        displayAmount={displayAmount}
+                        rawAmount={rawAmount}
+                        onChangeText={handleAmountChange}
+                        textType="h3"
+                      />
+                      <ThemedText type="h3"> per hour</ThemedText>
+                    </ThemedView>
+                  </View>
+                  <View
+                    style={{ marginVertical: 10, gap: 5, alignItems: "center" }}
+                  >
+                    <ThemedText type="overline">
+                      Enter your best average if it varies
+                    </ThemedText>
+                    <ThemedView style={styles.salaryAmount}>
+                      <CapsuleNumberInput
+                        displayAmount={hoursDisplay}
+                        rawAmount={hoursRaw}
+                        onChangeText={handleHoursChange}
+                        textType="h3"
+                      />
+                      <ThemedText type="h3"> hours per week</ThemedText>
+                    </ThemedView>
+                  </View>
+                </ThemedView>
+              )}
+              {salaryType === "Biweekly" && (
+                <ThemedView style={styles.quantityWrapper}>
                   <ThemedText type="h2">How much?</ThemedText>
                   <ThemedView style={styles.salaryAmount}>
                     <AmountDisplay
@@ -202,95 +234,64 @@ export default function SalaryOnboarding() {
                       onChangeText={handleAmountChange}
                       textType="h3"
                     />
-                    <ThemedText type="h3"> per hour</ThemedText>
+                    <ThemedText type="h3"> every 2 weeks</ThemedText>
                   </ThemedView>
-                </View>
-                <View
-                  style={{ marginVertical: 10, gap: 5, alignItems: "center" }}
-                >
-                  <ThemedText type="overline">
-                    Enter your best average if it varies
-                  </ThemedText>
+                </ThemedView>
+              )}
+              {salaryType === "Monthly" && (
+                <ThemedView style={styles.quantityWrapper}>
+                  <ThemedText type="h2">How much?</ThemedText>
                   <ThemedView style={styles.salaryAmount}>
-                    <CapsuleNumberInput
-                      displayAmount={hoursDisplay}
-                      rawAmount={hoursRaw}
-                      onChangeText={handleHoursChange}
+                    <AmountDisplay
+                      displayAmount={displayAmount}
+                      rawAmount={rawAmount}
+                      onChangeText={handleAmountChange}
                       textType="h3"
                     />
-                    <ThemedText type="h3"> hours per week</ThemedText>
+                    <ThemedText type="h3"> per month</ThemedText>
                   </ThemedView>
-                </View>
-              </ThemedView>
-            )}
-            {salaryType === "Biweekly" && (
-              <ThemedView style={styles.quantityWrapper}>
-                <ThemedText type="h2">How much?</ThemedText>
-                <ThemedView style={styles.salaryAmount}>
-                  <AmountDisplay
-                    displayAmount={displayAmount}
-                    rawAmount={rawAmount}
-                    onChangeText={handleAmountChange}
-                    textType="h3"
-                  />
-                  <ThemedText type="h3"> every 2 weeks</ThemedText>
                 </ThemedView>
-              </ThemedView>
-            )}
-            {salaryType === "Monthly" && (
-              <ThemedView style={styles.quantityWrapper}>
-                <ThemedText type="h2">How much?</ThemedText>
-                <ThemedView style={styles.salaryAmount}>
-                  <AmountDisplay
-                    displayAmount={displayAmount}
-                    rawAmount={rawAmount}
-                    onChangeText={handleAmountChange}
-                    textType="h3"
-                  />
-                  <ThemedText type="h3"> per month</ThemedText>
+              )}
+              {salaryType === "Yearly" && (
+                <ThemedView style={styles.quantityWrapper}>
+                  <ThemedText type="h2">How much?</ThemedText>
+                  <ThemedView style={styles.salaryAmount}>
+                    <AmountDisplay
+                      displayAmount={displayAmount}
+                      rawAmount={rawAmount}
+                      onChangeText={handleAmountChange}
+                      textType="h3"
+                    />
+                    <ThemedText type="h3"> per year</ThemedText>
+                  </ThemedView>
                 </ThemedView>
-              </ThemedView>
-            )}
-            {salaryType === "Yearly" && (
-              <ThemedView style={styles.quantityWrapper}>
-                <ThemedText type="h2">How much?</ThemedText>
-                <ThemedView style={styles.salaryAmount}>
-                  <AmountDisplay
-                    displayAmount={displayAmount}
-                    rawAmount={rawAmount}
-                    onChangeText={handleAmountChange}
-                    textType="h3"
-                  />
-                  <ThemedText type="h3"> per year</ThemedText>
+              )}
+              {salaryType === "Varies" && (
+                <ThemedView style={styles.quantityWrapper}>
+                  <ThemedText type="h2">How much?</ThemedText>
+                  <ThemedView style={styles.salaryAmount}>
+                    <AmountDisplay
+                      displayAmount={displayAmount}
+                      rawAmount={rawAmount}
+                      onChangeText={handleAmountChange}
+                      textType="h3"
+                    />
+                    <ThemedText type="h3"> per month (estimated)</ThemedText>
+                  </ThemedView>
                 </ThemedView>
-              </ThemedView>
-            )}
-            {salaryType === "Varies" && (
-              <ThemedView style={styles.quantityWrapper}>
-                <ThemedText type="h2">How much?</ThemedText>
-                <ThemedView style={styles.salaryAmount}>
-                  <AmountDisplay
-                    displayAmount={displayAmount}
-                    rawAmount={rawAmount}
-                    onChangeText={handleAmountChange}
-                    textType="h3"
-                  />
-                  <ThemedText type="h3"> per month (estimated)</ThemedText>
-                </ThemedView>
-              </ThemedView>
-            )}
-
-            <CapsuleButton
-              text="Next"
-              iconName="arrow-right"
-              IconComponent={Octicons}
-              bgFocused={btnColor}
-              onPress={saveSalary}
-            />
-          </ThemedView>
-        </KeyboardAwareScrollView>
-      </TouchableWithoutFeedback>
-    </SafeAreaView>
+              )}
+              <CapsuleButton
+                text="Next"
+                iconName="arrow-right"
+                IconComponent={Octicons}
+                bgFocused={btnColor}
+                onPress={saveSalary}
+              />
+            </ThemedView>
+          </KeyboardAwareScrollView>
+        </TouchableWithoutFeedback>
+      </SafeAreaView>
+    </AnimatedScreen>
   );
 }
 

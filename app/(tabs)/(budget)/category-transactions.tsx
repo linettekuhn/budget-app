@@ -1,13 +1,16 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import AnimatedScreen from "@/components/ui/animated-screen";
 import CapsuleButton from "@/components/ui/capsule-button";
 import EditCategory from "@/components/ui/modal/edit-category-modal";
+import TextButton from "@/components/ui/text-button";
 import { Colors } from "@/constants/theme";
 import { useCategorySpend } from "@/hooks/useCategorySpend";
 import { useModal } from "@/hooks/useModal";
 import DatabaseService from "@/services/DatabaseService";
 import { CategoryType, TransactionType } from "@/types";
-import { useFocusEffect, useLocalSearchParams } from "expo-router";
+import Octicons from "@expo/vector-icons/Octicons";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -104,95 +107,108 @@ export default function CategoryTransactions() {
     return <ActivityIndicator size="large" />;
   }
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
-      <ThemedView style={styles.container}>
-        <ThemedView style={styles.main}>
-          <View>
-            <ThemedText type="displayMedium" style={styles.header}>
-              {category.name
-                .split(" ")
-                .map((word) => word[0].toUpperCase() + word.slice(1))
-                .join(" ")}{" "}
-              Transactions
-            </ThemedText>
-            <ThemedText
-              type="bodyLarge"
-              style={{ textAlign: "center", paddingHorizontal: 32 }}
-            >
-              You have spent ${budget.totalSpent} out of your ${budget.budget}{" "}
-              budget for{" "}
-              {category.name
-                .split(" ")
-                .map((word) => word[0].toLowerCase() + word.slice(1))
-                .join(" ")}
-              .
-            </ThemedText>
-          </View>
-          <CapsuleButton
-            text="Edit Budget"
-            onPress={handleOpen}
-            bgFocused={Colors[colorScheme ?? "light"].primary[500]}
-          />
-          <FlatList
-            contentContainerStyle={[
-              styles.transactionList,
-              { backgroundColor: Colors[colorScheme ?? "light"].primary[200] },
-            ]}
-            data={transactions}
-            keyExtractor={(item) => item.id}
-            refreshControl={
-              <RefreshControl
-                refreshing={loading}
-                onRefresh={loadTransaction}
-              />
-            }
-            renderItem={({ item }) => {
-              const date = new Date(item.date);
-              const typeColor = item.type === "income" ? "#2EA64E" : "#CF3D3D";
-              return (
-                <ThemedView
-                  style={[
-                    styles.transactionWrapper,
-                    { backgroundColor: transactionBgColor },
-                  ]}
-                >
+    <AnimatedScreen entering="slideRight">
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
+        <ThemedView style={styles.container}>
+          <ThemedView style={styles.main}>
+            <TextButton
+              text="Back"
+              iconName="arrow-left"
+              IconComponent={Octicons}
+              onPress={() => router.back()}
+            />
+            <View>
+              <ThemedText type="displayMedium" style={styles.header}>
+                {category.name
+                  .split(" ")
+                  .map((word) => word[0].toUpperCase() + word.slice(1))
+                  .join(" ")}{" "}
+                Transactions
+              </ThemedText>
+              <ThemedText
+                type="bodyLarge"
+                style={{ textAlign: "center", paddingHorizontal: 32 }}
+              >
+                You have spent ${budget.totalSpent} out of your ${budget.budget}{" "}
+                budget for{" "}
+                {category.name
+                  .split(" ")
+                  .map((word) => word[0].toLowerCase() + word.slice(1))
+                  .join(" ")}
+                .
+              </ThemedText>
+            </View>
+            <CapsuleButton
+              text="Edit Budget"
+              onPress={handleOpen}
+              bgFocused={Colors[colorScheme ?? "light"].primary[500]}
+            />
+            <FlatList
+              contentContainerStyle={[
+                styles.transactionList,
+                {
+                  backgroundColor: Colors[colorScheme ?? "light"].primary[200],
+                },
+              ]}
+              data={transactions}
+              keyExtractor={(item) => item.id}
+              refreshControl={
+                <RefreshControl
+                  refreshing={loading}
+                  onRefresh={loadTransaction}
+                />
+              }
+              renderItem={({ item }) => {
+                const date = new Date(item.date);
+                const typeColor =
+                  item.type === "income" ? "#2EA64E" : "#CF3D3D";
+                return (
                   <ThemedView
-                    style={{
-                      backgroundColor: transactionBgColor,
-                    }}
+                    style={[
+                      styles.transactionWrapper,
+                      { backgroundColor: transactionBgColor },
+                    ]}
                   >
-                    <ThemedText
+                    <ThemedView
                       style={{
-                        color: bgColor,
-                        margin: 0,
-                        lineHeight: 0,
+                        backgroundColor: transactionBgColor,
                       }}
                     >
-                      {item.name}
-                    </ThemedText>
+                      <ThemedText
+                        style={{
+                          color: bgColor,
+                          margin: 0,
+                          lineHeight: 0,
+                        }}
+                      >
+                        {item.name}
+                      </ThemedText>
+                      <ThemedText
+                        type="captionSmall"
+                        style={{
+                          color: bgColor,
+                          margin: 0,
+                          lineHeight: 0,
+                        }}
+                      >
+                        {date.toLocaleDateString()}
+                      </ThemedText>
+                    </ThemedView>
                     <ThemedText
-                      type="captionSmall"
-                      style={{
-                        color: bgColor,
-                        margin: 0,
-                        lineHeight: 0,
-                      }}
-                    >
-                      {date.toLocaleDateString()}
-                    </ThemedText>
+                      style={{ color: typeColor }}
+                      type="bodyLarge"
+                    >{`$${item.amount.toFixed(2)}`}</ThemedText>
                   </ThemedView>
-                  <ThemedText
-                    style={{ color: typeColor }}
-                    type="bodyLarge"
-                  >{`$${item.amount.toFixed(2)}`}</ThemedText>
-                </ThemedView>
-              );
-            }}
-            ListEmptyComponent={<ThemedText>No transactions found</ThemedText>}
-          />
+                );
+              }}
+              ListEmptyComponent={
+                <ThemedText>No transactions found</ThemedText>
+              }
+            />
+          </ThemedView>
         </ThemedView>
-      </ThemedView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </AnimatedScreen>
   );
 }
 
