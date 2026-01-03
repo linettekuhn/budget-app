@@ -257,7 +257,6 @@ export default function Profile() {
                         );
                       }}
                     />
-                    <ProfileOption text="Reset app" onPress={resetApp} />
                   </View>
                 </Collapsible>
                 <Collapsible
