@@ -5,6 +5,7 @@ import EditSalaryOption from "@/components/profile/edit-salary-option";
 import ProfileOption from "@/components/profile/profile-option";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import AnimatedScreen from "@/components/ui/animated-screen";
 import Avatar from "@/components/ui/avatar";
 import CapsuleButton from "@/components/ui/capsule-button";
 import { Collapsible } from "@/components/ui/collapsible";
@@ -165,161 +166,168 @@ export default function Profile() {
 
   // TODO: add button functionality
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
-      <ScrollView contentContainerStyle={styles.container}>
-        <ThemedView style={styles.main}>
-          <View
-            style={[
-              styles.settingsWrapper,
-              { backgroundColor: Colors[colorScheme ?? "light"].primary[300] },
-            ]}
-          >
+    <AnimatedScreen>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
+        <ScrollView contentContainerStyle={styles.container}>
+          <ThemedView style={styles.main}>
             <View
               style={[
-                styles.profileWrapper,
+                styles.settingsWrapper,
                 {
-                  backgroundColor: Colors[colorScheme ?? "light"].primary[200],
+                  backgroundColor: Colors[colorScheme ?? "light"].primary[300],
                 },
               ]}
             >
-              <Avatar name={name ?? ""} size={80} />
-              <View style={styles.profile}>
-                <ThemedText type="h1">{name}</ThemedText>
-                {email ? (
-                  <ThemedText type="bodySmall">{email}</ThemedText>
-                ) : null}
+              <View
+                style={[
+                  styles.profileWrapper,
+                  {
+                    backgroundColor:
+                      Colors[colorScheme ?? "light"].primary[200],
+                  },
+                ]}
+              >
+                <Avatar name={name ?? ""} size={80} />
+                <View style={styles.profile}>
+                  <ThemedText type="h1">{name}</ThemedText>
+                  {email ? (
+                    <ThemedText type="bodySmall">{email}</ThemedText>
+                  ) : null}
+                </View>
+              </View>
+              <View style={{ paddingHorizontal: 24, gap: 32 }}>
+                <Collapsible
+                  title="Account"
+                  IconComponent={Octicons}
+                  iconName="person"
+                >
+                  <View>
+                    <ChangeNameOption onChange={reload} />
+                    {user ? (
+                      <>
+                        <ChangePasswordOption />
+                        <DeleteAccountOption />
+                      </>
+                    ) : (
+                      <>
+                        <ProfileOption
+                          text="Log in"
+                          onPress={() => {
+                            router.replace("/(auth)/login");
+                          }}
+                        />
+                        <ProfileOption
+                          text="Create account"
+                          onPress={() => {
+                            router.replace("/(auth)/register");
+                          }}
+                        />
+                      </>
+                    )}
+                  </View>
+                </Collapsible>
+                <Collapsible
+                  title="Notifications"
+                  IconComponent={Octicons}
+                  iconName="bell"
+                >
+                  <View>
+                    <ProfileOption
+                      text="Push notifications"
+                      onPress={() => {}}
+                    />
+                    <ProfileOption
+                      text="In-app notifications"
+                      onPress={() => {}}
+                    />
+                  </View>
+                </Collapsible>
+                <Collapsible
+                  title="Settings"
+                  IconComponent={Octicons}
+                  iconName="gear"
+                >
+                  <View>
+                    <EditSalaryOption />
+                    <ProfileOption
+                      text="Manage recurring transactions"
+                      onPress={() => {
+                        router.push(
+                          "/(tabs)/(profile)/manage-recurring-transactions"
+                        );
+                      }}
+                    />
+                    <ProfileOption text="Reset app" onPress={resetApp} />
+                  </View>
+                </Collapsible>
+                <Collapsible
+                  title="Region"
+                  IconComponent={Octicons}
+                  iconName="globe"
+                >
+                  <View>
+                    <ProfileOption text="Choose currency" onPress={() => {}} />
+                  </View>
+                </Collapsible>
+                {user && (
+                  <TouchableOpacity
+                    onPress={logout}
+                    activeOpacity={0.8}
+                    style={[
+                      styles.wrapper,
+                      {
+                        backgroundColor:
+                          Colors[colorScheme ?? "light"].primary[200],
+                      },
+                    ]}
+                  >
+                    <View style={styles.row}>
+                      <Octicons name="sign-out" size={17} color={color} />
+                      <ThemedText type="bodyLarge" style={{ color }}>
+                        Logout
+                      </ThemedText>
+                    </View>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
-            <View style={{ paddingHorizontal: 24, gap: 32 }}>
-              <Collapsible
-                title="Account"
-                IconComponent={Octicons}
-                iconName="person"
-              >
-                <View>
-                  <ChangeNameOption onChange={reload} />
-                  {user ? (
-                    <>
-                      <ChangePasswordOption />
-                      <DeleteAccountOption />
-                    </>
-                  ) : (
-                    <>
-                      <ProfileOption
-                        text="Log in"
-                        onPress={() => {
-                          router.replace("/(auth)/login");
-                        }}
-                      />
-                      <ProfileOption
-                        text="Create account"
-                        onPress={() => {
-                          router.replace("/(auth)/register");
-                        }}
-                      />
-                    </>
-                  )}
-                </View>
-              </Collapsible>
-              <Collapsible
-                title="Notifications"
-                IconComponent={Octicons}
-                iconName="bell"
-              >
-                <View>
-                  <ProfileOption text="Push notifications" onPress={() => {}} />
-                  <ProfileOption
-                    text="In-app notifications"
-                    onPress={() => {}}
-                  />
-                </View>
-              </Collapsible>
-              <Collapsible
-                title="Settings"
-                IconComponent={Octicons}
-                iconName="gear"
-              >
-                <View>
-                  <EditSalaryOption />
-                  <ProfileOption
-                    text="Manage recurring transactions"
-                    onPress={() => {
-                      router.push(
-                        "/(tabs)/(profile)/manage-recurring-transactions"
-                      );
-                    }}
-                  />
-                  <ProfileOption text="Reset app" onPress={resetApp} />
-                </View>
-              </Collapsible>
-              <Collapsible
-                title="Region"
-                IconComponent={Octicons}
-                iconName="globe"
-              >
-                <View>
-                  <ProfileOption text="Choose currency" onPress={() => {}} />
-                </View>
-              </Collapsible>
-              {user && (
-                <TouchableOpacity
-                  onPress={logout}
-                  activeOpacity={0.8}
-                  style={[
-                    styles.wrapper,
-                    {
-                      backgroundColor:
-                        Colors[colorScheme ?? "light"].primary[200],
-                    },
-                  ]}
-                >
-                  <View style={styles.row}>
-                    <Octicons name="sign-out" size={17} color={color} />
-
-                    <ThemedText type="bodyLarge" style={{ color }}>
-                      Logout
-                    </ThemedText>
-                  </View>
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-          <ThemedText
-            type="bodyLarge"
-            darkColor={Colors["dark"].primary[700]}
-            lightColor={Colors["light"].primary[700]}
-            style={{ textAlign: "center" }}
-          >
-            Budgeting since{" "}
-            {startDate.toLocaleDateString(undefined, {
-              year: "numeric",
-              month: "long",
-              day: "2-digit",
-            })}
-          </ThemedText>
-          <CapsuleButton
-            text="SYNC APP"
-            onPress={syncApp}
-            bgFocused={btnColor}
-          />
-          <CapsuleButton
-            text="RESET TRANSACTIONS"
-            onPress={resetDatabase}
-            bgFocused={btnColor}
-          />
-          <CapsuleButton
-            text="RESET ONBOARDING"
-            onPress={resetOnboarding}
-            bgFocused={btnColor}
-          />
-          <CapsuleButton
-            text="RESET APP"
-            onPress={resetApp}
-            bgFocused={btnColor}
-          />
-        </ThemedView>
-      </ScrollView>
-    </SafeAreaView>
+            <ThemedText
+              type="bodyLarge"
+              darkColor={Colors["dark"].primary[700]}
+              lightColor={Colors["light"].primary[700]}
+              style={{ textAlign: "center" }}
+            >
+              Budgeting since{" "}
+              {startDate.toLocaleDateString(undefined, {
+                year: "numeric",
+                month: "long",
+                day: "2-digit",
+              })}
+            </ThemedText>
+            <CapsuleButton
+              text="SYNC APP"
+              onPress={syncApp}
+              bgFocused={btnColor}
+            />
+            <CapsuleButton
+              text="RESET TRANSACTIONS"
+              onPress={resetDatabase}
+              bgFocused={btnColor}
+            />
+            <CapsuleButton
+              text="RESET ONBOARDING"
+              onPress={resetOnboarding}
+              bgFocused={btnColor}
+            />
+            <CapsuleButton
+              text="RESET APP"
+              onPress={resetApp}
+              bgFocused={btnColor}
+            />
+          </ThemedView>
+        </ScrollView>
+      </SafeAreaView>
+    </AnimatedScreen>
   );
 }
 

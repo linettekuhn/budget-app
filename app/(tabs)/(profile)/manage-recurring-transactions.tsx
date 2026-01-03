@@ -1,4 +1,5 @@
 import { ThemedView } from "@/components/themed-view";
+import AnimatedScreen from "@/components/ui/animated-screen";
 import CapsuleButton from "@/components/ui/capsule-button";
 import SettingsModal from "@/components/ui/modal/settings-modal";
 import TextButton from "@/components/ui/text-button";
@@ -213,79 +214,83 @@ export default function ManageRecurringTransactions() {
   }
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
-      <ThemedView style={styles.container}>
-        <ThemedView style={styles.main}>
-          <TextButton
-            text="Back"
-            iconName="arrow-left"
-            IconComponent={Octicons}
-            onPress={() => router.back()}
-          />
-          <ThemedText type="h1">Manage your recurring transactions</ThemedText>
-          <FlatList
-            contentContainerStyle={[
-              styles.recurringList,
-              {
-                backgroundColor: Colors[colorScheme ?? "light"].primary[200],
-              },
-            ]}
-            data={recurringTransactions}
-            keyExtractor={(item) => item.id}
-            refreshControl={
-              <RefreshControl refreshing={loading} onRefresh={reload} />
-            }
-            renderItem={({ item }) => {
-              const rruleObj = rrulestr(item.rrule);
-              const category = categories.find(
-                (cat) => cat.id === item.categoryId
-              );
-              return (
-                <ThemedView
-                  key={item.id}
-                  style={[
-                    styles.recurringWrapper,
-                    {
-                      backgroundColor: adjustColorForScheme(
-                        category
-                          ? category.color
-                          : Colors[colorScheme ?? "light"].primary[500],
-                        colorScheme
-                      ),
-                    },
-                  ]}
-                >
-                  <View>
-                    <ThemedText type="bodyLarge">{item.name}</ThemedText>
-                    <ThemedText type="captionSmall">
-                      {rruleObj.toText()}
-                    </ThemedText>
-                  </View>
-                  <View style={{ flexDirection: "row", gap: 8 }}>
-                    <ThemedText type="h3">
-                      ${formatAmountDisplay(item.amount.toFixed(2))}
-                    </ThemedText>
-                    <Pressable
-                      onPress={() => handleOpen(item)}
-                      style={{ transform: [{ rotate: "90deg" }] }}
-                    >
-                      <Octicons
-                        name="kebab-horizontal"
-                        size={20}
-                        color={Colors[colorScheme ?? "light"].text}
-                      />
-                    </Pressable>
-                  </View>
-                </ThemedView>
-              );
-            }}
-            ListEmptyComponent={
-              <ThemedText>No recurring transactions found.</ThemedText>
-            }
-          />
+    <AnimatedScreen entering="slideRight">
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
+        <ThemedView style={styles.container}>
+          <ThemedView style={styles.main}>
+            <TextButton
+              text="Back"
+              iconName="arrow-left"
+              IconComponent={Octicons}
+              onPress={() => router.back()}
+            />
+            <ThemedText type="h1">
+              Manage your recurring transactions
+            </ThemedText>
+            <FlatList
+              contentContainerStyle={[
+                styles.recurringList,
+                {
+                  backgroundColor: Colors[colorScheme ?? "light"].primary[200],
+                },
+              ]}
+              data={recurringTransactions}
+              keyExtractor={(item) => item.id}
+              refreshControl={
+                <RefreshControl refreshing={loading} onRefresh={reload} />
+              }
+              renderItem={({ item }) => {
+                const rruleObj = rrulestr(item.rrule);
+                const category = categories.find(
+                  (cat) => cat.id === item.categoryId
+                );
+                return (
+                  <ThemedView
+                    key={item.id}
+                    style={[
+                      styles.recurringWrapper,
+                      {
+                        backgroundColor: adjustColorForScheme(
+                          category
+                            ? category.color
+                            : Colors[colorScheme ?? "light"].primary[500],
+                          colorScheme
+                        ),
+                      },
+                    ]}
+                  >
+                    <View>
+                      <ThemedText type="bodyLarge">{item.name}</ThemedText>
+                      <ThemedText type="captionSmall">
+                        {rruleObj.toText()}
+                      </ThemedText>
+                    </View>
+                    <View style={{ flexDirection: "row", gap: 8 }}>
+                      <ThemedText type="h3">
+                        ${formatAmountDisplay(item.amount.toFixed(2))}
+                      </ThemedText>
+                      <Pressable
+                        onPress={() => handleOpen(item)}
+                        style={{ transform: [{ rotate: "90deg" }] }}
+                      >
+                        <Octicons
+                          name="kebab-horizontal"
+                          size={20}
+                          color={Colors[colorScheme ?? "light"].text}
+                        />
+                      </Pressable>
+                    </View>
+                  </ThemedView>
+                );
+              }}
+              ListEmptyComponent={
+                <ThemedText>No recurring transactions found.</ThemedText>
+              }
+            />
+          </ThemedView>
         </ThemedView>
-      </ThemedView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </AnimatedScreen>
   );
 }
 
