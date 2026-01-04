@@ -23,7 +23,6 @@ export default function HomeScreen() {
   const colorScheme = useColorScheme();
   const router = useRouter();
   const bgColor = Colors[colorScheme ?? "light"].background;
-  const textColor = Colors[colorScheme ?? "light"].text;
   const { salary, loading: loadingSalary, reload: reloadSalary } = useSalary();
   const {
     budgets,
