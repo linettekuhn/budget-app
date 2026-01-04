@@ -166,7 +166,7 @@ export default class DatabaseService {
     const db = await this.getDatabase();
 
     const categories = [
-      { name: "Utilities", color: "#FF6B6B", type: "need" },
+      { name: "Utilities", color: "#32A2A8", type: "need" },
       { name: "Transport", color: "#4ECDC4", type: "need" },
       { name: "Groceries", color: "#FFD93D", type: "need" },
       { name: "Rent", color: "#3DFF8B", type: "need" },
