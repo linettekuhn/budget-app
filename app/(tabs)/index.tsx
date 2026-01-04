@@ -23,13 +23,15 @@ export default function HomeScreen() {
   const colorScheme = useColorScheme();
   const router = useRouter();
   const bgColor = Colors[colorScheme ?? "light"].background;
+  const textColor = Colors[colorScheme ?? "light"].text;
   const { salary, loading: loadingSalary, reload: reloadSalary } = useSalary();
   const {
     budgets,
     loading: loadingBudgets,
     reload: reloadSpend,
   } = useCategoriesSpend();
-  const [saved, setSaved] = useState("0.00");
+  const [difference, setDifference] = useState("0.00");
+  const [overBudget, setOverBudget] = useState(false);
   const [totalBudget, setTotalBudget] = useState(0);
   const [totalSpent, setTotalSpent] = useState(0);
 
@@ -51,10 +53,14 @@ export default function HomeScreen() {
     setTotalBudget(Number(budget.toFixed(2)));
 
     if (salary) {
-      const saved = salary.monthly - budget;
-      setSaved(formatCompactNumber(saved));
+      const difference = salary.monthly - totalBudget;
+      const isOverBudget = difference < 0;
+      setOverBudget(isOverBudget);
+      const saved = Math.max(0, difference);
+      const deficit = Math.abs(Math.min(0, difference));
+      setDifference(formatCompactNumber(isOverBudget ? deficit : saved));
     }
-  }, [salary, budgets]);
+  }, [salary, budgets, totalBudget]);
 
   if (loadingSalary || loadingBudgets || !budgets || !salary) {
     return <ActivityIndicator size="large" />;
@@ -72,17 +78,41 @@ export default function HomeScreen() {
                 kept!
               </ThemedText>
             </View>
-            <ThemedView style={styles.pieChartWrapper}>
-              <SalaryBreakdownPieChart budgets={budgets} salary={salary} />
-              <View style={styles.savedWrapper}>
-                <ThemedText type="displayMedium" style={styles.percent}>
-                  ${saved}
-                </ThemedText>
-                <ThemedText type="h5" style={styles.saved}>
-                  saved!
-                </ThemedText>
-              </View>
-            </ThemedView>
+            <View>
+              <ThemedView style={styles.pieChartWrapper}>
+                <SalaryBreakdownPieChart budgets={budgets} salary={salary} />
+                <View style={styles.savedWrapper}>
+                  <ThemedText type="displayMedium" style={styles.percent}>
+                    ${difference}
+                  </ThemedText>
+                  <ThemedText type="h5" style={styles.saved}>
+                    {overBudget ? "short!" : "saved!"}
+                  </ThemedText>
+                </View>
+              </ThemedView>
+              {overBudget && (
+                <View>
+                  <ThemedText
+                    type="overline"
+                    style={{
+                      color: Colors[colorScheme ?? "light"].error,
+                      textAlign: "center",
+                    }}
+                  >
+                    This budget exceeds your current salary!
+                  </ThemedText>
+                  <ThemedText
+                    type="captionSmall"
+                    style={{
+                      color: Colors[colorScheme ?? "light"].error,
+                      textAlign: "center",
+                    }}
+                  >
+                    Consider adjusting your budgets or salary to start saving.
+                  </ThemedText>
+                </View>
+              )}
+            </View>
             <View
               style={[
                 styles.spendingTrackerWrapper,

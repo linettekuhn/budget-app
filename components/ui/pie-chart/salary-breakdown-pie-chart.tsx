@@ -24,7 +24,9 @@ export default function SalaryBreakdownPieChart({ budgets, salary }: Props) {
     (sum, budget) => sum + budget.budget,
     0
   );
-  const saved = salary.monthly - totalBudget;
+  const difference = salary.monthly - totalBudget;
+  const isOverBudget = difference < 0;
+  const saved = Math.max(0, difference);
 
   const wantsSpent = [...wantsBudgets].reduce(
     (sum, budget) => sum + budget.totalSpent,
@@ -43,6 +45,8 @@ export default function SalaryBreakdownPieChart({ budgets, salary }: Props) {
     0
   );
 
+  const totalAmount = isOverBudget ? totalBudget : salary.monthly;
+
   const screenBgColor = Colors[colorScheme ?? "light"].background;
   const gap = 0.3;
   const size = 240;
@@ -59,7 +63,7 @@ export default function SalaryBreakdownPieChart({ budgets, salary }: Props) {
   const needsBgColor = tinycolor
     .mix(screenBgColor, needsColor, 40)
     .toHexString();
-  const needsPercent = needsTotal / salary.monthly;
+  const needsPercent = needsTotal / totalAmount;
   const needsAngleSpan = needsPercent * (2 * Math.PI);
   const needsMiddleAngle = startAngle + needsAngleSpan / 2;
   const needsArcData = calculateArcData({
@@ -80,7 +84,7 @@ export default function SalaryBreakdownPieChart({ budgets, salary }: Props) {
   const wantsBgColor = tinycolor
     .mix(screenBgColor, wantsColor, 40)
     .toHexString();
-  const wantsPercent = wantsTotal / salary.monthly;
+  const wantsPercent = wantsTotal / totalAmount;
   const wantsAngleSpan = wantsPercent * (2 * Math.PI);
   const wantsMiddleAngle = startAngle + wantsAngleSpan / 2;
   const wantsArcData = calculateArcData({
@@ -99,7 +103,7 @@ export default function SalaryBreakdownPieChart({ budgets, salary }: Props) {
   // Saved Arc
   const savedColor = adjustColorForScheme("#35D17E", colorScheme, 10);
   const savedBgColor = tinycolor(savedColor).setAlpha(0.4).toRgbString();
-  const savedPercent = saved / salary.monthly;
+  const savedPercent = saved / totalAmount;
   const savedAngleSpan = savedPercent * (2 * Math.PI);
   const savedMiddleAngle = startAngle + savedAngleSpan / 2;
   const savedArcData = calculateArcData({
