@@ -41,7 +41,6 @@ export default function HomeScreen() {
     }, [reloadSpend, reloadSalary])
   );
 
-  // TODO: adjust saved if overflow in spending
   useEffect(() => {
     const spent = [...budgets].reduce(
       (sum, budget) => sum + budget.totalSpent,

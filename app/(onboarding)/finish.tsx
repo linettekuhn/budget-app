@@ -98,13 +98,36 @@ export default function FinishOnboarding() {
                   );
                 })}
               </View>
-              <ThemedText type="h3">
-                Monthly Budget: ${total.toFixed(2)}
-              </ThemedText>
-              <ThemedText type="h3">
-                Monthly Salary: ${salary.monthly.toFixed(2)}
-              </ThemedText>
+              <View>
+                <ThemedText type="h3">Monthly Summary</ThemedText>
+                <ThemedText type="h6">Budget: ${total.toFixed(2)}</ThemedText>
+                <ThemedText type="h6">
+                  Salary: ${salary.monthly.toFixed(2)}
+                </ThemedText>
+              </View>
             </ThemedView>
+            {total > salary.monthly && (
+              <View>
+                <ThemedText
+                  type="overline"
+                  style={{
+                    color: Colors[colorScheme ?? "light"].error,
+                    textAlign: "center",
+                  }}
+                >
+                  This budget exceeds your current salary!
+                </ThemedText>
+                <ThemedText
+                  type="captionSmall"
+                  style={{
+                    color: Colors[colorScheme ?? "light"].error,
+                    textAlign: "center",
+                  }}
+                >
+                  Consider adjusting your budgets or salary to start saving.
+                </ThemedText>
+              </View>
+            )}
             <ThemedText type="h4">
               You can now start tracking your spending and building better money
               habits!
