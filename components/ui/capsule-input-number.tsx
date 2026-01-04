@@ -14,6 +14,8 @@ type Props = {
   displayAmount: string;
   rawAmount: string;
   onChangeText: (text: string) => void;
+  min?: number;
+  max?: number;
   textType?:
     | "displayLarge"
     | "displayMedium"
@@ -37,6 +39,8 @@ export default function CapsuleNumberInput({
   displayAmount,
   rawAmount,
   onChangeText,
+  min,
+  max,
   textType,
 }: Props) {
   const colorScheme = useColorScheme();
@@ -65,6 +69,10 @@ export default function CapsuleNumberInput({
     }
 
     let numeric = parseInt(filtered, 10);
+
+    // apply min + max if provided
+    if (min !== undefined && numeric < min) numeric = min;
+    if (max !== undefined && numeric > max) numeric = max;
 
     onChangeText(numeric.toString());
   };
@@ -122,7 +130,7 @@ export default function CapsuleNumberInput({
         ref={inputRef}
         value={rawAmount}
         onChangeText={handleChange}
-        keyboardType="numeric"
+        keyboardType="number-pad"
         style={styles.hiddenInput}
         onFocus={() => {
           setFocused(true);

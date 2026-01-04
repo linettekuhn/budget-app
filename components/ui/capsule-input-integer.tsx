@@ -130,7 +130,7 @@ export default function CapsuleNumberInteger({
         ref={inputRef}
         value={rawAmount}
         onChangeText={handleChange}
-        keyboardType="numeric"
+        keyboardType="number-pad"
         style={styles.hiddenInput}
         onFocus={() => {
           setFocused(true);
