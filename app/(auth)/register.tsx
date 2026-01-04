@@ -131,7 +131,10 @@ export default function Register() {
                   IconComponent={Octicons}
                   iconName="lock"
                 >
-                  <Pressable onPress={() => setShowPass((prev) => !prev)}>
+                  <Pressable
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    onPress={() => setShowPass((prev) => !prev)}
+                  >
                     {showPass ? (
                       <Octicons name="eye-closed" size={20} color={textColor} />
                     ) : (
