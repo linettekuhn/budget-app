@@ -9,6 +9,7 @@ import CapsuleToggle from "@/components/ui/capsule-toggle";
 import CustomCategory from "@/components/ui/modal/category-modal";
 import { Colors } from "@/constants/theme";
 import { useCategories } from "@/hooks/useCategories";
+import { useCategoriesSpend } from "@/hooks/useCategoriesSpend";
 import { useModal } from "@/hooks/useModal";
 import {
   CategoryType,
@@ -72,9 +73,38 @@ export default function TransactionForm({ initial, onChange }: Props) {
   const [yearMonth, setYearMonth] = useState(
     initial?.recurrence.yearMonth ?? now.getMonth() + 1
   );
+  const [showAllCategories, setShowAllCategories] = useState(false);
 
   const { openModal, closeModal } = useModal();
-  const { categories, loading, reload } = useCategories();
+  const {
+    categories,
+    loading: loadingCategories,
+    reload: reloadCategories,
+  } = useCategories();
+  const {
+    budgets,
+    loading: loadingSpend,
+    reload: reloadSpend,
+  } = useCategoriesSpend();
+
+  // sort categories by budget and show top 3 by default
+  const sortedCategories = useMemo(() => {
+    const categoryToBudgetMap = new Map(
+      budgets.map((budget) => [budget.id, budget.budget])
+    );
+
+    return [...categories].sort((a, b) => {
+      const budgetA = categoryToBudgetMap.get(a.id) ?? 0;
+      const budgetB = categoryToBudgetMap.get(b.id) ?? 0;
+      return budgetB - budgetA;
+    });
+  }, [budgets, categories]);
+
+  const topThreeCategories = sortedCategories.slice(0, 3);
+  const otherCategories = sortedCategories.slice(3);
+  const displayCategories = showAllCategories
+    ? sortedCategories
+    : topThreeCategories;
 
   const recurrenceOptions = [
     { label: "Week", value: RRule.WEEKLY },
@@ -112,8 +142,9 @@ export default function TransactionForm({ initial, onChange }: Props) {
   );
 
   useEffect(() => {
-    reload();
-  }, [reload]);
+    reloadCategories();
+    reloadSpend();
+  }, [reloadCategories, reloadSpend]);
 
   // trigger parent callback whenever a value changes
   useEffect(() => {
@@ -177,7 +208,8 @@ export default function TransactionForm({ initial, onChange }: Props) {
       <CustomCategory
         onComplete={() => {
           closeModal();
-          reload();
+          reloadCategories();
+          reloadSpend();
         }}
       />
     );
@@ -197,12 +229,38 @@ export default function TransactionForm({ initial, onChange }: Props) {
     setIntervalDisplay(formatted);
   };
 
-  if (loading) {
+  if (loadingCategories || loadingSpend) {
     return <ActivityIndicator size="large" />;
   }
 
   return (
     <ThemedView style={styles.main}>
+      <ThemedView style={styles.options}>
+        <ThemedView style={styles.horizontalContainer}>
+          <CapsuleToggle
+            text="INCOME"
+            bgFocused="#2EA64E"
+            IconComponent={Octicons}
+            iconName="arrow-up"
+            selected={typeSelected === "INCOME"}
+            onPress={() => {
+              Keyboard.dismiss();
+              setType("INCOME");
+            }}
+          />
+          <CapsuleToggle
+            text="EXPENSE"
+            bgFocused="#CF3D3D"
+            IconComponent={Octicons}
+            iconName="arrow-down"
+            selected={typeSelected === "EXPENSE"}
+            onPress={() => {
+              Keyboard.dismiss();
+              setType("EXPENSE");
+            }}
+          />
+        </ThemedView>
+      </ThemedView>
       <ThemedView style={styles.options}>
         <ThemedText style={styles.heading} type="h1">
           Amount
@@ -214,6 +272,81 @@ export default function TransactionForm({ initial, onChange }: Props) {
           textType="displayLarge"
         />
       </ThemedView>
+      <ThemedView style={styles.options}>
+        <ThemedText style={styles.heading} type="h1">
+          Name
+        </ThemedText>
+        <CapsuleInput
+          value={transactionName}
+          onChangeText={setTransactionName}
+          placeholder="Enter transaction name"
+          keyboardType="default"
+        />
+      </ThemedView>
+
+      <ThemedView style={styles.options}>
+        <ThemedText style={styles.heading} type="h1">
+          Category
+        </ThemedText>
+        <ThemedView style={styles.horizontalContainer}>
+          {displayCategories.map((category) => {
+            const categoryColor = adjustColorForScheme(
+              category.color,
+              colorScheme
+            );
+            return (
+              <CapsuleToggle
+                key={category.id}
+                text={category.name}
+                bgFocused={categoryColor}
+                selected={categorySelected?.id === category.id}
+                onPress={() => {
+                  Keyboard.dismiss();
+                  setCategory(category);
+                }}
+              />
+            );
+          })}
+          {!showAllCategories && otherCategories.length > 0 && (
+            <CapsuleButton
+              onPress={() => {
+                Keyboard.dismiss();
+                setShowAllCategories(true);
+              }}
+              text="See More"
+              bgFocused={btnColor}
+              bgDefault={Colors[colorScheme ?? "light"].primary[200]}
+              iconName="chevron-down"
+              IconComponent={Octicons}
+            />
+          )}
+          {showAllCategories && otherCategories.length > 0 && (
+            <CapsuleButton
+              onPress={() => {
+                Keyboard.dismiss();
+                setShowAllCategories(false);
+              }}
+              text="See Less"
+              bgFocused={btnColor}
+              bgDefault={Colors[colorScheme ?? "light"].primary[200]}
+              iconName="chevron-up"
+              IconComponent={Octicons}
+            />
+          )}
+          <CapsuleButton
+            onPress={() => {
+              Keyboard.dismiss();
+              handleOpen();
+            }}
+            text="New Category"
+            bgFocused={btnColor}
+            bgDefault={Colors[colorScheme ?? "light"].primary[200]}
+            iconName="plus"
+            IconComponent={Octicons}
+          />
+        </ThemedView>
+      </ThemedView>
+
       <ThemedView style={styles.options}>
         <ThemedText style={styles.heading} type="h1">
           Date
@@ -332,85 +465,6 @@ export default function TransactionForm({ initial, onChange }: Props) {
           </ThemedView>
         </ThemedView>
       )}
-
-      <ThemedView style={styles.options}>
-        <ThemedText style={styles.heading} type="h1">
-          Name
-        </ThemedText>
-        <CapsuleInput
-          value={transactionName}
-          onChangeText={setTransactionName}
-          placeholder="Enter transaction name"
-          keyboardType="default"
-        />
-      </ThemedView>
-
-      <ThemedView style={styles.options}>
-        <ThemedText style={styles.heading} type="h1">
-          Type
-        </ThemedText>
-        <ThemedView style={styles.horizontalContainer}>
-          <CapsuleToggle
-            text="INCOME"
-            bgFocused="#2EA64E"
-            IconComponent={Octicons}
-            iconName="arrow-up"
-            selected={typeSelected === "INCOME"}
-            onPress={() => {
-              Keyboard.dismiss();
-              setType("INCOME");
-            }}
-          />
-          <CapsuleToggle
-            text="EXPENSE"
-            bgFocused="#CF3D3D"
-            IconComponent={Octicons}
-            iconName="arrow-down"
-            selected={typeSelected === "EXPENSE"}
-            onPress={() => {
-              Keyboard.dismiss();
-              setType("EXPENSE");
-            }}
-          />
-        </ThemedView>
-      </ThemedView>
-
-      <ThemedView style={styles.options}>
-        <ThemedText style={styles.heading} type="h1">
-          Category
-        </ThemedText>
-        <ThemedView style={styles.horizontalContainer}>
-          {categories.map((category) => {
-            const categoryColor = adjustColorForScheme(
-              category.color,
-              colorScheme
-            );
-            return (
-              <CapsuleToggle
-                key={category.id}
-                text={category.name}
-                bgFocused={categoryColor}
-                selected={categorySelected?.id === category.id}
-                onPress={() => {
-                  Keyboard.dismiss();
-                  setCategory(category);
-                }}
-              />
-            );
-          })}
-          <CapsuleButton
-            onPress={() => {
-              Keyboard.dismiss();
-              handleOpen();
-            }}
-            text="New Category"
-            bgFocused={btnColor}
-            bgDefault={Colors[colorScheme ?? "light"].primary[200]}
-            iconName="plus"
-            IconComponent={Octicons}
-          />
-        </ThemedView>
-      </ThemedView>
     </ThemedView>
   );
 }
@@ -418,7 +472,8 @@ export default function TransactionForm({ initial, onChange }: Props) {
 const styles = StyleSheet.create({
   main: {
     flex: 1,
-    gap: 15,
+    gap: 8,
+    marginBottom: 15,
   },
 
   amountWrapper: {
