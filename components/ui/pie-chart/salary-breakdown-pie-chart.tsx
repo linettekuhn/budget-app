@@ -58,14 +58,51 @@ export default function SalaryBreakdownPieChart({ budgets, salary }: Props) {
   const centerX = viewBoxWidth / 2;
   const centerY = size / 2;
 
+  // calculate actual percentage
+
+  const needsActualPercent = needsTotal / totalAmount;
+  const wantsActualPercent = wantsTotal / totalAmount;
+  const savedActualPercent = saved / totalAmount;
+
+  const MINIMUM_PERCENT = 0.05;
+
+  // determine which arcs need boosting (make small arcs have a minimum percent)
+  const needsBoost = needsTotal > 0 && needsActualPercent < MINIMUM_PERCENT;
+  const wantsBoost = wantsTotal > 0 && wantsActualPercent < MINIMUM_PERCENT;
+  const savedBoost = saved > 0 && savedActualPercent < MINIMUM_PERCENT;
+
+  // calculate extra space needed
+  const boostCount = [needsBoost, wantsBoost, savedBoost].filter(
+    Boolean
+  ).length;
+  const totalBoost = boostCount * MINIMUM_PERCENT;
+
+  // calculate scale factor to shrink larger arcs and make room for boosted smaller ones
+  const nonBoostedSum =
+    (needsBoost ? 0 : needsActualPercent) +
+    (wantsBoost ? 0 : wantsActualPercent) +
+    (savedBoost ? 0 : savedActualPercent);
+  const remainingSpace = 1 - totalBoost;
+  const scaleFactor = nonBoostedSum > 0 ? remainingSpace / nonBoostedSum : 1;
+
+  // apply minimum arc size if actual percent is too small
+  const needsPercent = needsBoost
+    ? MINIMUM_PERCENT
+    : needsActualPercent * scaleFactor;
+  const wantsPercent = wantsBoost
+    ? MINIMUM_PERCENT
+    : wantsActualPercent * scaleFactor;
+  const savedPercent = savedBoost
+    ? MINIMUM_PERCENT
+    : savedActualPercent * scaleFactor;
+
   // Needs Arc
   const needsColor = adjustColorForScheme("#3BACE4", colorScheme, 0.2);
   const needsBgColor = tinycolor
     .mix(screenBgColor, needsColor, 40)
     .toHexString();
-  const needsPercent = needsTotal / totalAmount;
   const needsAngleSpan = needsPercent * (2 * Math.PI);
-  const needsMiddleAngle = startAngle + needsAngleSpan / 2;
+  const needsMiddleAngle = startAngle + (needsAngleSpan - gap) / 2;
   const needsArcData = calculateArcData({
     spent: needsSpent,
     total: needsTotal,
@@ -84,9 +121,8 @@ export default function SalaryBreakdownPieChart({ budgets, salary }: Props) {
   const wantsBgColor = tinycolor
     .mix(screenBgColor, wantsColor, 40)
     .toHexString();
-  const wantsPercent = wantsTotal / totalAmount;
   const wantsAngleSpan = wantsPercent * (2 * Math.PI);
-  const wantsMiddleAngle = startAngle + wantsAngleSpan / 2;
+  const wantsMiddleAngle = startAngle + (wantsAngleSpan - gap) / 2;
   const wantsArcData = calculateArcData({
     spent: wantsSpent,
     total: wantsTotal,
@@ -103,9 +139,8 @@ export default function SalaryBreakdownPieChart({ budgets, salary }: Props) {
   // Saved Arc
   const savedColor = adjustColorForScheme("#35D17E", colorScheme, 10);
   const savedBgColor = tinycolor(savedColor).setAlpha(0.4).toRgbString();
-  const savedPercent = saved / totalAmount;
   const savedAngleSpan = savedPercent * (2 * Math.PI);
-  const savedMiddleAngle = startAngle + savedAngleSpan / 2;
+  const savedMiddleAngle = startAngle + (savedAngleSpan - gap) / 2;
   const savedArcData = calculateArcData({
     spent: saved,
     total: saved,
