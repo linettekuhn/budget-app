@@ -1,4 +1,5 @@
 import { HapticTab } from "@/components/haptic-tab";
+import NewTransactionButton from "@/components/ui/new-transaction-button";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import Entypo from "@expo/vector-icons/Entypo";
@@ -96,18 +97,10 @@ export default function TabLayout() {
         name="transaction"
         options={{
           title: "Transaction",
-          tabBarIcon: ({ focused }) => (
-            <View style={styles.transactionBtn}>
-              <Octicons
-                name="feed-plus"
-                size={40}
-                color={
-                  focused
-                    ? activeTabColor
-                    : Colors[colorScheme ?? "light"].primary[500]
-                }
-              />
-            </View>
+          tabBarButton: (props) => (
+            <NewTransactionButton
+              focused={props.accessibilityState?.selected ?? false}
+            />
           ),
         }}
       />
@@ -146,13 +139,6 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
-  transactionBtn: {
-    width: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    height: "100%",
-    paddingBottom: 0,
-  },
   tabIconContainer: {
     alignItems: "center",
     justifyContent: "center",

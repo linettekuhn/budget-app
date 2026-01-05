@@ -6,6 +6,7 @@ import { useBadgeCheck } from "@/hooks/useBadgeCheck";
 import DatabaseService from "@/services/DatabaseService";
 import { TransactionFormData } from "@/types";
 import buildRRule from "@/utils/buildRRule";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
   Keyboard,
@@ -19,9 +20,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Toast } from "toastify-react-native";
 
 export default function Transaction() {
+  const params = useLocalSearchParams<{
+    type: "INCOME" | "EXPENSE" | "";
+    reset?: string;
+  }>();
+  const router = useRouter();
   const colorScheme = useColorScheme();
   const { checkBadges } = useBadgeCheck();
   const [formData, setFormData] = useState<TransactionFormData | null>(null);
+  const [resetKey, setResetKey] = useState(0);
 
   const btnColor = Colors[colorScheme ?? "light"].secondary[500];
 
@@ -79,7 +86,9 @@ export default function Transaction() {
 
       await checkBadges();
 
+      router.setParams({});
       setFormData(null);
+      setResetKey((prev) => prev + 1);
     } catch (error: unknown) {
       if (error instanceof Error) {
         Toast.show({
@@ -94,6 +103,10 @@ export default function Transaction() {
       }
     }
   };
+
+  if (!params.type) {
+    return null;
+  }
 
   return (
     <AnimatedScreen>
@@ -111,8 +124,11 @@ export default function Transaction() {
             contentContainerStyle={styles.container}
           >
             <TransactionForm
-              key={formData ? "editing" : "new"}
+              key={`${params.reset || "default"}-${resetKey}`}
               onChange={setFormData}
+              initial={
+                params.type ? { type: params.type, recurrence: {} } : undefined
+              }
             />
             <CapsuleButton
               text="ADD TRANSACTION"
