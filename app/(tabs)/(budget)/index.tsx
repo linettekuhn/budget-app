@@ -80,14 +80,7 @@ export default function Budget() {
       <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
         <ScrollView contentContainerStyle={styles.container}>
           <ThemedView style={styles.main}>
-            <Pressable
-              onPress={() =>
-                router.push({
-                  pathname: "/monthly-transactions",
-                  params: { date: JSON.stringify(selectedDate) },
-                })
-              }
-            >
+            <Pressable onPress={() => router.push("/monthly-transactions")}>
               <ThemedView style={styles.pieChartWrapper}>
                 <MonthlyBudgetPieChart budgets={budgets} />
                 <View style={styles.monthWrapper}>

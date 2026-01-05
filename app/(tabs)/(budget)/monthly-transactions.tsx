@@ -9,35 +9,36 @@ import { useModal } from "@/hooks/useModal";
 import DatabaseService from "@/services/DatabaseService";
 import { TransactionType } from "@/types";
 import Octicons from "@expo/vector-icons/Octicons";
-import { router, useLocalSearchParams } from "expo-router";
+import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  FlatList,
   RefreshControl,
+  SectionList,
   StyleSheet,
   useColorScheme,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Toast } from "toastify-react-native";
 
+type SectionType = {
+  title: string;
+  data: TransactionType[];
+};
+
 export default function MonthlyTransactions() {
-  const params = useLocalSearchParams();
-  const date: Date = new Date(JSON.parse(params.date as string));
   const colorScheme = useColorScheme();
-  const transactinBgColor = Colors[colorScheme ?? "light"].primary[700];
+
   const bgColor = Colors[colorScheme ?? "light"].background;
 
   const [loading, setLoading] = useState(true);
-  const [transactions, setTransactions] = useState<TransactionType[]>([]);
+  const [sections, setSections] = useState<SectionType[]>([]);
   const { openModal, closeModal } = useModal();
 
   const loadTransaction = async () => {
     try {
-      const year = date.getFullYear();
-      const month = date.getMonth() + 1;
-
-      const data = await DatabaseService.getTransactionsByMonth(year, month);
+      const data = await DatabaseService.getAllTransactions();
       const savedTransactions = data.map((row) => {
         const transaction: TransactionType = {
           id: row.id,
@@ -49,7 +50,34 @@ export default function MonthlyTransactions() {
         };
         return transaction;
       });
-      setTransactions(savedTransactions);
+
+      // group transactions by month
+      const grouped: Record<string, TransactionType[]> = {};
+      savedTransactions.forEach((transaction) => {
+        const date = new Date(transaction.date);
+        const key = `${date.getFullYear()}-${String(
+          date.getMonth() + 1
+        ).padStart(2, "0")}`;
+        if (!grouped[key]) {
+          grouped[key] = [];
+        }
+        grouped[key].push(transaction);
+      });
+
+      // sort keys descending (selected month first)
+      const orderedKeys = Object.keys(grouped).sort().reverse();
+
+      // build sections for each month
+      const sections: SectionType[] = orderedKeys.map((key) => {
+        const [year, month] = key.split("-");
+        const monthName = new Date(
+          parseInt(year),
+          parseInt(month) - 1
+        ).toLocaleString("en-US", { month: "long", year: "numeric" });
+        return { title: monthName, data: grouped[key] };
+      });
+
+      setSections(sections);
     } catch (error: unknown) {
       if (error instanceof Error) {
         Toast.show({
@@ -91,7 +119,7 @@ export default function MonthlyTransactions() {
   if (loading) {
     return <ActivityIndicator size="large" />;
   }
-  // TODO: show all months with headers for each month
+
   return (
     <AnimatedScreen>
       <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
@@ -102,12 +130,8 @@ export default function MonthlyTransactions() {
             IconComponent={Octicons}
             onPress={() => router.back()}
           />
-          <ThemedText type="displayMedium" style={styles.header}>
-            {new Date().toLocaleDateString("en-US", { month: "long" })}{" "}
-            Transactions
-          </ThemedText>
-          <FlatList
-            data={transactions}
+          <SectionList
+            sections={sections}
             keyExtractor={(item) => item.id}
             refreshControl={
               <RefreshControl
@@ -120,6 +144,11 @@ export default function MonthlyTransactions() {
                 transaction={item}
                 handleEdit={handleEditTransaction}
               />
+            )}
+            renderSectionHeader={({ section: { title } }) => (
+              <View style={styles.monthHeader}>
+                <ThemedText type="overline">{title}</ThemedText>
+              </View>
             )}
             ListEmptyComponent={<ThemedText>No transactions found</ThemedText>}
           />
@@ -144,18 +173,5 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 
-  transactionWrapper: {
-    flexDirection: "row",
-    width: "100%",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 25,
-    paddingVertical: 10,
-    borderRadius: 25,
-    marginVertical: 10,
-  },
-
-  transactionAmount: {
-    fontFamily: "Onest-SemiBold",
-  },
+  monthHeader: { marginTop: 16, marginBottom: 4 },
 });
