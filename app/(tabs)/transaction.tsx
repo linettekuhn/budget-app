@@ -78,6 +78,8 @@ export default function Transaction() {
       }
 
       await checkBadges();
+
+      setFormData(null);
     } catch (error: unknown) {
       if (error instanceof Error) {
         Toast.show({
@@ -108,7 +110,10 @@ export default function Transaction() {
             enableOnAndroid={true}
             contentContainerStyle={styles.container}
           >
-            <TransactionForm onChange={setFormData} />
+            <TransactionForm
+              key={formData ? "editing" : "new"}
+              onChange={setFormData}
+            />
             <CapsuleButton
               text="ADD TRANSACTION"
               onPress={() => {

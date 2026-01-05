@@ -272,6 +272,7 @@ export default function ManageRecurringTransactions() {
                       <Pressable
                         onPress={() => handleOpen(item)}
                         style={{ transform: [{ rotate: "90deg" }] }}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                       >
                         <Octicons
                           name="kebab-horizontal"

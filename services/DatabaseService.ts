@@ -639,6 +639,33 @@ export default class DatabaseService {
     }
   }
 
+  static async updateTransaction(transaction: {
+    id: string;
+    name: string;
+    amount: number;
+    type: "income" | "expense";
+    date: string;
+    categoryId: string;
+  }) {
+    const db = await this.getDatabase();
+    await db.runAsync(
+      `
+      UPDATE transactions 
+      SET name = ?, amount = ?, type = ?, categoryId = ?, date = ?
+      WHERE id = ?;
+      `,
+      [
+        transaction.name,
+        transaction.amount,
+        transaction.type,
+        transaction.categoryId,
+        transaction.date,
+        transaction.id,
+      ]
+    );
+    await this.logChange("transactions", transaction.id, "update", transaction);
+  }
+
   static async updateRecurringTransaction(transaction: {
     id: string;
     name: string;
@@ -673,6 +700,21 @@ export default class DatabaseService {
       "update",
       transaction
     );
+  }
+
+  static async deleteTransaction(id: string) {
+    const db = await this.getDatabase();
+
+    await db.runAsync(
+      `
+      UPDATE transactions
+      SET deletedAt = CURRENT_TIMESTAMP, updatedAt = CURRENT_TIMESTAMP
+      WHERE id = ?
+      `,
+      [id]
+    );
+
+    await this.logChange("transactions", id, "delete", {});
   }
 
   static async deleteRecurringTransaction(id: string) {
@@ -790,6 +832,7 @@ export default class DatabaseService {
       LEFT JOIN transactions t 
           ON c.id = t.categoryId
           AND strftime('%Y-%m', t.date) = ?
+          AND t.deletedAt IS NULL
       WHERE c.deletedAt IS NULL
       GROUP BY c.id
     `,
@@ -820,6 +863,7 @@ export default class DatabaseService {
       LEFT JOIN transactions t 
           ON c.id = t.categoryId
           AND strftime('%Y-%m', t.date) = ?
+          AND t.deletedAt IS NULL
       WHERE c.id = ? AND c.deletedAt IS NULL
       GROUP BY c.id
     `,

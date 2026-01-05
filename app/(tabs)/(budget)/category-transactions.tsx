@@ -2,8 +2,10 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import AnimatedScreen from "@/components/ui/animated-screen";
 import CapsuleButton from "@/components/ui/capsule-button";
+import EditTransaction from "@/components/ui/edit-transaction";
 import EditCategory from "@/components/ui/modal/edit-category-modal";
 import TextButton from "@/components/ui/text-button";
+import TransactionItem from "@/components/ui/transaction-item";
 import { Colors } from "@/constants/theme";
 import { useCategorySpend } from "@/hooks/useCategorySpend";
 import { useModal } from "@/hooks/useModal";
@@ -29,7 +31,6 @@ export default function CategoryTransactions() {
   const date: Date = new Date(JSON.parse(params.date as string));
 
   const colorScheme = useColorScheme();
-  const transactionBgColor = Colors[colorScheme ?? "light"].primary[700];
   const bgColor = Colors[colorScheme ?? "light"].background;
 
   const [loading, setLoading] = useState(true);
@@ -47,7 +48,7 @@ export default function CategoryTransactions() {
     }, [reloadSpend])
   );
 
-  const handleOpen = () => {
+  const handleEditCategory = () => {
     openModal(
       <EditCategory
         onComplete={() => {
@@ -55,6 +56,23 @@ export default function CategoryTransactions() {
           reloadSpend();
         }}
         category={category}
+      />
+    );
+  };
+
+  const handleEditTransaction = (transaction: TransactionType) => {
+    openModal(
+      <EditTransaction
+        initialTransaction={transaction}
+        onCancel={() => {
+          loadTransaction();
+          closeModal();
+        }}
+        onSave={async (newTransaction: TransactionType) => {
+          await DatabaseService.updateTransaction(newTransaction);
+          loadTransaction();
+          closeModal();
+        }}
       />
     );
   };
@@ -140,7 +158,7 @@ export default function CategoryTransactions() {
             </View>
             <CapsuleButton
               text="Edit Budget"
-              onPress={handleOpen}
+              onPress={handleEditCategory}
               bgFocused={Colors[colorScheme ?? "light"].primary[500]}
             />
             <FlatList
@@ -158,49 +176,12 @@ export default function CategoryTransactions() {
                   onRefresh={loadTransaction}
                 />
               }
-              renderItem={({ item }) => {
-                const date = new Date(item.date);
-                const typeColor =
-                  item.type === "income" ? "#2EA64E" : "#CF3D3D";
-                return (
-                  <ThemedView
-                    style={[
-                      styles.transactionWrapper,
-                      { backgroundColor: transactionBgColor },
-                    ]}
-                  >
-                    <ThemedView
-                      style={{
-                        backgroundColor: transactionBgColor,
-                      }}
-                    >
-                      <ThemedText
-                        style={{
-                          color: bgColor,
-                          margin: 0,
-                          lineHeight: 0,
-                        }}
-                      >
-                        {item.name}
-                      </ThemedText>
-                      <ThemedText
-                        type="captionSmall"
-                        style={{
-                          color: bgColor,
-                          margin: 0,
-                          lineHeight: 0,
-                        }}
-                      >
-                        {date.toLocaleDateString()}
-                      </ThemedText>
-                    </ThemedView>
-                    <ThemedText
-                      style={{ color: typeColor }}
-                      type="bodyLarge"
-                    >{`$${item.amount.toFixed(2)}`}</ThemedText>
-                  </ThemedView>
-                );
-              }}
+              renderItem={({ item }) => (
+                <TransactionItem
+                  transaction={item}
+                  handleEdit={handleEditTransaction}
+                />
+              )}
               ListEmptyComponent={
                 <ThemedText>No transactions found</ThemedText>
               }

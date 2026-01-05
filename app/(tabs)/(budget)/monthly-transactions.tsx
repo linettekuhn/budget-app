@@ -1,8 +1,11 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import AnimatedScreen from "@/components/ui/animated-screen";
+import EditTransaction from "@/components/ui/edit-transaction";
 import TextButton from "@/components/ui/text-button";
+import TransactionItem from "@/components/ui/transaction-item";
 import { Colors } from "@/constants/theme";
+import { useModal } from "@/hooks/useModal";
 import DatabaseService from "@/services/DatabaseService";
 import { TransactionType } from "@/types";
 import Octicons from "@expo/vector-icons/Octicons";
@@ -27,6 +30,7 @@ export default function MonthlyTransactions() {
 
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<TransactionType[]>([]);
+  const { openModal, closeModal } = useModal();
 
   const loadTransaction = async () => {
     try {
@@ -63,6 +67,23 @@ export default function MonthlyTransactions() {
     }
   };
 
+  const handleEditTransaction = (transaction: TransactionType) => {
+    openModal(
+      <EditTransaction
+        initialTransaction={transaction}
+        onCancel={() => {
+          loadTransaction();
+          closeModal();
+        }}
+        onSave={async (newTransaction: TransactionType) => {
+          await DatabaseService.updateTransaction(newTransaction);
+          loadTransaction();
+          closeModal();
+        }}
+      />
+    );
+  };
+
   useEffect(() => {
     loadTransaction();
   }, []);
@@ -94,31 +115,12 @@ export default function MonthlyTransactions() {
                 onRefresh={loadTransaction}
               />
             }
-            renderItem={({ item }) => {
-              const date = new Date(item.date);
-              const typeColor = item.type === "income" ? "#2EA64E" : "#CF3D3D";
-              return (
-                <ThemedView
-                  style={[
-                    styles.transactionWrapper,
-                    { backgroundColor: transactinBgColor },
-                  ]}
-                >
-                  <ThemedView style={{ backgroundColor: transactinBgColor }}>
-                    <ThemedText style={{ color: bgColor }}>
-                      {item.name}
-                    </ThemedText>
-                    <ThemedText type="caption" style={{ color: bgColor }}>
-                      {date.toLocaleDateString()}
-                    </ThemedText>
-                  </ThemedView>
-                  <ThemedText
-                    style={[styles.transactionAmount, { color: typeColor }]}
-                    type="bodyLarge"
-                  >{`$${item.amount.toFixed(2)}`}</ThemedText>
-                </ThemedView>
-              );
-            }}
+            renderItem={({ item }) => (
+              <TransactionItem
+                transaction={item}
+                handleEdit={handleEditTransaction}
+              />
+            )}
             ListEmptyComponent={<ThemedText>No transactions found</ThemedText>}
           />
         </ThemedView>
