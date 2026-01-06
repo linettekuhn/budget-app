@@ -120,9 +120,23 @@ export default class DatabaseService {
       )
     `);
 
+    // check if database has been initialized
+    const initialized = await db.getFirstAsync<{ value: string }>(
+      "SELECT value FROM app_meta WHERE id = 'db_initalized'"
+    );
+
+    if (initialized) {
+      return;
+    }
+
     await this.seedDefaultAppData();
     await this.seedDefaultCategories();
     await this.seedDefaultBadges();
+
+    // mark database as initialized
+    await db.runAsync(
+      "INSERT INTO app_meta (id, value) VALUES ('db_initalized', 'true')"
+    );
   }
 
   private static async seedDefaultAppData() {
