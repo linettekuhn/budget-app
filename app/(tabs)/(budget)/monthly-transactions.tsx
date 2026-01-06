@@ -5,6 +5,7 @@ import EditTransaction from "@/components/ui/edit-transaction";
 import TextButton from "@/components/ui/text-button";
 import TransactionItem from "@/components/ui/transaction-item";
 import { Colors } from "@/constants/theme";
+import { useCurrency } from "@/hooks/useCurrency";
 import { useModal } from "@/hooks/useModal";
 import DatabaseService from "@/services/DatabaseService";
 import { TransactionType } from "@/types";
@@ -35,6 +36,7 @@ export default function MonthlyTransactions() {
   const [loading, setLoading] = useState(true);
   const [sections, setSections] = useState<SectionType[]>([]);
   const { openModal, closeModal } = useModal();
+  const { currency, loading: loadingCurrency } = useCurrency();
 
   const loadTransaction = async () => {
     try {
@@ -116,7 +118,7 @@ export default function MonthlyTransactions() {
     loadTransaction();
   }, []);
 
-  if (loading) {
+  if (loading || loadingCurrency) {
     return <ActivityIndicator size="large" />;
   }
 
@@ -141,6 +143,7 @@ export default function MonthlyTransactions() {
             }
             renderItem={({ item }) => (
               <TransactionItem
+                currency={currency ?? "USD"}
                 transaction={item}
                 handleEdit={handleEditTransaction}
               />

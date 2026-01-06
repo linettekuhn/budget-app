@@ -1,11 +1,18 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
+import { useCurrency } from "@/hooks/useCurrency";
 import DatabaseService from "@/services/DatabaseService";
 import { CategoryType } from "@/types";
 import { formatAmountDisplay } from "@/utils/formatDisplay";
 import { useEffect, useState } from "react";
-import { Keyboard, StyleSheet, useColorScheme, View } from "react-native";
+import {
+  ActivityIndicator,
+  Keyboard,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from "react-native";
 import ColorPicker, {
   BrightnessSlider,
   ColorFormatsObject,
@@ -24,7 +31,7 @@ type Props = {
 
 export default function EditCategory({ onComplete, category }: Props) {
   const colorScheme = useColorScheme();
-  console.log(category);
+  const { currency, loading: loadingCurrency } = useCurrency();
   const [typeSelected, setType] = useState(category.type.toUpperCase());
   const [categoryColor, setCategoryColor] = useState(category.color);
   const [rawAmount, setRawAmount] = useState(
@@ -97,6 +104,10 @@ export default function EditCategory({ onComplete, category }: Props) {
     setDisplayAmount(formatted);
   };
 
+  if (loadingCurrency) {
+    return <ActivityIndicator size={"large"} />;
+  }
+
   return (
     <ThemedView style={styles.categoryForm}>
       <ThemedText style={styles.heading} type="h1">
@@ -108,6 +119,7 @@ export default function EditCategory({ onComplete, category }: Props) {
           Budget
         </ThemedText>
         <AmountDisplay
+          currency={currency}
           displayAmount={displayAmount}
           rawAmount={rawAmount}
           onChangeText={handleAmountChange}

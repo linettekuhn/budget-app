@@ -1,8 +1,10 @@
 import { Colors } from "@/constants/theme";
+import { useCurrency } from "@/hooks/useCurrency";
 import { useModal } from "@/hooks/useModal";
 import { useSalary } from "@/hooks/useSalary";
 import { Salary } from "@/types";
 import { formatAmountDisplay } from "@/utils/formatDisplay";
+import { formatMoney } from "@/utils/formatMoney";
 import { useEffect, useState } from "react";
 import { Keyboard, StyleSheet, useColorScheme, View } from "react-native";
 import { Toast } from "toastify-react-native";
@@ -18,10 +20,12 @@ function SalaryChangeContent({
   initialSalary,
   onSave,
   onCancel,
+  currency,
 }: {
   initialSalary: Salary;
   onSave: (name: Salary) => Promise<void>;
   onCancel: () => void;
+  currency: string;
 }) {
   const colorScheme = useColorScheme();
   const [salaryType, setSalaryType] = useState<
@@ -80,7 +84,12 @@ function SalaryChangeContent({
   const saveSalary = async () => {
     try {
       if (!rawAmount || parseFloat(rawAmount) < 1) {
-        throw new Error("Amount must be at least $1.00");
+        throw new Error(
+          `Amount must be at least ${formatMoney({
+            code: currency,
+            amount: 1,
+          })}`
+        );
       }
 
       if (
@@ -196,6 +205,7 @@ function SalaryChangeContent({
             <ThemedText type="h2">How much?</ThemedText>
             <ThemedView style={styles.salaryAmount}>
               <AmountDisplay
+                currency={currency}
                 displayAmount={displayAmount}
                 rawAmount={rawAmount}
                 onChangeText={handleAmountChange}
@@ -225,6 +235,7 @@ function SalaryChangeContent({
           <ThemedText type="h2">How much?</ThemedText>
           <ThemedView style={styles.salaryAmount}>
             <AmountDisplay
+              currency={currency}
               displayAmount={displayAmount}
               rawAmount={rawAmount}
               onChangeText={handleAmountChange}
@@ -239,6 +250,7 @@ function SalaryChangeContent({
           <ThemedText type="h2">How much?</ThemedText>
           <ThemedView style={styles.salaryAmount}>
             <AmountDisplay
+              currency={currency}
               displayAmount={displayAmount}
               rawAmount={rawAmount}
               onChangeText={handleAmountChange}
@@ -253,6 +265,7 @@ function SalaryChangeContent({
           <ThemedText type="h2">How much?</ThemedText>
           <ThemedView style={styles.salaryAmount}>
             <AmountDisplay
+              currency={currency}
               displayAmount={displayAmount}
               rawAmount={rawAmount}
               onChangeText={handleAmountChange}
@@ -267,6 +280,7 @@ function SalaryChangeContent({
           <ThemedText type="h2">How much?</ThemedText>
           <ThemedView style={styles.salaryAmount}>
             <AmountDisplay
+              currency={currency}
               displayAmount={displayAmount}
               rawAmount={rawAmount}
               onChangeText={handleAmountChange}
@@ -277,7 +291,7 @@ function SalaryChangeContent({
         </ThemedView>
       )}
       <ThemedText type="h4">
-        Monthly income: ${formatAmountDisplay(monthlyAmount.toFixed(2))}
+        Monthly income: {formatMoney({ amount: monthlyAmount, code: currency })}
       </ThemedText>
     </SettingsModal>
   );
@@ -290,6 +304,7 @@ export default function EditSalaryOption({
 }) {
   const { openModal, closeModal } = useModal();
   const { salary, updateSalary } = useSalary();
+  const { currency } = useCurrency();
 
   const handleSalaryEdit = () => {
     openModal(
@@ -318,6 +333,7 @@ export default function EditSalaryOption({
           closeModal();
         }}
         onCancel={closeModal}
+        currency={currency ?? "USD"}
       />
     );
   };

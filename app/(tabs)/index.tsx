@@ -5,8 +5,9 @@ import CategoryBudgetPreview from "@/components/ui/category-budget-preview";
 import SalaryBreakdownPieChart from "@/components/ui/pie-chart/salary-breakdown-pie-chart";
 import { Colors } from "@/constants/theme";
 import { useCategoriesSpend } from "@/hooks/useCategoriesSpend";
+import { useCurrency } from "@/hooks/useCurrency";
 import { useSalary } from "@/hooks/useSalary";
-import { formatCompactNumber } from "@/utils/formatCompactNumber";
+import { formatMoney } from "@/utils/formatMoney";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -29,7 +30,12 @@ export default function HomeScreen() {
     loading: loadingBudgets,
     reload: reloadSpend,
   } = useCategoriesSpend();
-  const [difference, setDifference] = useState("0.00");
+  const {
+    currency,
+    loading: loadingCurrency,
+    reload: reloadCurrency,
+  } = useCurrency();
+  const [difference, setDifference] = useState(0);
   const [overBudget, setOverBudget] = useState(false);
   const [totalBudget, setTotalBudget] = useState(0);
   const [totalSpent, setTotalSpent] = useState(0);
@@ -38,7 +44,8 @@ export default function HomeScreen() {
     useCallback(() => {
       reloadSpend();
       reloadSalary();
-    }, [reloadSpend, reloadSalary])
+      reloadCurrency();
+    }, [reloadSpend, reloadSalary, reloadCurrency])
   );
 
   useEffect(() => {
@@ -56,14 +63,21 @@ export default function HomeScreen() {
       setOverBudget(isOverBudget);
       const saved = Math.max(0, difference);
       const deficit = Math.abs(Math.min(0, difference));
-      setDifference(formatCompactNumber(isOverBudget ? deficit : saved));
+      setDifference(isOverBudget ? deficit : saved);
     }
   }, [salary, budgets, totalBudget]);
 
-  if (loadingSalary || loadingBudgets || !budgets || !salary) {
+  if (
+    loadingSalary ||
+    loadingBudgets ||
+    loadingCurrency ||
+    !budgets ||
+    !salary
+  ) {
     return <ActivityIndicator size="large" />;
   }
 
+  console.log(currency);
   return (
     <AnimatedScreen>
       <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
@@ -81,7 +95,7 @@ export default function HomeScreen() {
                 <SalaryBreakdownPieChart budgets={budgets} salary={salary} />
                 <View style={styles.savedWrapper}>
                   <ThemedText type="displayMedium" style={styles.percent}>
-                    ${difference}
+                    {formatMoney({ code: currency, amount: difference })}
                   </ThemedText>
                   <ThemedText type="h5" style={styles.saved}>
                     {overBudget ? "short!" : "saved!"}
@@ -132,6 +146,7 @@ export default function HomeScreen() {
                   color: Colors[colorScheme ?? "light"].primary[500],
                   type: "need",
                 }}
+                currency={currency ?? "USD"}
               />
               <Pressable
                 onPress={() => {

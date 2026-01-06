@@ -8,9 +8,11 @@ import TextButton from "@/components/ui/text-button";
 import TransactionItem from "@/components/ui/transaction-item";
 import { Colors } from "@/constants/theme";
 import { useCategorySpend } from "@/hooks/useCategorySpend";
+import { useCurrency } from "@/hooks/useCurrency";
 import { useModal } from "@/hooks/useModal";
 import DatabaseService from "@/services/DatabaseService";
 import { CategoryType, TransactionType } from "@/types";
+import { formatMoney } from "@/utils/formatMoney";
 import Octicons from "@expo/vector-icons/Octicons";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
@@ -40,12 +42,18 @@ export default function CategoryTransactions() {
     loading: loadingBudget,
     reload: reloadSpend,
   } = useCategorySpend(category.id);
+  const {
+    currency,
+    loading: loadingCurrency,
+    reload: reloadCurrency,
+  } = useCurrency();
   const { openModal, closeModal } = useModal();
 
   useFocusEffect(
     useCallback(() => {
       reloadSpend();
-    }, [reloadSpend])
+      reloadCurrency();
+    }, [reloadSpend, reloadCurrency])
   );
 
   const handleEditCategory = () => {
@@ -121,7 +129,7 @@ export default function CategoryTransactions() {
     loadTransaction();
   }, []);
 
-  if (loading || loadingBudget || !budget) {
+  if (loading || loadingBudget || loadingCurrency || !budget) {
     return <ActivityIndicator size="large" />;
   }
   return (
@@ -147,7 +155,9 @@ export default function CategoryTransactions() {
                 type="bodyLarge"
                 style={{ textAlign: "center", paddingHorizontal: 32 }}
               >
-                You have spent ${budget.totalSpent} out of your ${budget.budget}{" "}
+                You have spent{" "}
+                {formatMoney({ amount: budget.totalSpent, code: currency })} out
+                of your {formatMoney({ amount: budget.budget, code: currency })}{" "}
                 budget for{" "}
                 {category.name
                   .split(" ")
@@ -178,6 +188,7 @@ export default function CategoryTransactions() {
               }
               renderItem={({ item }) => (
                 <TransactionItem
+                  currency={currency ?? "USD"}
                   transaction={item}
                   handleEdit={handleEditTransaction}
                 />

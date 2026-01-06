@@ -6,6 +6,7 @@ import TextButton from "@/components/ui/text-button";
 import TransactionForm from "@/components/ui/transaction-form";
 import { Colors } from "@/constants/theme";
 import { useCategories } from "@/hooks/useCategories";
+import { useCurrency } from "@/hooks/useCurrency";
 import { useModal } from "@/hooks/useModal";
 import { useRecurringTransactions } from "@/hooks/useRecurringTransactions";
 import DatabaseService from "@/services/DatabaseService";
@@ -16,10 +17,10 @@ import {
 } from "@/types";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
 import buildRRule from "@/utils/buildRRule";
-import { formatAmountDisplay } from "@/utils/formatDisplay";
+import { formatMoney } from "@/utils/formatMoney";
 import Octicons from "@expo/vector-icons/Octicons";
-import { router } from "expo-router";
-import { useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -187,29 +188,50 @@ function EditRecurringTransaction({
 
 export default function ManageRecurringTransactions() {
   const { openModal, closeModal } = useModal();
-  const { recurringTransactions, reload, loading } = useRecurringTransactions();
+  const {
+    recurringTransactions,
+    reload: reloadTransactions,
+    loading: loadingTransactions,
+  } = useRecurringTransactions();
   const colorScheme = useColorScheme();
   const bgColor = Colors[colorScheme ?? "light"].background;
-  const { categories } = useCategories();
+  const {
+    categories,
+    reload: reloadCategories,
+    loading: loadingCategories,
+  } = useCategories();
+  const {
+    currency,
+    loading: loadingCurrency,
+    reload: reloadCurrency,
+  } = useCurrency();
+
+  useFocusEffect(
+    useCallback(() => {
+      reloadCategories();
+      reloadTransactions();
+      reloadCurrency();
+    }, [reloadCategories, reloadTransactions, reloadCurrency])
+  );
 
   const handleOpen = (recurring: RecurringTransaction) => {
     openModal(
       <EditRecurringTransaction
         initialRecurring={recurring}
         onCancel={() => {
-          reload();
+          reloadTransactions();
           closeModal();
         }}
         onSave={async (newRecurring: RecurringTransaction) => {
           await DatabaseService.updateRecurringTransaction(newRecurring);
-          reload();
+          reloadTransactions();
           closeModal();
         }}
       />
     );
   };
 
-  if (loading) {
+  if (loadingCategories || loadingCurrency || loadingTransactions) {
     return <ActivityIndicator size="large" />;
   }
 
@@ -237,7 +259,10 @@ export default function ManageRecurringTransactions() {
               data={recurringTransactions}
               keyExtractor={(item) => item.id}
               refreshControl={
-                <RefreshControl refreshing={loading} onRefresh={reload} />
+                <RefreshControl
+                  refreshing={loadingTransactions}
+                  onRefresh={reloadTransactions}
+                />
               }
               renderItem={({ item }) => {
                 const rruleObj = rrulestr(item.rrule);
@@ -267,7 +292,7 @@ export default function ManageRecurringTransactions() {
                     </View>
                     <View style={{ flexDirection: "row", gap: 8 }}>
                       <ThemedText type="h3">
-                        ${formatAmountDisplay(item.amount.toFixed(2))}
+                        {formatMoney({ amount: item.amount, code: currency })}
                       </ThemedText>
                       <Pressable
                         onPress={() => handleOpen(item)}

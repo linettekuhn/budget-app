@@ -1,3 +1,4 @@
+import ChangeCurrencyOption from "@/components/profile/change-currency-option";
 import ChangeNameOption from "@/components/profile/change-name-option";
 import ChangePasswordOption from "@/components/profile/change-password-option";
 import DeleteAccountOption from "@/components/profile/delete-account-option";
@@ -265,7 +266,7 @@ export default function Profile() {
                   iconName="globe"
                 >
                   <View>
-                    <ProfileOption text="Choose currency" onPress={() => {}} />
+                    <ChangeCurrencyOption />
                   </View>
                 </Collapsible>
                 {user && (

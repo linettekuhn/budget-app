@@ -160,6 +160,15 @@ export default class DatabaseService {
       id: "app_last_active",
       value: now,
     });
+
+    await db.runAsync(
+      "INSERT INTO app_meta (id, value) VALUES ('user_currency', ?)",
+      ["USD"]
+    );
+    await this.logChange("app_meta", "user_currency", "create", {
+      id: "user_currency",
+      value: "USD",
+    });
   }
 
   static async seedDefaultCategories() {
@@ -1038,6 +1047,31 @@ export default class DatabaseService {
 
     await this.logChange("app_meta", "user_name", "update", {
       value: name,
+    });
+  }
+
+  static async getCurrency() {
+    const db = await this.getDatabase();
+
+    const row = await db.getFirstAsync<{ value: string }>(
+      "SELECT value FROM app_meta WHERE id = 'user_currency' AND deletedAt IS NULL"
+    );
+
+    if (row) {
+      return row.value;
+    }
+  }
+
+  static async updateCurrency(currency: string) {
+    const db = await this.getDatabase();
+
+    await db.runAsync(
+      "UPDATE app_meta SET value = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = 'user_currency'",
+      [currency]
+    );
+
+    await this.logChange("app_meta", "user_currency", "update", {
+      value: currency,
     });
   }
 

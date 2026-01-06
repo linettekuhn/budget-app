@@ -1,3 +1,4 @@
+import getCurrencySymbol from "@/utils/getCurrencySymbol";
 import CapsuleNumberInput from "./capsule-input-number";
 
 type Props = {
@@ -6,6 +7,7 @@ type Props = {
   onChangeText: (text: string) => void;
   min?: number;
   max?: number;
+  currency?: string;
   textType?:
     | "displayLarge"
     | "displayMedium"
@@ -31,11 +33,12 @@ export default function AmountDisplay({
   onChangeText,
   min = 0,
   max = 1_000_000_000,
+  currency = "USD",
   textType,
 }: Props) {
   return (
     <CapsuleNumberInput
-      displayAmount={`$${displayAmount}`}
+      displayAmount={`${getCurrencySymbol({ code: currency })}${displayAmount}`}
       rawAmount={rawAmount}
       onChangeText={onChangeText}
       min={min}

@@ -2,6 +2,7 @@ import { Motion } from "@/constants/motion";
 import { Colors } from "@/constants/theme";
 import { CategorySpend } from "@/types";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
+import { formatMoney } from "@/utils/formatMoney";
 import mixColors from "@/utils/mixColors";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useEffect } from "react";
@@ -16,12 +17,20 @@ import tinycolor from "tinycolor2";
 import { ThemedText } from "../themed-text";
 
 type Props = {
+  currency: string;
   category: CategorySpend;
   onPress: () => void;
 };
 
-export default function CategoryBudgetPreview({ category, onPress }: Props) {
-  let spent = category.totalSpent / category.budget;
+export default function CategoryBudgetPreview({
+  currency,
+  category,
+  onPress,
+}: Props) {
+  const totalSpent = category.totalSpent ?? 0;
+  const budget = category.budget ?? 0;
+
+  let spent = totalSpent / budget;
   let overflow = 0;
   if (spent >= 1) {
     overflow = Math.abs(1 - spent);
@@ -122,7 +131,8 @@ export default function CategoryBudgetPreview({ category, onPress }: Props) {
             darkColor={Colors["dark"].background}
             lightColor={Colors["light"].background}
           >
-            ${category.totalSpent} / ${category.budget}
+            {formatMoney({ code: currency, amount: totalSpent })} /{" "}
+            {formatMoney({ code: currency, amount: budget })}
           </ThemedText>
         </View>
         <View style={styles.progressBar}>

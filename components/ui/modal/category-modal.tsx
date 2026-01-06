@@ -2,11 +2,18 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
 import { useBadgeCheck } from "@/hooks/useBadgeCheck";
+import { useCurrency } from "@/hooks/useCurrency";
 import DatabaseService from "@/services/DatabaseService";
 import { CategorySpend } from "@/types";
 import { formatAmountDisplay } from "@/utils/formatDisplay";
 import { useState } from "react";
-import { Keyboard, StyleSheet, useColorScheme, View } from "react-native";
+import {
+  ActivityIndicator,
+  Keyboard,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from "react-native";
 import ColorPicker, {
   BrightnessSlider,
   ColorFormatsObject,
@@ -28,6 +35,7 @@ export default function CustomCategory({
 }) {
   const colorScheme = useColorScheme();
   const { checkBadges } = useBadgeCheck();
+  const { currency, loading: loadingCurrency } = useCurrency();
 
   const [categoryName, setCategoryName] = useState("");
   const [typeSelected, setType] = useState("");
@@ -107,6 +115,10 @@ export default function CustomCategory({
     setDisplayAmount(formatted);
   };
 
+  if (loadingCurrency) {
+    return <ActivityIndicator size={"large"} />;
+  }
+
   return (
     <ThemedView style={styles.categoryForm}>
       <ThemedText style={styles.heading} type="h1">
@@ -128,6 +140,7 @@ export default function CustomCategory({
           Budget
         </ThemedText>
         <AmountDisplay
+          currency={currency}
           displayAmount={displayAmount}
           rawAmount={rawAmount}
           onChangeText={handleAmountChange}

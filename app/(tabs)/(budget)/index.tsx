@@ -6,8 +6,10 @@ import MonthSelect from "@/components/ui/month-select";
 import MonthlyBudgetPieChart from "@/components/ui/pie-chart/monthly-budget-pie-chart";
 import { Colors } from "@/constants/theme";
 import { useCategoriesSpend } from "@/hooks/useCategoriesSpend";
+import { useCurrency } from "@/hooks/useCurrency";
 import { CategorySpend } from "@/types";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
+import { formatMoney } from "@/utils/formatMoney";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -35,6 +37,11 @@ export default function Budget() {
     budgets: defaultBudgets,
     reload: reloadSpend,
   } = useCategoriesSpend(selectedMonth);
+  const {
+    currency,
+    loading: loadingCurrency,
+    reload: reloadCurrency,
+  } = useCurrency();
 
   useEffect(() => {
     setBudgets(defaultBudgets);
@@ -43,7 +50,8 @@ export default function Budget() {
   useFocusEffect(
     useCallback(() => {
       reloadSpend();
-    }, [reloadSpend])
+      reloadCurrency();
+    }, [reloadSpend, reloadCurrency])
   );
 
   let totalBudget = budgets.reduce((sum, category) => sum + category.budget, 0);
@@ -71,7 +79,7 @@ export default function Budget() {
     setSelectedDate(date);
   };
 
-  if (loadingSpend) {
+  if (loadingSpend || loadingCurrency) {
     return <ActivityIndicator size="large" />;
   }
 
@@ -85,7 +93,8 @@ export default function Budget() {
                 <MonthlyBudgetPieChart budgets={budgets} />
                 <View style={styles.monthWrapper}>
                   <ThemedText type="captionLarge">
-                    ${totalSpent} / ${totalBudget}
+                    {formatMoney({ code: currency, amount: totalSpent })} /{" "}
+                    {formatMoney({ code: currency, amount: totalBudget })}
                   </ThemedText>
                   <MonthSelect
                     handleDateChange={updateMonthData}
@@ -116,10 +125,11 @@ export default function Budget() {
                           },
                         })
                       }
+                      currency={currency ?? "USD"}
                     />
                   );
                 })}
-              {!seeAll && (
+              {!seeAll && other.length > 0 && (
                 <CategoryBudgetPreview
                   key={-1}
                   category={{
@@ -131,9 +141,11 @@ export default function Budget() {
                     type: "need",
                   }}
                   onPress={() => setSeeAll(true)}
+                  currency={currency ?? "USD"}
                 />
               )}
               {seeAll &&
+                other.length > 0 &&
                 other
                   .slice()
                   .sort((a, b) => {
@@ -155,18 +167,20 @@ export default function Budget() {
                             },
                           })
                         }
+                        currency={currency ?? "USD"}
                       />
                     );
                   })}
             </ThemedView>
-            {seeAll ? (
+            {seeAll && other.length > 0 && (
               <Pressable
                 style={{ alignSelf: "center" }}
                 onPress={() => setSeeAll(false)}
               >
                 <ThemedText type="link">See Less Categories</ThemedText>
               </Pressable>
-            ) : (
+            )}
+            {!seeAll && other.length > 0 && (
               <Pressable
                 style={{ alignSelf: "center" }}
                 onPress={() => setSeeAll(true)}

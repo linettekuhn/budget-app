@@ -1,15 +1,18 @@
 import { Colors } from "@/constants/theme";
 import { TransactionType } from "@/types";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
+import { formatMoney } from "@/utils/formatMoney";
 import Octicons from "@expo/vector-icons/Octicons";
 import { Pressable, StyleSheet, useColorScheme, View } from "react-native";
 import { ThemedText } from "../themed-text";
 import { ThemedView } from "../themed-view";
 
 export default function TransactionItem({
+  currency,
   transaction,
   handleEdit,
 }: {
+  currency: string;
   transaction: TransactionType;
   handleEdit: (transaction: TransactionType) => void;
 }) {
@@ -57,7 +60,7 @@ export default function TransactionItem({
       </ThemedView>
       <View style={{ flexDirection: "row", gap: 4 }}>
         <ThemedText style={{ color: typeColor }} type="h6">
-          ${transaction.amount.toFixed(2)}
+          {formatMoney({ code: currency, amount: transaction.amount })}
         </ThemedText>
         <Pressable
           onPress={() => handleEdit(transaction)}

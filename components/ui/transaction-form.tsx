@@ -10,6 +10,7 @@ import CustomCategory from "@/components/ui/modal/category-modal";
 import { Colors } from "@/constants/theme";
 import { useCategories } from "@/hooks/useCategories";
 import { useCategoriesSpend } from "@/hooks/useCategoriesSpend";
+import { useCurrency } from "@/hooks/useCurrency";
 import { useModal } from "@/hooks/useModal";
 import {
   CategoryType,
@@ -86,6 +87,7 @@ export default function TransactionForm({ initial, onChange }: Props) {
     loading: loadingSpend,
     reload: reloadSpend,
   } = useCategoriesSpend();
+  const { currency, loading: loadingCurrency } = useCurrency();
 
   // sort categories by budget and show top 3 by default
   const sortedCategories = useMemo(() => {
@@ -229,7 +231,7 @@ export default function TransactionForm({ initial, onChange }: Props) {
     setIntervalDisplay(formatted);
   };
 
-  if (loadingCategories || loadingSpend) {
+  if (loadingCategories || loadingSpend || loadingCurrency) {
     return <ActivityIndicator size="large" />;
   }
 
@@ -266,6 +268,7 @@ export default function TransactionForm({ initial, onChange }: Props) {
           Amount
         </ThemedText>
         <AmountDisplay
+          currency={currency}
           displayAmount={displayAmount}
           rawAmount={rawAmount}
           onChangeText={handleAmountChange}
