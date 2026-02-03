@@ -3,7 +3,7 @@ import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 
-const BACKEND_URL = "http://api.piggy-stash.linettekuhn.com";
+const BACKEND_URL = "https://api.piggy-stash.linettekuhn.com";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
