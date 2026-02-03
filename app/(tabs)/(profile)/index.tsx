@@ -2,6 +2,7 @@ import ChangeCurrencyOption from "@/components/profile/change-currency-option";
 import ChangeNameOption from "@/components/profile/change-name-option";
 import ChangePasswordOption from "@/components/profile/change-password-option";
 import DeleteAccountOption from "@/components/profile/delete-account-option";
+import EditNotificationSettingsOption from "@/components/profile/edit-notification-settings-option";
 import EditSalaryOption from "@/components/profile/edit-salary-option";
 import ProfileOption from "@/components/profile/profile-option";
 import { ThemedText } from "@/components/themed-text";
@@ -226,22 +227,6 @@ export default function Profile() {
                   </View>
                 </Collapsible>
                 <Collapsible
-                  title="Notifications"
-                  IconComponent={Octicons}
-                  iconName="bell"
-                >
-                  <View>
-                    <ProfileOption
-                      text="Push notifications"
-                      onPress={() => {}}
-                    />
-                    <ProfileOption
-                      text="In-app notifications"
-                      onPress={() => {}}
-                    />
-                  </View>
-                </Collapsible>
-                <Collapsible
                   title="Settings"
                   IconComponent={Octicons}
                   iconName="gear"
@@ -256,6 +241,15 @@ export default function Profile() {
                         );
                       }}
                     />
+                  </View>
+                </Collapsible>
+                <Collapsible
+                  title="Notifications"
+                  IconComponent={Octicons}
+                  iconName="bell"
+                >
+                  <View>
+                    <EditNotificationSettingsOption />
                   </View>
                 </Collapsible>
                 <Collapsible

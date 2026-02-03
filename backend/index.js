@@ -53,7 +53,6 @@ app.post("/register-push-token", (req, res) => {
 
 // endpoint to update last active
 app.post("/ping", (req, res) => {
-  // get userId from request body
   const { userId, spentPercent, weeklySpent, currentStreak } = req.body;
 
   // get stored tokens
@@ -66,6 +65,29 @@ app.post("/ping", (req, res) => {
     user.spentPercent = spentPercent;
     user.weeklySpent = weeklySpent;
     user.currentStreak = currentStreak;
+  }
+
+  // save tokens to file
+  saveTokens(tokens);
+
+  res.json({ ok: true });
+});
+
+// endpoint to update notification settings
+app.post("/update-notification-settings", (req, res) => {
+  const { userId, settings } = req.body;
+
+  // get stored tokens
+  const tokens = readTokens();
+
+  // update user settings
+  const user = tokens.users.find((user) => user.userId === userId);
+  if (user && settings) {
+    user.settings = {
+      daily: settings.daily ?? user.settings?.daily ?? true,
+      weekly: settings.weekly ?? user.settings?.weekly ?? true,
+      midMonth: settings.midMonth ?? user.settings?.midMonth ?? true,
+    };
   }
 
   // save tokens to file
@@ -102,6 +124,15 @@ cron.schedule("0 20 * * *", async () => {
 
   // loop through all tokens
   for (const user of tokens.users) {
+    // skip users that opt out
+    const userSettings = user.settings ?? {
+      daily: true,
+      weekly: true,
+      midMonth: true,
+    };
+
+    if (!userSettings.daily) continue;
+
     const lastActive = user.lastActive || 0;
     const hoursSinceActive = (now - lastActive) / 1000 / 3600;
     const userStreak = user.currentStreak || 1;
@@ -128,6 +159,15 @@ cron.schedule("0 9 * * 0", async () => {
 
   // loop through all tokens
   for (const user of tokens.users) {
+    // skip users that opt out
+    const userSettings = user.settings ?? {
+      daily: true,
+      weekly: true,
+      midMonth: true,
+    };
+
+    if (!userSettings.weekly) continue;
+
     // get weekly spent
     const weeklySpent = user.weeklySpent || 0;
 
@@ -163,6 +203,15 @@ cron.schedule("0 9 15 * *", async () => {
 
   // loop through all tokens
   for (const user of tokens.users) {
+    // skip users that opt out
+    const userSettings = user.settings ?? {
+      daily: true,
+      weekly: true,
+      midMonth: true,
+    };
+
+    if (!userSettings.midMonth) continue;
+
     // get spent percent
     const spentPercent = user.spentPercent || 0;
 

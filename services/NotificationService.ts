@@ -3,7 +3,7 @@ import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 
-const BACKEND_URL = "http://192.168.1.18:3005";
+const BACKEND_URL = "http://api.piggy-stash.linettekuhn.com";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -95,5 +95,29 @@ export async function pingBackend(
     });
   } catch (error) {
     console.error("Error pinging backend", error);
+  }
+}
+
+export async function updateRemoteNotificationSettings(
+  userId: string,
+  settings: {
+    daily: boolean;
+    weekly: boolean;
+    midMonth: boolean;
+  }
+) {
+  try {
+    await fetch(`${BACKEND_URL}/update-notification-settings`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId,
+        settings,
+      }),
+    });
+  } catch (error) {
+    console.error("Error updating notification settings", error);
   }
 }

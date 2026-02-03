@@ -14,6 +14,12 @@ import { rrulestr } from "rrule";
 const badges = badgesJson as BadgeDefinition[];
 type CountResult = { count: number };
 
+export type NotificationSettings = {
+  daily: boolean;
+  weekly: boolean;
+  midMonth: boolean;
+};
+
 export default class DatabaseService {
   private static db: SQLite.SQLiteDatabase | null = null;
 
@@ -182,6 +188,30 @@ export default class DatabaseService {
     await this.logChange("app_meta", "user_currency", "create", {
       id: "user_currency",
       value: "USD",
+    });
+
+    await db.runAsync(
+      "INSERT INTO app_meta (id, value) VALUES ('notif_daily', 'true')"
+    );
+    await this.logChange("app_meta", "notif_daily", "create", {
+      id: "notif_daily",
+      value: true,
+    });
+
+    await db.runAsync(
+      "INSERT INTO app_meta (id, value) VALUES ('notif_weekly', 'true')"
+    );
+    await this.logChange("app_meta", "notif_weekly", "create", {
+      id: "notif_weekly",
+      value: true,
+    });
+
+    await db.runAsync(
+      "INSERT INTO app_meta (id, value) VALUES ('notif_mid_month', 'true')"
+    );
+    await this.logChange("app_meta", "notif_mid_month", "create", {
+      id: "notif_mid_month",
+      value: true,
     });
   }
 
@@ -1117,6 +1147,57 @@ export default class DatabaseService {
 
     await this.logChange("app_meta", "user_name", "update", {
       value: name,
+    });
+  }
+
+  static async getNotificationSettings() {
+    const db = await this.getDatabase();
+
+    const dailyRow = await db.getFirstAsync<{ value: string }>(
+      "SELECT value FROM app_meta WHERE id = 'notif_daily' AND deletedAt IS NULL"
+    );
+    const weeklyRow = await db.getFirstAsync<{ value: string }>(
+      "SELECT value FROM app_meta WHERE id = 'notif_weekly' AND deletedAt IS NULL"
+    );
+    const midMonthRow = await db.getFirstAsync<{ value: string }>(
+      "SELECT value FROM app_meta WHERE id = 'notif_mid_month' AND deletedAt IS NULL"
+    );
+
+    return {
+      daily: dailyRow?.value !== "false",
+      weekly: weeklyRow?.value !== "false",
+      midMonth: midMonthRow?.value !== "false",
+    };
+  }
+
+  static async updateNotificationSettings(settings: NotificationSettings) {
+    const db = await this.getDatabase();
+
+    await db.runAsync(
+      "UPDATE app_meta SET value = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = 'notif_daily'",
+      [String(settings.daily)]
+    );
+
+    await db.runAsync(
+      "UPDATE app_meta SET value = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = 'notif_weekly'",
+      [String(settings.weekly)]
+    );
+
+    await db.runAsync(
+      "UPDATE app_meta SET value = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = 'notif_mid_month'",
+      [String(settings.midMonth)]
+    );
+
+    await this.logChange("app_meta", "notif_daily", "update", {
+      value: settings.daily,
+    });
+
+    await this.logChange("app_meta", "notif_weekly", "update", {
+      value: settings.weekly,
+    });
+
+    await this.logChange("app_meta", "notif_mid_month", "update", {
+      value: settings.midMonth,
     });
   }
 

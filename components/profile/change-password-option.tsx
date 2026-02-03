@@ -63,7 +63,7 @@ function ChangePasswordContent({ onComplete }: { onComplete: () => void }) {
 
   return (
     <SettingsModal
-      title="Change Password"
+      title="Change your password"
       onCancel={onComplete}
       onComplete={changePassword}
     >
