@@ -894,6 +894,62 @@ export default class DatabaseService {
     );
   }
 
+  static async getSpentPercentFirstHalf(): Promise<number> {
+    const db = await this.getDatabase();
+
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+
+    const start = `${year}-${month}-01`;
+    const mid = `${year}-${month}-15`;
+
+    const row = await db.getFirstAsync<{ spent: number; budget: number }>(
+      `
+      SELECT
+        IFNULL(SUM(CASE WHEN t.type = 'expense' THEN t.amount ELSE 0 END), 0) AS spent,
+        IFNULL(SUM(c.budget), 0) AS budget
+      FROM categories c
+      LEFT JOIN transactions t
+        ON c.id = t.categoryId
+        AND t.deletedAt IS NULL
+        AND t.date BETWEEN ? AND ?
+      WHERE c.deletedAt IS NULL
+    `,
+      [start, mid]
+    );
+
+    if (!row || row.budget === 0) return 0;
+
+    return Number(((row.spent / row.budget) * 100).toFixed(2));
+  }
+
+  static async getWeeklySpent(): Promise<number> {
+    const db = await this.getDatabase();
+
+    const now = new Date();
+    const day = now.getDay(); // 0 = Sunday
+    const diff = now.getDate() - day;
+    const startOfWeek = new Date(now.setDate(diff));
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const endOfWeek = new Date();
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    const row = await db.getFirstAsync<{ spent: number }>(
+      `
+      SELECT IFNULL(SUM(amount), 0) AS spent
+      FROM transactions
+      WHERE deletedAt IS NULL
+        AND type = 'expense'
+        AND date BETWEEN ? AND ?
+    `,
+      [startOfWeek.toISOString(), endOfWeek.toISOString()]
+    );
+
+    return Number(row?.spent?.toFixed(2) || 0);
+  }
+
   // Badges Table Interaction
   static async checkBadgeUnlocked(badgeKey: string) {
     const db = await this.getDatabase();

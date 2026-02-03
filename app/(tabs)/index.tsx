@@ -4,9 +4,12 @@ import AnimatedScreen from "@/components/ui/animated-screen";
 import CategoryBudgetPreview from "@/components/ui/category-budget-preview";
 import SalaryBreakdownPieChart from "@/components/ui/pie-chart/salary-breakdown-pie-chart";
 import { Colors } from "@/constants/theme";
+import { auth } from "@/firebase/firebaseConfig";
 import { useCategoriesSpend } from "@/hooks/useCategoriesSpend";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useSalary } from "@/hooks/useSalary";
+import DatabaseService from "@/services/DatabaseService";
+import { pingBackend, registerPushToken } from "@/services/NotificationService";
 import { formatMoney } from "@/utils/formatMoney";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
@@ -45,8 +48,33 @@ export default function HomeScreen() {
       reloadSpend();
       reloadSalary();
       reloadCurrency();
+
+      const user = auth.currentUser;
+      if (!user) {
+        return;
+      }
+
+      const ping = async () => {
+        const spentPercent = await DatabaseService.getSpentPercentFirstHalf();
+
+        const weeklySpent = await DatabaseService.getWeeklySpent();
+
+        const currentStreak = await DatabaseService.getStreak();
+        await pingBackend(user.uid, spentPercent, weeklySpent, currentStreak);
+      };
+
+      ping();
     }, [reloadSpend, reloadSalary, reloadCurrency])
   );
+
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (!user) {
+      return;
+    }
+
+    registerPushToken(user.uid);
+  });
 
   useEffect(() => {
     const spent = [...budgets].reduce(
@@ -77,7 +105,6 @@ export default function HomeScreen() {
     return <ActivityIndicator size="large" />;
   }
 
-  console.log(currency);
   return (
     <AnimatedScreen>
       <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
