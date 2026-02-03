@@ -16,10 +16,8 @@ import {
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
-import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
 import { useFonts } from "expo-font";
 import { Stack, router } from "expo-router";
-import * as SQLite from "expo-sqlite";
 import { SQLiteDatabase, SQLiteProvider } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -50,9 +48,6 @@ export default function RootLayout() {
   const { checkBadges } = useBadgeCheck();
   const [dbReady, setDbReady] = useState<boolean>(false);
   const initialCheckDone = useRef(false);
-
-  const studioDb = SQLite.openDatabaseSync("app.db");
-  useDrizzleStudio(studioDb);
 
   const createDatabase = useCallback(async (db: SQLiteDatabase) => {
     try {
