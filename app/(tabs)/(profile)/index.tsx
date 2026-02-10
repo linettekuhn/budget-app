@@ -9,7 +9,6 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import AnimatedScreen from "@/components/ui/animated-screen";
 import Avatar from "@/components/ui/avatar";
-import CapsuleButton from "@/components/ui/capsule-button";
 import { Collapsible } from "@/components/ui/collapsible";
 import { Colors } from "@/constants/theme";
 import { auth } from "@/firebase/firebaseConfig";
@@ -309,26 +308,6 @@ export default function Profile() {
                   day: "2-digit",
                 })}
               </ThemedText>
-              <CapsuleButton
-                text="SYNC APP"
-                onPress={syncApp}
-                bgFocused={btnColor}
-              />
-              <CapsuleButton
-                text="RESET TRANSACTIONS"
-                onPress={resetDatabase}
-                bgFocused={btnColor}
-              />
-              <CapsuleButton
-                text="RESET ONBOARDING"
-                onPress={resetOnboarding}
-                bgFocused={btnColor}
-              />
-              <CapsuleButton
-                text="RESET APP"
-                onPress={resetApp}
-                bgFocused={btnColor}
-              />
             </ThemedView>
           )}
         </ScrollView>

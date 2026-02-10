@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
   form: {
     flex: 1,
     gap: 20,
-    alignItems: "center",
+    alignItems: "stretch",
     justifyContent: "center",
   },
 

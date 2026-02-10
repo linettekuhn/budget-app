@@ -277,28 +277,22 @@ export default function TransactionForm({ initial, onChange }: Props) {
           />
         </ThemedView>
       </ThemedView>
-      <ThemedView style={styles.options}>
-        <ThemedText style={styles.heading} type="h1">
-          Amount
-        </ThemedText>
-        <AmountDisplay
-          currency={currency}
-          displayAmount={displayAmount}
-          rawAmount={rawAmount}
-          onChangeText={handleAmountChange}
-          textType="displayLarge"
-        />
-      </ThemedView>
       <ThemedView style={[styles.options, { alignItems: "stretch" }]}>
-        <ThemedText style={styles.heading} type="h1">
-          Name
-        </ThemedText>
         <CapsuleInput
           style={{ flex: 1 }}
           value={transactionName}
           onChangeText={setTransactionName}
           placeholder="Enter transaction name"
           keyboardType="default"
+        />
+      </ThemedView>
+      <ThemedView style={styles.options}>
+        <AmountDisplay
+          currency={currency}
+          displayAmount={displayAmount}
+          rawAmount={rawAmount}
+          onChangeText={handleAmountChange}
+          textType="displayLarge"
         />
       </ThemedView>
 
@@ -490,7 +484,7 @@ export default function TransactionForm({ initial, onChange }: Props) {
 const styles = StyleSheet.create({
   main: {
     flex: 1,
-    gap: 8,
+    gap: 16,
     marginBottom: 15,
   },
 
