@@ -10,7 +10,14 @@ import SyncService from "@/services/SyncService";
 import Octicons from "@expo/vector-icons/Octicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import { ScrollView, StyleSheet, useColorScheme, View } from "react-native";
+import { useState } from "react";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Toast } from "toastify-react-native";
 
@@ -18,6 +25,7 @@ export default function FinishOnboarding() {
   const colorScheme = useColorScheme();
   const btnColor = Colors[colorScheme ?? "light"].secondary[500];
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   // get onboarding state's budgets
   const { state, reset } = useOnboarding();
@@ -29,10 +37,14 @@ export default function FinishOnboarding() {
 
   const handleCompleteOnboarding = async () => {
     try {
+      setLoading(true);
       // save name
       await DatabaseService.insertName(name);
 
+      // TODO: FIX THIS GARGBAGE
       // save categories
+      //const defaultCategories = await DatabaseService.getCategories();
+      //console.log(defaultCategories);
       await DatabaseService.clearCategories();
       await DatabaseService.insertCategories(categories, budgets);
 
@@ -53,9 +65,13 @@ export default function FinishOnboarding() {
       // sync changes after onboarding
       await SyncService.sync();
 
+      setLoading(false);
+
       // access app
       router.replace("/(tabs)");
     } catch (error: unknown) {
+      setLoading(false);
+
       if (error instanceof Error) {
         Toast.show({
           type: "error",
@@ -141,6 +157,22 @@ export default function FinishOnboarding() {
             />
           </ThemedView>
         </ScrollView>
+        {loading && (
+          <View
+            style={{
+              ...StyleSheet.absoluteFillObject,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: "rgba(0,0,0,0.4)",
+              zIndex: 999,
+            }}
+          >
+            <ActivityIndicator
+              size="large"
+              color={Colors[colorScheme ?? "light"].text}
+            />
+          </View>
+        )}
       </SafeAreaView>
     </AnimatedScreen>
   );

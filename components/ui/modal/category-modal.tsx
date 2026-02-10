@@ -116,7 +116,21 @@ export default function CustomCategory({
   };
 
   if (loadingCurrency) {
-    return <ActivityIndicator size={"large"} />;
+    return (
+      <View
+        style={{
+          backgroundColor: Colors[colorScheme ?? "light"].background,
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <ActivityIndicator
+          size="large"
+          color={Colors[colorScheme ?? "light"].text}
+        />
+      </View>
+    );
   }
 
   return (
@@ -129,6 +143,7 @@ export default function CustomCategory({
           Name
         </ThemedText>
         <CapsuleInput
+          style={{ flex: 1 }}
           value={categoryName}
           onChangeText={setCategoryName}
           placeholder="Enter category name"

@@ -89,6 +89,8 @@ export default function Transaction() {
       router.setParams({});
       setFormData(null);
       setResetKey((prev) => prev + 1);
+
+      router.push("/(tabs)/(budget)");
     } catch (error: unknown) {
       if (error instanceof Error) {
         Toast.show({

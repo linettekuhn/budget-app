@@ -19,6 +19,7 @@ import {
   ScrollView,
   StyleSheet,
   useColorScheme,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -81,7 +82,21 @@ export default function CategoriesOnboarding() {
   };
 
   if (loading) {
-    return <ActivityIndicator size="large" />;
+    return (
+      <View
+        style={{
+          backgroundColor: Colors[colorScheme ?? "light"].background,
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <ActivityIndicator
+          size="large"
+          color={Colors[colorScheme ?? "light"].text}
+        />
+      </View>
+    );
   }
 
   return (

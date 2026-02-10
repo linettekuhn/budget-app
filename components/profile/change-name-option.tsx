@@ -43,6 +43,7 @@ function NameChangeContent({
     >
       <ThemedText type="h3">What should we call you?</ThemedText>
       <CapsuleInput
+        style={{ flex: 1 }}
         value={tempName}
         onChangeText={(text) =>
           setTempName(

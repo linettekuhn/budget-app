@@ -232,7 +232,21 @@ export default function TransactionForm({ initial, onChange }: Props) {
   };
 
   if (loadingCategories || loadingSpend || loadingCurrency) {
-    return <ActivityIndicator size="large" />;
+    return (
+      <View
+        style={{
+          backgroundColor: Colors[colorScheme ?? "light"].background,
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <ActivityIndicator
+          size="large"
+          color={Colors[colorScheme ?? "light"].text}
+        />
+      </View>
+    );
   }
 
   return (
@@ -275,11 +289,12 @@ export default function TransactionForm({ initial, onChange }: Props) {
           textType="displayLarge"
         />
       </ThemedView>
-      <ThemedView style={styles.options}>
+      <ThemedView style={[styles.options, { alignItems: "stretch" }]}>
         <ThemedText style={styles.heading} type="h1">
           Name
         </ThemedText>
         <CapsuleInput
+          style={{ flex: 1 }}
           value={transactionName}
           onChangeText={setTransactionName}
           placeholder="Enter transaction name"

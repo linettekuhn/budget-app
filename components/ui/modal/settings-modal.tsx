@@ -42,7 +42,7 @@ export default function SettingsModal({
 const styles = StyleSheet.create({
   modalContent: {
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "stretch",
     paddingHorizontal: 20,
     gap: 8,
   },

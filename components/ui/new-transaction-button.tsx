@@ -47,7 +47,13 @@ export default function NewTransactionButton({
   };
 
   return (
-    <View>
+    <View
+      style={{
+        alignItems: "center",
+        justifyContent: "center",
+        flexDirection: "row",
+      }}
+    >
       {!isTransactionScreen && (
         <>
           <FloatingIconButton

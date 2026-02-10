@@ -51,7 +51,7 @@ export default function RootLayout() {
 
   const createDatabase = useCallback(async (db: SQLiteDatabase) => {
     try {
-      await DatabaseService.initalize();
+      await DatabaseService.initializeSchema();
       setDbReady(true);
     } catch (error: unknown) {
       if (error instanceof Error) {

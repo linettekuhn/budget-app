@@ -1,19 +1,22 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import AnimatedScreen from "@/components/ui/animated-screen";
+import CapsuleButton from "@/components/ui/capsule-button";
 import CategoryBudgetPreview from "@/components/ui/category-budget-preview";
+import CustomCategory from "@/components/ui/modal/category-modal";
 import MonthSelect from "@/components/ui/month-select";
 import MonthlyBudgetPieChart from "@/components/ui/pie-chart/monthly-budget-pie-chart";
 import { Colors } from "@/constants/theme";
 import { useCategoriesSpend } from "@/hooks/useCategoriesSpend";
 import { useCurrency } from "@/hooks/useCurrency";
+import { useModal } from "@/hooks/useModal";
 import { CategorySpend } from "@/types";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
 import { formatMoney } from "@/utils/formatMoney";
+import Octicons from "@expo/vector-icons/Octicons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -25,12 +28,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function Budget() {
   const colorScheme = useColorScheme();
   const bgColor = Colors[colorScheme ?? "light"].background;
+  const btnColor = Colors[colorScheme ?? "light"].secondary[500];
   const router = useRouter();
   const [seeAll, setSeeAll] = useState(false);
   const [budgets, setBudgets] = useState<CategorySpend[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
-  const selectedMonth = selectedDate.toISOString().slice(0, 7);
+  const selectedMonth = selectedDate.toISOString();
 
   const {
     loading: loadingSpend,
@@ -70,83 +74,50 @@ export default function Budget() {
   const other = sortedBudgets.slice(3);
 
   const otherTotal = other.reduce((sum, category) => sum + category.budget, 0);
-  const otherTotalSpent = other.reduce(
-    (sum, category) => sum + category.totalSpent,
-    0
-  );
+  const otherTotalSpent = other
+    .reduce((sum, category) => sum + category.totalSpent, 0)
+    .toFixed(2);
 
   const updateMonthData = (date: Date) => {
     setSelectedDate(date);
   };
 
-  if (loadingSpend || loadingCurrency) {
-    return <ActivityIndicator size="large" />;
-  }
+  const { openModal, closeModal } = useModal();
+
+  const handleOpen = () => {
+    openModal(
+      <CustomCategory
+        onComplete={() => {
+          closeModal();
+          reloadSpend();
+        }}
+      />
+    );
+  };
 
   return (
     <AnimatedScreen>
       <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
         <ScrollView contentContainerStyle={styles.container}>
-          <ThemedView style={styles.main}>
-            <Pressable onPress={() => router.push("/monthly-transactions")}>
-              <ThemedView style={styles.pieChartWrapper}>
-                <MonthlyBudgetPieChart budgets={budgets} />
-                <View style={styles.monthWrapper}>
-                  <ThemedText type="captionLarge">
-                    {formatMoney({ code: currency, amount: totalSpent })} /{" "}
-                    {formatMoney({ code: currency, amount: totalBudget })}
-                  </ThemedText>
-                  <MonthSelect
-                    handleDateChange={updateMonthData}
-                    initialDate={selectedDate}
-                  />
-                </View>
-              </ThemedView>
-            </Pressable>
-            <ThemedView style={styles.categoryPreviews}>
-              {topThree
-                .slice()
-                .sort((a, b) => {
-                  const aPercent = a.totalSpent / a.budget;
-                  const bPercent = b.totalSpent / b.budget;
-                  return bPercent - aPercent;
-                })
-                .map((category) => {
-                  return (
-                    <CategoryBudgetPreview
-                      key={category.id}
-                      category={category}
-                      onPress={() =>
-                        router.push({
-                          pathname: "/category-transactions",
-                          params: {
-                            category: JSON.stringify(category),
-                            date: JSON.stringify(selectedDate),
-                          },
-                        })
-                      }
-                      currency={currency ?? "USD"}
+          {!loadingSpend && !loadingCurrency && (
+            <ThemedView style={styles.main}>
+              <Pressable onPress={() => router.push("/monthly-transactions")}>
+                <ThemedView style={styles.pieChartWrapper}>
+                  <MonthlyBudgetPieChart budgets={budgets} />
+                  <View style={styles.monthWrapper}>
+                    <ThemedText type="captionLarge">
+                      {formatMoney({ code: currency, amount: totalSpent })} /{" "}
+                      {formatMoney({ code: currency, amount: totalBudget })}
+                    </ThemedText>
+                    <MonthSelect
+                      handleDateChange={updateMonthData}
+                      initialDate={selectedDate}
                     />
-                  );
-                })}
-              {!seeAll && other.length > 0 && (
-                <CategoryBudgetPreview
-                  key={-1}
-                  category={{
-                    id: "",
-                    name: "Other",
-                    budget: otherTotal,
-                    totalSpent: otherTotalSpent,
-                    color: adjustColorForScheme("#B6B6B6", colorScheme),
-                    type: "need",
-                  }}
-                  onPress={() => setSeeAll(true)}
-                  currency={currency ?? "USD"}
-                />
-              )}
-              {seeAll &&
-                other.length > 0 &&
-                other
+                  </View>
+                </ThemedView>
+              </Pressable>
+              <ThemedView style={styles.categoryPreviews}>
+                {topThree
                   .slice()
                   .sort((a, b) => {
                     const aPercent = a.totalSpent / a.budget;
@@ -171,24 +142,74 @@ export default function Budget() {
                       />
                     );
                   })}
+                {!seeAll && other.length > 0 && (
+                  <CategoryBudgetPreview
+                    key={-1}
+                    category={{
+                      id: "",
+                      name: "Other",
+                      budget: otherTotal,
+                      totalSpent: Number(otherTotalSpent),
+                      color: adjustColorForScheme("#B6B6B6", colorScheme),
+                      type: "need",
+                    }}
+                    onPress={() => setSeeAll(true)}
+                    currency={currency ?? "USD"}
+                  />
+                )}
+                {seeAll &&
+                  other.length > 0 &&
+                  other
+                    .slice()
+                    .sort((a, b) => {
+                      const aPercent = a.totalSpent / a.budget;
+                      const bPercent = b.totalSpent / b.budget;
+                      return bPercent - aPercent;
+                    })
+                    .map((category) => {
+                      return (
+                        <CategoryBudgetPreview
+                          key={category.id}
+                          category={category}
+                          onPress={() =>
+                            router.push({
+                              pathname: "/category-transactions",
+                              params: {
+                                category: JSON.stringify(category),
+                                date: JSON.stringify(selectedDate),
+                              },
+                            })
+                          }
+                          currency={currency ?? "USD"}
+                        />
+                      );
+                    })}
+                <CapsuleButton
+                  onPress={handleOpen}
+                  text="ADD NEW CATEGORY"
+                  bgFocused={btnColor}
+                  IconComponent={Octicons}
+                  iconName="plus"
+                />
+              </ThemedView>
+              {seeAll && other.length > 0 && (
+                <Pressable
+                  style={{ alignSelf: "center" }}
+                  onPress={() => setSeeAll(false)}
+                >
+                  <ThemedText type="link">See Less Categories</ThemedText>
+                </Pressable>
+              )}
+              {!seeAll && other.length > 0 && (
+                <Pressable
+                  style={{ alignSelf: "center" }}
+                  onPress={() => setSeeAll(true)}
+                >
+                  <ThemedText type="link">See More Categories</ThemedText>
+                </Pressable>
+              )}
             </ThemedView>
-            {seeAll && other.length > 0 && (
-              <Pressable
-                style={{ alignSelf: "center" }}
-                onPress={() => setSeeAll(false)}
-              >
-                <ThemedText type="link">See Less Categories</ThemedText>
-              </Pressable>
-            )}
-            {!seeAll && other.length > 0 && (
-              <Pressable
-                style={{ alignSelf: "center" }}
-                onPress={() => setSeeAll(true)}
-              >
-                <ThemedText type="link">See More Categories</ThemedText>
-              </Pressable>
-            )}
-          </ThemedView>
+          )}
         </ScrollView>
       </SafeAreaView>
     </AnimatedScreen>

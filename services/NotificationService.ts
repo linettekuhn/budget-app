@@ -66,8 +66,6 @@ export async function registerPushToken(userId: string) {
 
     if (!data.ok) {
       console.error("Failed to register push token", data);
-    } else {
-      console.log("Push token registered successfully");
     }
   } catch (error: unknown) {
     console.warn(`${error}`);

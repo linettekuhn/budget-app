@@ -82,6 +82,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     paddingVertical: 10,
     paddingHorizontal: 20,
+    alignSelf: "center",
   },
 
   content: {

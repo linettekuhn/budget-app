@@ -14,12 +14,14 @@ import { FirebaseError } from "firebase/app";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useState } from "react";
 import {
+  ActivityIndicator,
   Keyboard,
   Platform,
   Pressable,
   StyleSheet,
   TouchableWithoutFeedback,
   useColorScheme,
+  View,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -108,11 +110,16 @@ export default function Register() {
                 </ThemedView>
                 <CapsuleInput
                   value={name}
-                  onChangeText={setName}
                   placeholder="Name"
                   keyboardType="default"
                   IconComponent={Octicons}
                   iconName="person"
+                  onChangeText={(text) => {
+                    const formatted =
+                      text.trim().charAt(0).toUpperCase() +
+                      text.trim().slice(1);
+                    setName(formatted);
+                  }}
                 />
                 <CapsuleInput
                   value={email}
@@ -158,6 +165,22 @@ export default function Register() {
             </ThemedView>
           </KeyboardAwareScrollView>
         </TouchableWithoutFeedback>
+        {loading && (
+          <View
+            style={{
+              ...StyleSheet.absoluteFillObject,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: "rgba(0,0,0,0.4)",
+              zIndex: 999,
+            }}
+          >
+            <ActivityIndicator
+              size="large"
+              color={Colors[colorScheme ?? "light"].text}
+            />
+          </View>
+        )}
       </SafeAreaView>
     </AnimatedScreen>
   );

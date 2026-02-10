@@ -14,12 +14,14 @@ import { FirebaseError } from "firebase/app";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { useState } from "react";
 import {
+  ActivityIndicator,
   Keyboard,
   Platform,
   Pressable,
   StyleSheet,
   TouchableWithoutFeedback,
   useColorScheme,
+  View,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -163,6 +165,22 @@ export default function Login() {
             </ThemedView>
           </KeyboardAwareScrollView>
         </TouchableWithoutFeedback>
+        {loading && (
+          <View
+            style={{
+              ...StyleSheet.absoluteFillObject,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: "rgba(0,0,0,0.4)",
+              zIndex: 999,
+            }}
+          >
+            <ActivityIndicator
+              size="large"
+              color={Colors[colorScheme ?? "light"].text}
+            />
+          </View>
+        )}
       </SafeAreaView>
     </AnimatedScreen>
   );
@@ -187,7 +205,7 @@ const styles = StyleSheet.create({
   form: {
     flex: 1,
     gap: 20,
-    alignItems: "center",
+    alignItems: "stretch",
     justifyContent: "center",
   },
 

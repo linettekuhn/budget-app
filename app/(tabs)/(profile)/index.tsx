@@ -9,6 +9,7 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import AnimatedScreen from "@/components/ui/animated-screen";
 import Avatar from "@/components/ui/avatar";
+import CapsuleButton from "@/components/ui/capsule-button";
 import { Collapsible } from "@/components/ui/collapsible";
 import { Colors } from "@/constants/theme";
 import { auth } from "@/firebase/firebaseConfig";
@@ -18,6 +19,7 @@ import SyncService from "@/services/SyncService";
 import Octicons from "@expo/vector-icons/Octicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
+import * as Updates from "expo-updates";
 import { signOut } from "firebase/auth";
 import { useEffect, useState } from "react";
 import {
@@ -139,14 +141,7 @@ export default function Profile() {
 
               await DatabaseService.resetTables();
 
-              await signOut(auth);
-
-              router.replace("/(auth)/login");
-
-              Toast.show({
-                type: "success",
-                text1: "App data cleared successfully!",
-              });
+              await Updates.reloadAsync();
             } catch (error) {
               Toast.show({
                 type: "error",
@@ -162,141 +157,180 @@ export default function Profile() {
   };
 
   if (loading || !startDate) {
-    return <ActivityIndicator size="large" />;
+    return (
+      <View
+        style={{
+          backgroundColor: Colors[colorScheme ?? "light"].background,
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <ActivityIndicator
+          size="large"
+          color={Colors[colorScheme ?? "light"].text}
+        />
+      </View>
+    );
   }
 
   return (
     <AnimatedScreen>
       <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
         <ScrollView contentContainerStyle={styles.container}>
-          <ThemedView style={styles.main}>
-            <View
-              style={[
-                styles.settingsWrapper,
-                {
-                  backgroundColor: Colors[colorScheme ?? "light"].primary[300],
-                },
-              ]}
-            >
+          {!loading && startDate && (
+            <ThemedView style={styles.main}>
               <View
                 style={[
-                  styles.profileWrapper,
+                  styles.settingsWrapper,
                   {
                     backgroundColor:
-                      Colors[colorScheme ?? "light"].primary[200],
+                      Colors[colorScheme ?? "light"].primary[300],
                   },
                 ]}
               >
-                <Avatar name={name ?? ""} size={80} />
-                <View style={styles.profile}>
-                  <ThemedText type="h1">{name}</ThemedText>
-                  {email ? (
-                    <ThemedText type="bodySmall">{email}</ThemedText>
-                  ) : null}
+                <View
+                  style={[
+                    styles.profileWrapper,
+                    {
+                      backgroundColor:
+                        Colors[colorScheme ?? "light"].primary[200],
+                    },
+                  ]}
+                >
+                  <Avatar name={name ?? ""} size={80} />
+                  <View style={styles.profile}>
+                    <ThemedText type="h1">{name}</ThemedText>
+                    {email ? (
+                      <ThemedText type="bodySmall">{email}</ThemedText>
+                    ) : null}
+                  </View>
+                </View>
+                <View style={{ paddingHorizontal: 24, gap: 32 }}>
+                  <Collapsible
+                    title="Account"
+                    IconComponent={Octicons}
+                    iconName="person"
+                  >
+                    <View>
+                      <ChangeNameOption onChange={reload} />
+                      {user ? (
+                        <>
+                          <ChangePasswordOption />
+                          <DeleteAccountOption />
+                        </>
+                      ) : (
+                        <>
+                          <ProfileOption
+                            text="Log in"
+                            onPress={() => {
+                              router.replace("/(auth)/login");
+                            }}
+                          />
+                          <ProfileOption
+                            text="Create account"
+                            onPress={() => {
+                              router.replace("/(auth)/register");
+                            }}
+                          />
+                        </>
+                      )}
+                    </View>
+                  </Collapsible>
+                  <Collapsible
+                    title="Settings"
+                    IconComponent={Octicons}
+                    iconName="gear"
+                  >
+                    <View>
+                      <EditSalaryOption />
+                      <ProfileOption
+                        text="Manage recurring transactions"
+                        onPress={() => {
+                          router.push(
+                            "/(tabs)/(profile)/manage-recurring-transactions"
+                          );
+                        }}
+                      />
+                    </View>
+                  </Collapsible>
+                  {user && (
+                    <Collapsible
+                      title="Notifications"
+                      IconComponent={Octicons}
+                      iconName="bell"
+                    >
+                      <View>
+                        <EditNotificationSettingsOption />
+                      </View>
+                    </Collapsible>
+                  )}
+                  <Collapsible
+                    title="Region"
+                    IconComponent={Octicons}
+                    iconName="globe"
+                  >
+                    <View>
+                      <ChangeCurrencyOption />
+                    </View>
+                  </Collapsible>
+                  {user && (
+                    <TouchableOpacity
+                      onPress={logout}
+                      activeOpacity={0.8}
+                      style={[
+                        styles.wrapper,
+                        {
+                          backgroundColor:
+                            Colors[colorScheme ?? "light"].primary[200],
+                        },
+                      ]}
+                    >
+                      <View style={styles.row}>
+                        <Octicons name="sign-out" size={17} color={color} />
+                        <ThemedText type="bodyLarge" style={{ color }}>
+                          Logout
+                        </ThemedText>
+                      </View>
+                    </TouchableOpacity>
+                  )}
                 </View>
               </View>
-              <View style={{ paddingHorizontal: 24, gap: 32 }}>
-                <Collapsible
-                  title="Account"
-                  IconComponent={Octicons}
-                  iconName="person"
-                >
-                  <View>
-                    <ChangeNameOption onChange={reload} />
-                    {user ? (
-                      <>
-                        <ChangePasswordOption />
-                        <DeleteAccountOption />
-                      </>
-                    ) : (
-                      <>
-                        <ProfileOption
-                          text="Log in"
-                          onPress={() => {
-                            router.replace("/(auth)/login");
-                          }}
-                        />
-                        <ProfileOption
-                          text="Create account"
-                          onPress={() => {
-                            router.replace("/(auth)/register");
-                          }}
-                        />
-                      </>
-                    )}
-                  </View>
-                </Collapsible>
-                <Collapsible
-                  title="Settings"
-                  IconComponent={Octicons}
-                  iconName="gear"
-                >
-                  <View>
-                    <EditSalaryOption />
-                    <ProfileOption
-                      text="Manage recurring transactions"
-                      onPress={() => {
-                        router.push(
-                          "/(tabs)/(profile)/manage-recurring-transactions"
-                        );
-                      }}
-                    />
-                  </View>
-                </Collapsible>
-                <Collapsible
-                  title="Notifications"
-                  IconComponent={Octicons}
-                  iconName="bell"
-                >
-                  <View>
-                    <EditNotificationSettingsOption />
-                  </View>
-                </Collapsible>
-                <Collapsible
-                  title="Region"
-                  IconComponent={Octicons}
-                  iconName="globe"
-                >
-                  <View>
-                    <ChangeCurrencyOption />
-                  </View>
-                </Collapsible>
-                {user && (
-                  <TouchableOpacity
-                    onPress={logout}
-                    activeOpacity={0.8}
-                    style={[
-                      styles.wrapper,
-                      {
-                        backgroundColor:
-                          Colors[colorScheme ?? "light"].primary[200],
-                      },
-                    ]}
-                  >
-                    <View style={styles.row}>
-                      <Octicons name="sign-out" size={17} color={color} />
-                      <ThemedText type="bodyLarge" style={{ color }}>
-                        Logout
-                      </ThemedText>
-                    </View>
-                  </TouchableOpacity>
-                )}
-              </View>
-            </View>
-            <ThemedText
-              type="bodyLarge"
-              darkColor={Colors["dark"].primary[700]}
-              lightColor={Colors["light"].primary[700]}
-              style={{ textAlign: "center" }}
-            >
-              Budgeting since{" "}
-              {startDate.toLocaleDateString(undefined, {
-                year: "numeric",
-                month: "long",
-                day: "2-digit",
-              })}
-            </ThemedText>
-          </ThemedView>
+              <ThemedText
+                type="bodyLarge"
+                darkColor={Colors["dark"].primary[700]}
+                lightColor={Colors["light"].primary[700]}
+                style={{ textAlign: "center" }}
+              >
+                Budgeting since{" "}
+                {startDate.toLocaleDateString(undefined, {
+                  year: "numeric",
+                  month: "long",
+                  day: "2-digit",
+                })}
+              </ThemedText>
+              <CapsuleButton
+                text="SYNC APP"
+                onPress={syncApp}
+                bgFocused={btnColor}
+              />
+              <CapsuleButton
+                text="RESET TRANSACTIONS"
+                onPress={resetDatabase}
+                bgFocused={btnColor}
+              />
+              <CapsuleButton
+                text="RESET ONBOARDING"
+                onPress={resetOnboarding}
+                bgFocused={btnColor}
+              />
+              <CapsuleButton
+                text="RESET APP"
+                onPress={resetApp}
+                bgFocused={btnColor}
+              />
+            </ThemedView>
+          )}
         </ScrollView>
       </SafeAreaView>
     </AnimatedScreen>

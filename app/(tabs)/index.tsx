@@ -14,7 +14,6 @@ import { formatMoney } from "@/utils/formatMoney";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -95,97 +94,98 @@ export default function HomeScreen() {
     }
   }, [salary, budgets, totalBudget]);
 
-  if (
-    loadingSalary ||
-    loadingBudgets ||
-    loadingCurrency ||
-    !budgets ||
-    !salary
-  ) {
-    return <ActivityIndicator size="large" />;
-  }
-
   return (
     <AnimatedScreen>
       <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
         <ScrollView contentContainerStyle={styles.container}>
-          <ThemedView style={styles.main}>
-            <View>
-              <ThemedText type="displayLarge">Monthly Report</ThemedText>
-              <ThemedText type="h6">
-                Here&apos;s a quick look at where your money went and what you
-                kept!
-              </ThemedText>
-            </View>
-            <View>
-              <ThemedView style={styles.pieChartWrapper}>
-                <SalaryBreakdownPieChart budgets={budgets} salary={salary} />
-                <View style={styles.savedWrapper}>
-                  <ThemedText type="displayMedium" style={styles.percent}>
-                    {formatMoney({ code: currency, amount: difference })}
+          {!loadingSalary &&
+            !loadingBudgets &&
+            !loadingCurrency &&
+            budgets &&
+            salary && (
+              <ThemedView style={styles.main}>
+                <View>
+                  <ThemedText type="displayLarge">Monthly Report</ThemedText>
+                  <ThemedText type="h6">
+                    Here&apos;s a quick look at where your money went and what
+                    you kept!
                   </ThemedText>
-                  <ThemedText type="h5" style={styles.saved}>
-                    {overBudget ? "short!" : "saved!"}
-                  </ThemedText>
+                </View>
+                <View>
+                  <ThemedView style={styles.pieChartWrapper}>
+                    <SalaryBreakdownPieChart
+                      budgets={budgets}
+                      salary={salary}
+                    />
+                    <View style={styles.savedWrapper}>
+                      <ThemedText type="displayMedium" style={styles.percent}>
+                        {formatMoney({ code: currency, amount: difference })}
+                      </ThemedText>
+                      <ThemedText type="h5" style={styles.saved}>
+                        {overBudget ? "short!" : "saved!"}
+                      </ThemedText>
+                    </View>
+                  </ThemedView>
+                  {overBudget && (
+                    <View>
+                      <ThemedText
+                        type="overline"
+                        style={{
+                          color: Colors[colorScheme ?? "light"].error,
+                          textAlign: "center",
+                        }}
+                      >
+                        This budget exceeds your current salary!
+                      </ThemedText>
+                      <ThemedText
+                        type="captionSmall"
+                        style={{
+                          color: Colors[colorScheme ?? "light"].error,
+                          textAlign: "center",
+                        }}
+                      >
+                        Consider adjusting your budgets or salary to start
+                        saving.
+                      </ThemedText>
+                    </View>
+                  )}
+                </View>
+                <View
+                  style={[
+                    styles.spendingTrackerWrapper,
+                    {
+                      backgroundColor:
+                        Colors[colorScheme ?? "light"].primary[200],
+                    },
+                  ]}
+                >
+                  <ThemedText type="displayMedium">Spending Tracker</ThemedText>
+                  <CategoryBudgetPreview
+                    onPress={() => {
+                      router.push("/(tabs)/(budget)");
+                    }}
+                    category={{
+                      id: "",
+                      name: "Total Spent",
+                      budget: totalBudget,
+                      totalSpent: totalSpent,
+                      color: Colors[colorScheme ?? "light"].primary[500],
+                      type: "need",
+                    }}
+                    currency={currency ?? "USD"}
+                  />
+                  <Pressable
+                    onPress={() => {
+                      router.push("/(tabs)/(budget)");
+                    }}
+                  >
+                    <ThemedText type="link" style={{ textAlign: "center" }}>
+                      Check your monthly budget →
+                    </ThemedText>
+                  </Pressable>
                 </View>
               </ThemedView>
-              {overBudget && (
-                <View>
-                  <ThemedText
-                    type="overline"
-                    style={{
-                      color: Colors[colorScheme ?? "light"].error,
-                      textAlign: "center",
-                    }}
-                  >
-                    This budget exceeds your current salary!
-                  </ThemedText>
-                  <ThemedText
-                    type="captionSmall"
-                    style={{
-                      color: Colors[colorScheme ?? "light"].error,
-                      textAlign: "center",
-                    }}
-                  >
-                    Consider adjusting your budgets or salary to start saving.
-                  </ThemedText>
-                </View>
-              )}
-            </View>
-            <View
-              style={[
-                styles.spendingTrackerWrapper,
-                {
-                  backgroundColor: Colors[colorScheme ?? "light"].primary[200],
-                },
-              ]}
-            >
-              <ThemedText type="displayMedium">Spending Tracker</ThemedText>
-              <CategoryBudgetPreview
-                onPress={() => {
-                  router.push("/(tabs)/(budget)");
-                }}
-                category={{
-                  id: "",
-                  name: "Total Spent",
-                  budget: totalBudget,
-                  totalSpent: totalSpent,
-                  color: Colors[colorScheme ?? "light"].primary[500],
-                  type: "need",
-                }}
-                currency={currency ?? "USD"}
-              />
-              <Pressable
-                onPress={() => {
-                  router.push("/(tabs)/(budget)");
-                }}
-              >
-                <ThemedText type="link" style={{ textAlign: "center" }}>
-                  Check your monthly budget →
-                </ThemedText>
-              </Pressable>
-            </View>
-          </ThemedView>
+            )}
         </ScrollView>
       </SafeAreaView>
     </AnimatedScreen>
