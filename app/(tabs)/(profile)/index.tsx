@@ -216,7 +216,6 @@ export default function Profile() {
                       {user ? (
                         <>
                           <ChangePasswordOption />
-                          <DeleteAccountOption />
                         </>
                       ) : (
                         <>
@@ -234,6 +233,7 @@ export default function Profile() {
                           />
                         </>
                       )}
+                      <DeleteAccountOption />
                     </View>
                   </Collapsible>
                   <Collapsible

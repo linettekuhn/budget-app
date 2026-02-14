@@ -5,10 +5,17 @@ import { AccountService } from "@/services/AccountService";
 import DatabaseService from "@/services/DatabaseService";
 import Octicons from "@expo/vector-icons/Octicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { router } from "expo-router";
+import * as Updates from "expo-updates";
 import { EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { useState } from "react";
-import { Alert, Pressable, useColorScheme } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from "react-native";
 import { Toast } from "toastify-react-native";
 import { ThemedText } from "../themed-text";
 import CapsuleInput from "../ui/capsule-input-box";
@@ -21,18 +28,23 @@ function DeleteAccountContent({ onComplete }: { onComplete: () => void }) {
 
   const [showPass, setShowPass] = useState(false);
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const user = auth.currentUser;
 
   const deleteAccount = async () => {
     Alert.alert(
       "Delete Account",
-      "Are you sure? This will delete your account and all app data associated with it. This action cannot be undone.",
+      user
+        ? "Are you sure? This will delete your account and all app data associated with it. This action cannot be undone."
+        : "Are you sure? This will delete all local app data. This action cannot be undone.",
       [
         { text: "Cancel", style: "cancel", onPress: onComplete },
         {
           text: "Delete",
           style: "destructive",
           onPress: async () => {
-            if (!password) {
+            if (user && !password) {
               Toast.show({
                 type: "error",
                 text1: "Password is required",
@@ -41,40 +53,32 @@ function DeleteAccountContent({ onComplete }: { onComplete: () => void }) {
             }
 
             try {
-              const user = auth.currentUser;
-              if (!user || !user.email) {
-                Toast.show({
-                  type: "error",
-                  text1: "User not signed in",
-                });
-                return;
+              setLoading(true);
+              if (user && user.email) {
+                const credential = EmailAuthProvider.credential(
+                  user.email,
+                  password
+                );
+
+                await reauthenticateWithCredential(user, credential);
+
+                await AccountService.deleteUserAccount();
               }
-
-              const credential = EmailAuthProvider.credential(
-                user.email,
-                password
-              );
-
-              await reauthenticateWithCredential(user, credential);
-
-              await AccountService.deleteUserAccount();
 
               await AsyncStorage.clear();
 
               await DatabaseService.resetTables();
 
-              onComplete();
+              setLoading(false);
 
-              router.replace("/(auth)/login");
-
-              Toast.show({
-                type: "success",
-                text1: "Account deleted successfully!",
-              });
+              await Updates.reloadAsync();
             } catch (error) {
+              setLoading(false);
               Toast.show({
                 type: "error",
-                text1: "Error deleting account",
+                text1: user
+                  ? "Error deleting account"
+                  : "Error clearing local data",
               });
               console.error("Error deleting account:", error);
             }
@@ -92,27 +96,47 @@ function DeleteAccountContent({ onComplete }: { onComplete: () => void }) {
       onComplete={deleteAccount}
       proceedLabel="DELETE"
     >
-      <ThemedText type="bodyLarge">Enter your password to proceed:</ThemedText>
-      <CapsuleInput
-        value={password}
-        onChangeText={setPassword}
-        placeholder="Password"
-        keyboardType="default"
-        secureTextEntry={!showPass}
-        IconComponent={Octicons}
-        iconName="lock"
-      >
-        <Pressable
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          onPress={() => setShowPass((prev) => !prev)}
+      <ThemedText type="bodyLarge" style={{ alignSelf: "center" }}>
+        {user ? "Enter your password to proceed:" : "Delete all local data?"}
+      </ThemedText>
+      {user && (
+        <CapsuleInput
+          value={password}
+          onChangeText={setPassword}
+          placeholder="Password"
+          keyboardType="default"
+          secureTextEntry={!showPass}
+          IconComponent={Octicons}
+          iconName="lock"
         >
-          {showPass ? (
-            <Octicons name="eye-closed" size={20} color={textColor} />
-          ) : (
-            <Octicons name="eye" size={20} color={textColor} />
-          )}
-        </Pressable>
-      </CapsuleInput>
+          <Pressable
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            onPress={() => setShowPass((prev) => !prev)}
+          >
+            {showPass ? (
+              <Octicons name="eye-closed" size={20} color={textColor} />
+            ) : (
+              <Octicons name="eye" size={20} color={textColor} />
+            )}
+          </Pressable>
+        </CapsuleInput>
+      )}
+      {loading && (
+        <View
+          style={{
+            ...StyleSheet.absoluteFillObject,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0,0,0,0.4)",
+            zIndex: 999,
+          }}
+        >
+          <ActivityIndicator
+            size="large"
+            color={Colors[colorScheme ?? "light"].text}
+          />
+        </View>
+      )}
     </SettingsModal>
   );
 }
