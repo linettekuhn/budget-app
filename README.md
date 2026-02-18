@@ -5,11 +5,11 @@ It helps users visualize spending patterns, track expenses by category, and unde
 
 ---
 
-## Demo and Visuals
+## Download and Visuals
 
-🚧 Demo currently in development!
+Available now in the [App Store](https://apps.apple.com/us/app/piggystash/id6757825917)!
 
-<img alt="piggy-project-preview" src="https://github.com/user-attachments/assets/b9f8360b-047f-4d32-bb05-b5233e31a1bf" />
+<img alt="piggy_project_preview" src="https://github.com/user-attachments/assets/5541079a-f869-463b-9c68-05eef6af3bd5" />
 
 ---
 
