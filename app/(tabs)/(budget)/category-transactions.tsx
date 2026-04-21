@@ -41,7 +41,7 @@ export default function CategoryTransactions() {
     budget,
     loading: loadingBudget,
     reload: reloadSpend,
-  } = useCategorySpend(category.id);
+  } = useCategorySpend(category.id, date.toISOString());
   const {
     currency,
     loading: loadingCurrency,
@@ -130,7 +130,21 @@ export default function CategoryTransactions() {
   }, []);
 
   if (loading || loadingBudget || loadingCurrency || !budget) {
-    return <ActivityIndicator size="large" />;
+    return (
+      <View
+        style={{
+          backgroundColor: Colors[colorScheme ?? "light"].background,
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <ActivityIndicator
+          size="large"
+          color={Colors[colorScheme ?? "light"].text}
+        />
+      </View>
+    );
   }
   return (
     <AnimatedScreen entering="slideRight">

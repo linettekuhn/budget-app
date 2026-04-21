@@ -3,10 +3,12 @@ import { Colors } from "@/constants/theme";
 import { ComponentType, ReactNode, useEffect, useRef, useState } from "react";
 import {
   Pressable,
+  StyleProp,
   StyleSheet,
   TextInput,
   TextInputProps,
   useColorScheme,
+  ViewStyle,
 } from "react-native";
 import Animated, {
   useAnimatedStyle,
@@ -23,6 +25,7 @@ type Props = TextInputProps & {
   IconComponent?: ComponentType<any>;
   iconName?: string;
   children?: ReactNode;
+  style?: StyleProp<ViewStyle>;
 };
 
 export default function CapsuleInput({
@@ -33,6 +36,7 @@ export default function CapsuleInput({
   IconComponent,
   iconName,
   children,
+  style,
   ...rest
 }: Props) {
   const colorScheme = useColorScheme();
@@ -63,6 +67,7 @@ export default function CapsuleInput({
 
   return (
     <Pressable
+      style={style}
       onPress={() => inputRef.current?.focus()}
       onPressIn={() => {
         pressScale.value = withTiming(Motion.scale.press, {
@@ -109,14 +114,12 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    flexShrink: 1,
     borderRadius: 25,
     paddingVertical: 12,
     paddingHorizontal: 24,
     gap: 10,
     borderWidth: 4,
     height: 50,
-    width: "100%",
   },
   textInput: {
     flex: 1,

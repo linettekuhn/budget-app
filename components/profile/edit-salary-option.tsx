@@ -291,7 +291,11 @@ function SalaryChangeContent({
         </ThemedView>
       )}
       <ThemedText type="h4">
-        Monthly income: {formatMoney({ amount: monthlyAmount, code: currency })}
+        Monthly income:{" "}
+        {formatMoney({
+          amount: Number(monthlyAmount.toFixed(2)),
+          code: currency,
+        })}
       </ThemedText>
     </SettingsModal>
   );

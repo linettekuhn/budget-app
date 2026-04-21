@@ -5,8 +5,10 @@ import AnimatedScreen from "@/components/ui/animated-screen";
 import CapsuleButton from "@/components/ui/capsule-button";
 import CapsuleInput from "@/components/ui/capsule-input-box";
 import { Colors } from "@/constants/theme";
+import DatabaseService from "@/services/DatabaseService";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useRouter } from "expo-router";
+import { useEffect } from "react";
 import {
   Keyboard,
   Platform,
@@ -24,6 +26,10 @@ export default function WelcomeOnboarding() {
   const router = useRouter();
 
   const { state, setState } = useOnboarding();
+
+  useEffect(() => {
+    DatabaseService.initializeDefaultData();
+  }, []);
 
   const startOnboardingProcess = async () => {
     try {
@@ -110,9 +116,8 @@ const styles = StyleSheet.create({
   },
 
   main: {
-    paddingVertical: 30,
     paddingHorizontal: 10,
     gap: 30,
-    alignItems: "center",
+    alignItems: "stretch",
   },
 });

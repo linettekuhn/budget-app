@@ -135,6 +135,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     gap: 15,
     borderWidth: 4,
+    alignSelf: "center",
   },
 
   dropdown: {

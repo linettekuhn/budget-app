@@ -4,14 +4,16 @@ import AnimatedScreen from "@/components/ui/animated-screen";
 import CategoryBudgetPreview from "@/components/ui/category-budget-preview";
 import SalaryBreakdownPieChart from "@/components/ui/pie-chart/salary-breakdown-pie-chart";
 import { Colors } from "@/constants/theme";
+import { auth } from "@/firebase/firebaseConfig";
 import { useCategoriesSpend } from "@/hooks/useCategoriesSpend";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useSalary } from "@/hooks/useSalary";
+import DatabaseService from "@/services/DatabaseService";
+import { pingBackend, registerPushToken } from "@/services/NotificationService";
 import { formatMoney } from "@/utils/formatMoney";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -45,8 +47,33 @@ export default function HomeScreen() {
       reloadSpend();
       reloadSalary();
       reloadCurrency();
+
+      const user = auth.currentUser;
+      if (!user) {
+        return;
+      }
+
+      const ping = async () => {
+        const spentPercent = await DatabaseService.getSpentPercentFirstHalf();
+
+        const weeklySpent = await DatabaseService.getWeeklySpent();
+
+        const currentStreak = await DatabaseService.getStreak();
+        await pingBackend(user.uid, spentPercent, weeklySpent, currentStreak);
+      };
+
+      ping();
     }, [reloadSpend, reloadSalary, reloadCurrency])
   );
+
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (!user) {
+      return;
+    }
+
+    registerPushToken(user.uid);
+  });
 
   useEffect(() => {
     const spent = [...budgets].reduce(
@@ -67,98 +94,98 @@ export default function HomeScreen() {
     }
   }, [salary, budgets, totalBudget]);
 
-  if (
-    loadingSalary ||
-    loadingBudgets ||
-    loadingCurrency ||
-    !budgets ||
-    !salary
-  ) {
-    return <ActivityIndicator size="large" />;
-  }
-
-  console.log(currency);
   return (
     <AnimatedScreen>
       <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
         <ScrollView contentContainerStyle={styles.container}>
-          <ThemedView style={styles.main}>
-            <View>
-              <ThemedText type="displayLarge">Monthly Report</ThemedText>
-              <ThemedText type="h6">
-                Here&apos;s a quick look at where your money went and what you
-                kept!
-              </ThemedText>
-            </View>
-            <View>
-              <ThemedView style={styles.pieChartWrapper}>
-                <SalaryBreakdownPieChart budgets={budgets} salary={salary} />
-                <View style={styles.savedWrapper}>
-                  <ThemedText type="displayMedium" style={styles.percent}>
-                    {formatMoney({ code: currency, amount: difference })}
+          {!loadingSalary &&
+            !loadingBudgets &&
+            !loadingCurrency &&
+            budgets &&
+            salary && (
+              <ThemedView style={styles.main}>
+                <View>
+                  <ThemedText type="displayLarge">Monthly Report</ThemedText>
+                  <ThemedText type="h6">
+                    Here&apos;s a quick look at where your money went and what
+                    you kept!
                   </ThemedText>
-                  <ThemedText type="h5" style={styles.saved}>
-                    {overBudget ? "short!" : "saved!"}
-                  </ThemedText>
+                </View>
+                <View>
+                  <ThemedView style={styles.pieChartWrapper}>
+                    <SalaryBreakdownPieChart
+                      budgets={budgets}
+                      salary={salary}
+                    />
+                    <View style={styles.savedWrapper}>
+                      <ThemedText type="displayMedium" style={styles.percent}>
+                        {formatMoney({ code: currency, amount: difference })}
+                      </ThemedText>
+                      <ThemedText type="h5" style={styles.saved}>
+                        {overBudget ? "short!" : "saved!"}
+                      </ThemedText>
+                    </View>
+                  </ThemedView>
+                  {overBudget && (
+                    <View>
+                      <ThemedText
+                        type="overline"
+                        style={{
+                          color: Colors[colorScheme ?? "light"].error,
+                          textAlign: "center",
+                        }}
+                      >
+                        This budget exceeds your current salary!
+                      </ThemedText>
+                      <ThemedText
+                        type="captionSmall"
+                        style={{
+                          color: Colors[colorScheme ?? "light"].error,
+                          textAlign: "center",
+                        }}
+                      >
+                        Consider adjusting your budgets or salary to start
+                        saving.
+                      </ThemedText>
+                    </View>
+                  )}
+                </View>
+                <View
+                  style={[
+                    styles.spendingTrackerWrapper,
+                    {
+                      backgroundColor:
+                        Colors[colorScheme ?? "light"].primary[200],
+                    },
+                  ]}
+                >
+                  <ThemedText type="displayMedium">Spending Tracker</ThemedText>
+                  <CategoryBudgetPreview
+                    onPress={() => {
+                      router.push("/(tabs)/(budget)");
+                    }}
+                    category={{
+                      id: "",
+                      name: "Total Spent",
+                      budget: totalBudget,
+                      totalSpent: totalSpent,
+                      color: Colors[colorScheme ?? "light"].primary[500],
+                      type: "need",
+                    }}
+                    currency={currency ?? "USD"}
+                  />
+                  <Pressable
+                    onPress={() => {
+                      router.push("/(tabs)/(budget)");
+                    }}
+                  >
+                    <ThemedText type="link" style={{ textAlign: "center" }}>
+                      Check your monthly budget →
+                    </ThemedText>
+                  </Pressable>
                 </View>
               </ThemedView>
-              {overBudget && (
-                <View>
-                  <ThemedText
-                    type="overline"
-                    style={{
-                      color: Colors[colorScheme ?? "light"].error,
-                      textAlign: "center",
-                    }}
-                  >
-                    This budget exceeds your current salary!
-                  </ThemedText>
-                  <ThemedText
-                    type="captionSmall"
-                    style={{
-                      color: Colors[colorScheme ?? "light"].error,
-                      textAlign: "center",
-                    }}
-                  >
-                    Consider adjusting your budgets or salary to start saving.
-                  </ThemedText>
-                </View>
-              )}
-            </View>
-            <View
-              style={[
-                styles.spendingTrackerWrapper,
-                {
-                  backgroundColor: Colors[colorScheme ?? "light"].primary[200],
-                },
-              ]}
-            >
-              <ThemedText type="displayMedium">Spending Tracker</ThemedText>
-              <CategoryBudgetPreview
-                onPress={() => {
-                  router.push("/(tabs)/(budget)");
-                }}
-                category={{
-                  id: "",
-                  name: "Total Spent",
-                  budget: totalBudget,
-                  totalSpent: totalSpent,
-                  color: Colors[colorScheme ?? "light"].primary[500],
-                  type: "need",
-                }}
-                currency={currency ?? "USD"}
-              />
-              <Pressable
-                onPress={() => {
-                  router.push("/(tabs)/(budget)");
-                }}
-              >
-                <ThemedText type="link" style={{ textAlign: "center" }}>
-                  Check your monthly budget →
-                </ThemedText>
-              </Pressable>
-            </View>
-          </ThemedView>
+            )}
         </ScrollView>
       </SafeAreaView>
     </AnimatedScreen>

@@ -232,7 +232,21 @@ export default function ManageRecurringTransactions() {
   };
 
   if (loadingCategories || loadingCurrency || loadingTransactions) {
-    return <ActivityIndicator size="large" />;
+    return (
+      <View
+        style={{
+          backgroundColor: Colors[colorScheme ?? "light"].background,
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <ActivityIndicator
+          size="large"
+          color={Colors[colorScheme ?? "light"].text}
+        />
+      </View>
+    );
   }
 
   return (

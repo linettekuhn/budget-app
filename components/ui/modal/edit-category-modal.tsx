@@ -5,9 +5,11 @@ import { useCurrency } from "@/hooks/useCurrency";
 import DatabaseService from "@/services/DatabaseService";
 import { CategoryType } from "@/types";
 import { formatAmountDisplay } from "@/utils/formatDisplay";
+import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Keyboard,
   StyleSheet,
   useColorScheme,
@@ -104,8 +106,56 @@ export default function EditCategory({ onComplete, category }: Props) {
     setDisplayAmount(formatted);
   };
 
+  const deleteCategory = async () => {
+    Alert.alert(
+      "Delete Category",
+      "Are you sure you want to delete this category? This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await DatabaseService.deleteCategory(category.id);
+              onComplete();
+              router.replace("/(tabs)/(budget)");
+            } catch (error: unknown) {
+              if (error instanceof Error) {
+                Toast.show({
+                  type: "error",
+                  text1: error.message,
+                });
+              } else {
+                Toast.show({
+                  type: "error",
+                  text1: "An error ocurred deleting category",
+                });
+              }
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
   if (loadingCurrency) {
-    return <ActivityIndicator size={"large"} />;
+    return (
+      <View
+        style={{
+          backgroundColor: Colors[colorScheme ?? "light"].background,
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <ActivityIndicator
+          size="large"
+          color={Colors[colorScheme ?? "light"].text}
+        />
+      </View>
+    );
   }
 
   return (
@@ -114,6 +164,11 @@ export default function EditCategory({ onComplete, category }: Props) {
         Edit {category.name}
       </ThemedText>
 
+      <CapsuleButton
+        text="DELETE CATEGORY"
+        bgFocused={Colors[colorScheme ?? "light"].error}
+        onPress={deleteCategory}
+      />
       <ThemedView style={styles.budgetPreview}>
         <ThemedText style={styles.heading} type="h2">
           Budget

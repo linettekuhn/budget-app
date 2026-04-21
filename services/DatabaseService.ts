@@ -14,6 +14,12 @@ import { rrulestr } from "rrule";
 const badges = badgesJson as BadgeDefinition[];
 type CountResult = { count: number };
 
+export type NotificationSettings = {
+  daily: boolean;
+  weekly: boolean;
+  midMonth: boolean;
+};
+
 export default class DatabaseService {
   private static db: SQLite.SQLiteDatabase | null = null;
 
@@ -25,7 +31,7 @@ export default class DatabaseService {
   }
 
   // Database Initalization
-  static async initalize() {
+  static async initializeSchema() {
     const db = await this.getDatabase();
 
     await db.execAsync(`
@@ -119,6 +125,10 @@ export default class DatabaseService {
         synced INTEGER DEFAULT 0
       )
     `);
+  }
+
+  static async initializeDefaultData() {
+    const db = await this.getDatabase();
 
     // check if database has been initialized
     const initialized = await db.getFirstAsync<{ value: string }>(
@@ -182,6 +192,30 @@ export default class DatabaseService {
     await this.logChange("app_meta", "user_currency", "create", {
       id: "user_currency",
       value: "USD",
+    });
+
+    await db.runAsync(
+      "INSERT INTO app_meta (id, value) VALUES ('notif_daily', 'true')"
+    );
+    await this.logChange("app_meta", "notif_daily", "create", {
+      id: "notif_daily",
+      value: true,
+    });
+
+    await db.runAsync(
+      "INSERT INTO app_meta (id, value) VALUES ('notif_weekly', 'true')"
+    );
+    await this.logChange("app_meta", "notif_weekly", "create", {
+      id: "notif_weekly",
+      value: true,
+    });
+
+    await db.runAsync(
+      "INSERT INTO app_meta (id, value) VALUES ('notif_mid_month', 'true')"
+    );
+    await this.logChange("app_meta", "notif_mid_month", "create", {
+      id: "notif_mid_month",
+      value: true,
     });
   }
 
@@ -262,8 +296,6 @@ export default class DatabaseService {
     await db.execAsync(`DROP TABLE IF EXISTS badges`);
     await db.execAsync(`DROP TABLE IF EXISTS app_meta`);
     await db.execAsync(`DROP TABLE IF EXISTS pending_changes`);
-
-    await this.initalize();
   }
 
   // Pending Changes Table Integration
@@ -384,8 +416,17 @@ export default class DatabaseService {
       values.push(ids[index], cat.name, cat.color, cat.type, budgetAmount);
     });
 
-    const query = `INSERT INTO categories (id, name, color, type, budget, is_default) VALUES ${placeholders}`;
-
+    const query = `
+    INSERT INTO categories (id, name, color, type, budget, is_default) 
+    VALUES ${placeholders}
+    ON CONFLICT(name) DO UPDATE SET
+      deletedAt = NULL,
+      color = excluded.color,
+      type = excluded.type,
+      budget = excluded.budget,
+      is_default = excluded.is_default,
+      updatedAt = CURRENT_TIMESTAMP
+    `;
     await db.runAsync(query, values);
 
     for (let i = 0; i < categories.length; i++) {
@@ -402,8 +443,8 @@ export default class DatabaseService {
 
   static async clearCategories() {
     const db = await this.getDatabase();
-    const categories = await db.getAllAsync<{ id: string }>(
-      "SELECT id FROM categories WHERE deletedAt IS NULL"
+    await db.runAsync(
+      `UPDATE categories SET deletedAt = CURRENT_TIMESTAMP, updatedAt = CURRENT_TIMESTAMP`
     );
     await db.runAsync(`DELETE FROM categories`);
   }
@@ -433,6 +474,21 @@ export default class DatabaseService {
       type: categoryType,
       budget,
     });
+  }
+
+  static async deleteCategory(id: string) {
+    const db = await this.getDatabase();
+
+    await db.runAsync(
+      `
+      UPDATE categories
+      SET deletedAt = CURRENT_TIMESTAMP, updatedAt = CURRENT_TIMESTAMP
+      WHERE id = ?
+      `,
+      [id]
+    );
+
+    await this.logChange("categories", id, "delete", {});
   }
 
   static async checkCategoryNameExists(name: string) {
@@ -832,9 +888,17 @@ export default class DatabaseService {
     );
   }
 
-  static async getCategoriesSpend(month?: string) {
+  static async getCategoriesSpend(year?: number, month?: number) {
     const db = await this.getDatabase();
-    const monthFilter = month ? month : new Date().toISOString().slice(0, 7);
+
+    const now = new Date();
+    const y = year ?? now.getFullYear();
+    const m = month ?? now.getMonth() + 1;
+
+    const monthStr = m.toString().padStart(2, "0");
+
+    const startDate = `${y}-${monthStr}-01`;
+    const endDate = `${y}-${monthStr}-31`;
 
     return await db.getAllAsync<CategorySpend>(
       `
@@ -844,28 +908,39 @@ export default class DatabaseService {
           c.color,
           c.budget,
           c.type,
-          IFNULL(SUM(
+          ROUND(IFNULL(SUM(
               CASE 
                   WHEN t.type = 'expense' THEN t.amount
                   WHEN t.type = 'income' THEN -t.amount
                   ELSE 0
               END
-          ), 0) AS totalSpent
+          ), 0), 2) AS totalSpent
       FROM categories c
       LEFT JOIN transactions t 
           ON c.id = t.categoryId
-          AND strftime('%Y-%m', t.date) = ?
+          AND t.date BETWEEN ? AND ?
           AND t.deletedAt IS NULL
       WHERE c.deletedAt IS NULL
       GROUP BY c.id
     `,
-      [monthFilter]
+      [startDate, endDate]
     );
   }
 
-  static async getCategorySpend(categoryId: string, month?: string) {
+  static async getCategorySpend(
+    categoryId: string,
+    year?: number,
+    month?: number
+  ) {
     const db = await this.getDatabase();
-    const monthFilter = month ? month : new Date().toISOString().slice(0, 7);
+
+    const now = new Date();
+    const y = year ?? now.getFullYear();
+    const m = month ?? now.getMonth() + 1;
+    const monthStr = m.toString().padStart(2, "0");
+
+    const startDate = `${y}-${monthStr}-01`;
+    const endDate = `${y}-${monthStr}-31`;
 
     return await db.getFirstAsync<CategorySpend>(
       `
@@ -875,23 +950,79 @@ export default class DatabaseService {
           c.color,
           c.budget,
           c.type,
-          IFNULL(SUM(
+          ROUND(IFNULL(SUM(
               CASE 
                   WHEN t.type = 'expense' THEN t.amount
                   WHEN t.type = 'income' THEN -t.amount
                   ELSE 0
               END
-          ), 0) AS totalSpent
+          ), 0), 2) AS totalSpent
       FROM categories c
       LEFT JOIN transactions t 
           ON c.id = t.categoryId
-          AND strftime('%Y-%m', t.date) = ?
+          AND t.date BETWEEN ? AND ?
           AND t.deletedAt IS NULL
       WHERE c.id = ? AND c.deletedAt IS NULL
       GROUP BY c.id
     `,
-      [monthFilter, categoryId]
+      [startDate, endDate, categoryId]
     );
+  }
+
+  static async getSpentPercentFirstHalf(): Promise<number> {
+    const db = await this.getDatabase();
+
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+
+    const start = `${year}-${month}-01`;
+    const mid = `${year}-${month}-15`;
+
+    const row = await db.getFirstAsync<{ spent: number; budget: number }>(
+      `
+      SELECT
+        ROUND(IFNULL(SUM(CASE WHEN t.type = 'expense' THEN t.amount ELSE 0 END), 0), 2) AS spent,
+        ROUND(IFNULL(SUM(c.budget), 0), 2) AS budget
+      FROM categories c
+      LEFT JOIN transactions t
+        ON c.id = t.categoryId
+        AND t.deletedAt IS NULL
+        AND t.date BETWEEN ? AND ?
+      WHERE c.deletedAt IS NULL
+    `,
+      [start, mid]
+    );
+
+    if (!row || row.budget === 0) return 0;
+
+    return Number(((row.spent / row.budget) * 100).toFixed(2));
+  }
+
+  static async getWeeklySpent(): Promise<number> {
+    const db = await this.getDatabase();
+
+    const now = new Date();
+    const day = now.getDay(); // 0 = Sunday
+    const diff = now.getDate() - day;
+    const startOfWeek = new Date(now.setDate(diff));
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const endOfWeek = new Date();
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    const row = await db.getFirstAsync<{ spent: number }>(
+      `
+      SELECT ROUND(IFNULL(SUM(amount), 0), 2) AS spent
+      FROM transactions
+      WHERE deletedAt IS NULL
+        AND type = 'expense'
+        AND date BETWEEN ? AND ?
+    `,
+      [startOfWeek.toISOString(), endOfWeek.toISOString()]
+    );
+
+    return Number(row?.spent?.toFixed(2) || 0);
   }
 
   // Badges Table Interaction
@@ -1061,6 +1192,57 @@ export default class DatabaseService {
 
     await this.logChange("app_meta", "user_name", "update", {
       value: name,
+    });
+  }
+
+  static async getNotificationSettings() {
+    const db = await this.getDatabase();
+
+    const dailyRow = await db.getFirstAsync<{ value: string }>(
+      "SELECT value FROM app_meta WHERE id = 'notif_daily' AND deletedAt IS NULL"
+    );
+    const weeklyRow = await db.getFirstAsync<{ value: string }>(
+      "SELECT value FROM app_meta WHERE id = 'notif_weekly' AND deletedAt IS NULL"
+    );
+    const midMonthRow = await db.getFirstAsync<{ value: string }>(
+      "SELECT value FROM app_meta WHERE id = 'notif_mid_month' AND deletedAt IS NULL"
+    );
+
+    return {
+      daily: dailyRow?.value !== "false",
+      weekly: weeklyRow?.value !== "false",
+      midMonth: midMonthRow?.value !== "false",
+    };
+  }
+
+  static async updateNotificationSettings(settings: NotificationSettings) {
+    const db = await this.getDatabase();
+
+    await db.runAsync(
+      "UPDATE app_meta SET value = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = 'notif_daily'",
+      [String(settings.daily)]
+    );
+
+    await db.runAsync(
+      "UPDATE app_meta SET value = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = 'notif_weekly'",
+      [String(settings.weekly)]
+    );
+
+    await db.runAsync(
+      "UPDATE app_meta SET value = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = 'notif_mid_month'",
+      [String(settings.midMonth)]
+    );
+
+    await this.logChange("app_meta", "notif_daily", "update", {
+      value: settings.daily,
+    });
+
+    await this.logChange("app_meta", "notif_weekly", "update", {
+      value: settings.weekly,
+    });
+
+    await this.logChange("app_meta", "notif_mid_month", "update", {
+      value: settings.midMonth,
     });
   }
 
