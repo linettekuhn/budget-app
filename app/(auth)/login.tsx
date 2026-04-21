@@ -6,6 +6,7 @@ import CapsuleInput from "@/components/ui/capsule-input-box";
 import { Colors } from "@/constants/theme";
 import { firebaseErrorMessages } from "@/firebase/errorMessages";
 import { auth } from "@/firebase/firebaseConfig";
+import DatabaseService from "@/services/DatabaseService";
 import SyncService from "@/services/SyncService";
 import Octicons from "@expo/vector-icons/Octicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -45,6 +46,9 @@ export default function Login() {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
+
+      await DatabaseService.initializeSchema();
+
       await SyncService.sync();
 
       Toast.show({
@@ -72,6 +76,8 @@ export default function Login() {
   const handleOffline = async () => {
     try {
       await AsyncStorage.setItem("offlineMode", "true");
+
+      await DatabaseService.initializeSchema();
 
       // check if user has completed onboarding
       const hasCompleted = await AsyncStorage.getItem("completedOnboarding");

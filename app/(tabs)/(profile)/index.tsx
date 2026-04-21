@@ -103,11 +103,12 @@ export default function Profile() {
 
   const logout = async () => {
     try {
+      // wipe to avoid data from this session bleeding into the next account on this device
+      await DatabaseService.resetTables();
+      await AsyncStorage.clear();
+
       // sign out from firebase
       await signOut(auth);
-
-      // clear offline mode
-      await AsyncStorage.removeItem("offlineMode");
 
       // navigate to login
       router.replace("/(auth)/login");
@@ -151,7 +152,7 @@ export default function Profile() {
           },
         },
       ],
-      { cancelable: true }
+      { cancelable: true },
     );
   };
 
@@ -247,7 +248,7 @@ export default function Profile() {
                         text="Manage recurring transactions"
                         onPress={() => {
                           router.push(
-                            "/(tabs)/(profile)/manage-recurring-transactions"
+                            "/(tabs)/(profile)/manage-recurring-transactions",
                           );
                         }}
                       />

@@ -6,7 +6,7 @@ import CapsuleInput from "@/components/ui/capsule-input-box";
 import { Colors } from "@/constants/theme";
 import { firebaseErrorMessages } from "@/firebase/errorMessages";
 import { auth } from "@/firebase/firebaseConfig";
-import SyncService from "@/services/SyncService";
+import DatabaseService from "@/services/DatabaseService";
 import Octicons from "@expo/vector-icons/Octicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
@@ -49,32 +49,17 @@ export default function Register() {
       const userCred = await createUserWithEmailAndPassword(
         auth,
         email,
-        password
+        password,
       );
       const user = userCred.user;
 
       await updateProfile(user, { displayName: name });
 
-      // check if user has completed onboarding
-      const hasCompleted = await AsyncStorage.getItem("completedOnboarding");
-      console.log("Onboarding complete:", hasCompleted);
+      await DatabaseService.initializeSchema();
 
-      // redirect to onboarding if necessary
-      if (hasCompleted !== "true") {
-        if (hasCompleted === null) {
-          await AsyncStorage.setItem("completedOnboarding", "false");
-        }
-        router.replace("/(onboarding)/welcome");
-        return;
-      }
-
-      await SyncService.sync();
-
-      Toast.show({
-        type: "success",
-        text1: "Account logged in!",
-      });
-      router.replace("/(tabs)");
+      // new accounts always go through onboarding
+      await AsyncStorage.setItem("completedOnboarding", "false");
+      router.replace("/(onboarding)/welcome");
     } catch (error: unknown) {
       if (error instanceof FirebaseError) {
         Toast.show({
