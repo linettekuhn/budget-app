@@ -7,6 +7,7 @@ import { Colors } from "@/constants/theme";
 import { firebaseErrorMessages } from "@/firebase/errorMessages";
 import { auth } from "@/firebase/firebaseConfig";
 import DatabaseService from "@/services/DatabaseService";
+import SyncService from "@/services/SyncService";
 import Octicons from "@expo/vector-icons/Octicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
@@ -43,23 +44,34 @@ export default function Register() {
 
   const handleRegister = async () => {
     if (loading) return;
-
     setLoading(true);
+
     try {
       const userCred = await createUserWithEmailAndPassword(
         auth,
         email,
         password,
       );
-      const user = userCred.user;
-
-      await updateProfile(user, { displayName: name });
+      await updateProfile(userCred.user, { displayName: name });
 
       await DatabaseService.initializeSchema();
 
-      // new accounts always go through onboarding
-      await AsyncStorage.setItem("completedOnboarding", "false");
-      router.replace("/(onboarding)/welcome");
+      // check if they have existing offline data worth migrating
+      const hasCompleted = await AsyncStorage.getItem("completedOnboarding");
+
+      if (hasCompleted === "true") {
+        // migrate data
+        await DatabaseService.initializeSchema();
+        await SyncService.sync(); // pushes offline pending_changes to new account
+        router.replace("/(tabs)");
+      } else {
+        // start fresh
+        await DatabaseService.resetTables();
+        await AsyncStorage.clear();
+        await DatabaseService.initializeSchema();
+        await AsyncStorage.setItem("completedOnboarding", "false");
+        router.replace("/(onboarding)/welcome");
+      }
     } catch (error: unknown) {
       if (error instanceof FirebaseError) {
         Toast.show({
