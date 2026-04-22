@@ -16,23 +16,28 @@ import {
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
+import Constants from "expo-constants";
 import { useFonts } from "expo-font";
 import { Stack, router } from "expo-router";
 import { SQLiteDatabase, SQLiteProvider } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
+import * as Updates from "expo-updates";
+import { fetchAndActivate, getString } from "firebase/remote-config";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Alert, Linking, Platform } from "react-native";
 import "react-native-reanimated";
 import ToastManager from "toastify-react-native";
 import {
   ToastConfig,
   ToastConfigParams,
 } from "toastify-react-native/utils/interfaces";
+import { remoteConfig } from "../firebase/firebaseConfig"; // adjust path
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const theme = useMemo(
     () => (colorScheme === "dark" ? DarkTheme : DefaultTheme),
-    [colorScheme]
+    [colorScheme],
   );
   const [fontsLoaded] = useFonts({
     "Onest-ExtraBold": require("../assets/fonts/Onest-ExtraBold.ttf"),
@@ -48,6 +53,55 @@ export default function RootLayout() {
   const { checkBadges } = useBadgeCheck();
   const [dbReady, setDbReady] = useState<boolean>(false);
   const initialCheckDone = useRef(false);
+
+  const showForceUpdateAlert = () => {
+    Alert.alert(
+      "Critical Update Required",
+      "To continue using the app, you must update to the latest version to apply fixes.",
+      [
+        {
+          text: "Update Now",
+          onPress: async () => {
+            const update = await Updates.checkForUpdateAsync();
+            if (update.isAvailable) {
+              await Updates.fetchUpdateAsync();
+              await Updates.reloadAsync(); // restarts app with new code immediately
+            } else {
+              // fallback: send them to the App Store
+              const storeUrl =
+                Platform.OS === "ios"
+                  ? "https://apps.apple.com/us/app/piggystash/id6757825917"
+                  : "";
+              Linking.openURL(storeUrl);
+            }
+          },
+        },
+      ],
+      { cancelable: false }, // user cannot click outside the alert to dismiss
+    );
+  };
+
+  useEffect(() => {
+    const checkUpdate = async () => {
+      try {
+        // fetch the minimum version from Firebase
+        await fetchAndActivate(remoteConfig);
+        const minVersion = getString(remoteConfig, "min_required_version");
+
+        // get current app version
+        const currentVersion = Constants.expoConfig?.version || "1.0.0";
+
+        // simple version comparison (e.g., "1.0.1" < "1.1.0")
+        if (currentVersion < minVersion) {
+          showForceUpdateAlert();
+        }
+      } catch (error) {
+        console.error("Remote Config failed", error);
+      }
+    };
+
+    checkUpdate();
+  }, []);
 
   const createDatabase = useCallback(async (db: SQLiteDatabase) => {
     try {
