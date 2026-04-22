@@ -12,12 +12,15 @@ app.use(express.json());
 
 const TOKENS_FILE_PATH = "./tokens.json";
 
+// TODO: DEV ONLY — set to null in production
+const DEV_TEST_USER_ID = "5UuQi6NUmVXuIrTtLRakXrnZvQY2";
+
 // returns tokens.json file as object
 function readTokens() {
   return JSON.parse(readFileSync(TOKENS_FILE_PATH, "utf-8"));
 }
 
-// save JSON object to tokens.json
+// save JSON object to tokens.json atomically
 function saveTokens(data) {
   const tmp = TOKENS_FILE_PATH + ".tmp";
   writeFileSync(tmp, JSON.stringify(data, null, 2));
@@ -135,29 +138,37 @@ function getMonthKey() {
 }
 
 // daily streak reminder scheduler
-cron.schedule("0 20 * * *", async () => {
+// TODO: restore to "0 20 * * *" after testing
+cron.schedule("* * * * *", async () => {
   console.log(`[${new Date().toISOString()}] Daily cron fired`);
   const tokens = readTokens();
   const today = getDateKey();
 
-  // loop through all tokens
   for (const user of tokens.users) {
-    // skip users that opt out
+    // DEV: only send to test user, skip everyone else
+    if (DEV_TEST_USER_ID && user.userId !== DEV_TEST_USER_ID) {
+      console.log(`[DEV] Skipping daily for non-test user ${user.userId}`);
+      continue;
+    }
+
     const userSettings = user.settings ?? {
       daily: true,
       weekly: true,
       midMonth: true,
     };
     if (!userSettings.daily) continue;
-    if (user.lastSentDaily === today) continue;
+    if (user.lastSentDaily === today) {
+      console.log(`[${user.userId}] Daily already sent today, skipping`);
+      continue;
+    }
 
     const lastActive = user.lastActive || 0;
     const hoursSinceActive = (Date.now() - lastActive) / 1000 / 3600;
     const userStreak = user.currentStreak || 1;
 
-    // only send notif if user has been inactive for more than 12 hours
     if (hoursSinceActive >= 12 && userStreak >= 2) {
       try {
+        console.log(`[${user.userId}] Sending daily reminder`);
         await sendPush(
           user.token,
           "Daily Streak Reminder",
@@ -167,6 +178,10 @@ cron.schedule("0 20 * * *", async () => {
       } catch (e) {
         console.error(`Failed to send push to ${user.userId}:`, e);
       }
+    } else {
+      console.log(
+        `[${user.userId}] Daily skipped — hoursSinceActive: ${hoursSinceActive.toFixed(2)}, streak: ${userStreak}`,
+      );
     }
   }
 
@@ -174,27 +189,33 @@ cron.schedule("0 20 * * *", async () => {
 });
 
 // weekly summary scheduler
-cron.schedule("0 9 * * 0", async () => {
+// TODO: restore to "0 9 * * 0" after testing
+cron.schedule("* * * * *", async () => {
   console.log(`[${new Date().toISOString()}] Weekly cron fired`);
   const tokens = readTokens();
   const weekKey = getWeekKey();
 
-  // loop through all tokens
   for (const user of tokens.users) {
-    // skip users that opt out
+    // DEV: only send to test user, skip everyone else
+    if (DEV_TEST_USER_ID && user.userId !== DEV_TEST_USER_ID) {
+      console.log(`[DEV] Skipping weekly for non-test user ${user.userId}`);
+      continue;
+    }
+
     const userSettings = user.settings ?? {
       daily: true,
       weekly: true,
       midMonth: true,
     };
     if (!userSettings.weekly) continue;
-    if (user.lastSentWeekly === weekKey) continue;
+    if (user.lastSentWeekly === weekKey) {
+      console.log(`[${user.userId}] Weekly already sent this week, skipping`);
+      continue;
+    }
 
-    // get weekly spent
     const weeklySpent = user.weeklySpent || 0;
-
-    // send weekly summary if user has spent this week
     try {
+      console.log(`[${user.userId}] Sending weekly summary`);
       if (weeklySpent > 0) {
         await sendPush(
           user.token,
@@ -218,28 +239,36 @@ cron.schedule("0 9 * * 0", async () => {
 });
 
 // half month summary scheduler
-cron.schedule("0 9 15 * *", async () => {
+// TODO: restore to "0 9 15 * *" after testing
+cron.schedule("* * * * *", async () => {
   console.log(`[${new Date().toISOString()}] Mid-month cron fired`);
   const tokens = readTokens();
   const monthKey = getMonthKey();
 
-  // loop through all tokens
   for (const user of tokens.users) {
-    // skip users that opt out
+    // DEV: only send to test user, skip everyone else
+    if (DEV_TEST_USER_ID && user.userId !== DEV_TEST_USER_ID) {
+      console.log(`[DEV] Skipping mid-month for non-test user ${user.userId}`);
+      continue;
+    }
+
     const userSettings = user.settings ?? {
       daily: true,
       weekly: true,
       midMonth: true,
     };
     if (!userSettings.midMonth) continue;
-    if (user.lastSentMidMonth === monthKey) continue;
+    if (user.lastSentMidMonth === monthKey) {
+      console.log(
+        `[${user.userId}] Mid-month already sent this month, skipping`,
+      );
+      continue;
+    }
 
-    // get spent percent
     const spentPercent = user.spentPercent || 0;
-
-    // send mid-month budget check in
     if (spentPercent > 0) {
       try {
+        console.log(`[${user.userId}] Sending mid-month summary`);
         await sendPush(
           user.token,
           "Mid-Month Budget Check",
@@ -249,6 +278,8 @@ cron.schedule("0 9 15 * *", async () => {
       } catch (e) {
         console.error(`Failed to send push to ${user.userId}:`, e);
       }
+    } else {
+      console.log(`[${user.userId}] Mid-month skipped — spentPercent is 0`);
     }
   }
 
