@@ -63,7 +63,7 @@ export default function HomeScreen() {
       };
 
       ping();
-    }, [reloadSpend, reloadSalary, reloadCurrency])
+    }, [reloadSpend, reloadSalary, reloadCurrency]),
   );
 
   useEffect(() => {
@@ -78,7 +78,7 @@ export default function HomeScreen() {
   useEffect(() => {
     const spent = [...budgets].reduce(
       (sum, budget) => sum + budget.totalSpent,
-      0
+      0,
     );
     const budget = [...budgets].reduce((sum, budget) => sum + budget.budget, 0);
     setTotalSpent(Number(spent.toFixed(2)));
@@ -88,8 +88,8 @@ export default function HomeScreen() {
       const difference = salary.monthly - totalBudget;
       const isOverBudget = difference < 0;
       setOverBudget(isOverBudget);
-      const saved = Math.max(0, difference);
-      const deficit = Math.abs(Math.min(0, difference));
+      const saved = Number(Math.max(0, difference).toFixed(2));
+      const deficit = Number(Math.abs(Math.min(0, difference)).toFixed(2));
       setDifference(isOverBudget ? deficit : saved);
     }
   }, [salary, budgets, totalBudget]);
