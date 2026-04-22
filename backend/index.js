@@ -1,6 +1,6 @@
 import cors from "cors";
 import express from "express";
-import fs from "fs";
+import { readFileSync, renameSync, writeFileSync } from "fs";
 import cron from "node-cron";
 
 // create server app
@@ -14,12 +14,14 @@ const TOKENS_FILE_PATH = "./tokens.json";
 
 // returns tokens.json file as object
 function readTokens() {
-  return JSON.parse(fs.readFileSync(TOKENS_FILE_PATH, "utf-8"));
+  return JSON.parse(readFileSync(TOKENS_FILE_PATH, "utf-8"));
 }
 
 // save JSON object to tokens.json
 function saveTokens(data) {
-  fs.writeFileSync(TOKENS_FILE_PATH, JSON.stringify(data, null, 2));
+  const tmp = TOKENS_FILE_PATH + ".tmp";
+  writeFileSync(tmp, JSON.stringify(data, null, 2));
+  renameSync(tmp, TOKENS_FILE_PATH);
 }
 
 // endpoint to register push token (identify users to send push)
@@ -116,11 +118,27 @@ async function sendPush(token, title, body) {
   });
 }
 
+function getDateKey() {
+  return new Date().toISOString().slice(0, 10); // "2026-04-21"
+}
+
+function getWeekKey() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 1);
+  const week = Math.ceil(((now - start) / 86400000 + start.getDay() + 1) / 7);
+  return `${now.getFullYear()}-w${week}`;
+}
+
+function getMonthKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${now.getMonth() + 1}`;
+}
+
 // daily streak reminder scheduler
 cron.schedule("0 20 * * *", async () => {
-  // get stored tokens
+  console.log(`[${new Date().toISOString()}] Daily cron fired`);
   const tokens = readTokens();
-  const now = Date.now();
+  const today = getDateKey();
 
   // loop through all tokens
   for (const user of tokens.users) {
@@ -130,11 +148,11 @@ cron.schedule("0 20 * * *", async () => {
       weekly: true,
       midMonth: true,
     };
-
     if (!userSettings.daily) continue;
+    if (user.lastSentDaily === today) continue;
 
     const lastActive = user.lastActive || 0;
-    const hoursSinceActive = (now - lastActive) / 1000 / 3600;
+    const hoursSinceActive = (Date.now() - lastActive) / 1000 / 3600;
     const userStreak = user.currentStreak || 1;
 
     // only send notif if user has been inactive for more than 12 hours
@@ -143,19 +161,23 @@ cron.schedule("0 20 * * *", async () => {
         await sendPush(
           user.token,
           "Daily Streak Reminder",
-          "Don't let the streak die! Check your budget today."
+          "Don't let the streak die! Check your budget today.",
         );
+        user.lastSentDaily = today;
       } catch (e) {
         console.error(`Failed to send push to ${user.userId}:`, e);
       }
     }
   }
+
+  saveTokens(tokens);
 });
 
 // weekly summary scheduler
 cron.schedule("0 9 * * 0", async () => {
-  // get stored tokens
+  console.log(`[${new Date().toISOString()}] Weekly cron fired`);
   const tokens = readTokens();
+  const weekKey = getWeekKey();
 
   // loop through all tokens
   for (const user of tokens.users) {
@@ -165,41 +187,41 @@ cron.schedule("0 9 * * 0", async () => {
       weekly: true,
       midMonth: true,
     };
-
     if (!userSettings.weekly) continue;
+    if (user.lastSentWeekly === weekKey) continue;
 
     // get weekly spent
     const weeklySpent = user.weeklySpent || 0;
 
     // send weekly summary if user has spent this week
-    if (weeklySpent > 0) {
-      try {
+    try {
+      if (weeklySpent > 0) {
         await sendPush(
           user.token,
           "Weekly Summary",
-          `You've spent $${weeklySpent} this week. Keep tracking!`
+          `You've spent $${weeklySpent} this week. Keep tracking!`,
         );
-      } catch (e) {
-        console.error(`Failed to send push to ${user.userId}:`, e);
-      }
-    } else {
-      try {
+      } else {
         await sendPush(
           user.token,
           "Weekly Summary",
-          `You haven't spent anything this week. Remember to track your expenses!`
+          `You haven't spent anything this week. Remember to track your expenses!`,
         );
-      } catch (e) {
-        console.error(`Failed to send push to ${user.userId}:`, e);
       }
+      user.lastSentWeekly = weekKey;
+    } catch (e) {
+      console.error(`Failed to send push to ${user.userId}:`, e);
     }
   }
+
+  saveTokens(tokens);
 });
 
 // half month summary scheduler
 cron.schedule("0 9 15 * *", async () => {
-  // get stored tokens
+  console.log(`[${new Date().toISOString()}] Mid-month cron fired`);
   const tokens = readTokens();
+  const monthKey = getMonthKey();
 
   // loop through all tokens
   for (const user of tokens.users) {
@@ -209,8 +231,8 @@ cron.schedule("0 9 15 * *", async () => {
       weekly: true,
       midMonth: true,
     };
-
     if (!userSettings.midMonth) continue;
+    if (user.lastSentMidMonth === monthKey) continue;
 
     // get spent percent
     const spentPercent = user.spentPercent || 0;
@@ -221,13 +243,16 @@ cron.schedule("0 9 15 * *", async () => {
         await sendPush(
           user.token,
           "Mid-Month Budget Check",
-          `You're halfway through the month and you've spent ${spentPercent}% of your budget.`
+          `You're halfway through the month and you've spent ${spentPercent}% of your budget.`,
         );
+        user.lastSentMidMonth = monthKey;
       } catch (e) {
         console.error(`Failed to send push to ${user.userId}:`, e);
       }
     }
   }
+
+  saveTokens(tokens);
 });
 
 app.listen(3005, () => console.log("Push backend running on port 3005"));
