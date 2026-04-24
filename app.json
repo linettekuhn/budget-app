@@ -48,12 +48,19 @@
       [
         "expo-widgets",
         {
+          "src": "widgets",
           "widgets": [
             {
               "name": "BudgetWidget",
               "displayName": "Budget Left",
               "description": "See your remaining monthly budget at a glance",
               "supportedFamilies": ["systemSmall", "systemMedium"]
+            },
+            {
+              "name": "HelloWidget",
+              "displayName": "Hello",
+              "description": "Test Widget",
+              "supportedFamilies": ["systemSmall"]
             }
           ]
         }
