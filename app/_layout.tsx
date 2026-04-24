@@ -10,6 +10,7 @@ import { useBadgeCheck } from "@/hooks/useBadgeCheck";
 import DatabaseService from "@/services/DatabaseService";
 import StreakService from "@/services/StreakService";
 import SyncService from "@/services/SyncService";
+import { syncBudgetWidget } from "@/utils/syncBudgetWidget";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   DarkTheme,
@@ -24,7 +25,7 @@ import { StatusBar } from "expo-status-bar";
 import * as Updates from "expo-updates";
 import { fetchAndActivate, getString } from "firebase/remote-config";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Linking, Platform } from "react-native";
+import { Alert, AppState, Linking, Platform } from "react-native";
 import "react-native-reanimated";
 import ToastManager from "toastify-react-native";
 import {
@@ -174,6 +175,15 @@ export default function RootLayout() {
 
     routeUser();
   }, [fontsLoaded, authLoading, user, dbReady, checkBadges]);
+
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        syncBudgetWidget();
+      }
+    });
+    return () => sub.remove();
+  }, []);
 
   const toastConfig: ToastConfig = {
     badge: (props: ToastConfigParams) => <BadgeToast {...props} />,

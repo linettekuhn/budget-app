@@ -5,6 +5,7 @@ import {
   TransactionFormInitial,
   TransactionType,
 } from "@/types";
+import { syncBudgetWidget } from "@/utils/syncBudgetWidget";
 import { useState } from "react";
 import { Alert, useColorScheme } from "react-native";
 import { Toast } from "toastify-react-native";
@@ -87,6 +88,7 @@ export default function EditTransaction({
           onPress: async () => {
             try {
               await DatabaseService.deleteTransaction(initialTransaction.id);
+              await syncBudgetWidget();
               onCancel();
             } catch (error: unknown) {
               if (error instanceof Error) {
@@ -104,7 +106,7 @@ export default function EditTransaction({
           },
         },
       ],
-      { cancelable: true }
+      { cancelable: true },
     );
   };
 

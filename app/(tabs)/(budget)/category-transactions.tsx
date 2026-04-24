@@ -13,6 +13,7 @@ import { useModal } from "@/hooks/useModal";
 import DatabaseService from "@/services/DatabaseService";
 import { CategoryType, TransactionType } from "@/types";
 import { formatMoney } from "@/utils/formatMoney";
+import { syncBudgetWidget } from "@/utils/syncBudgetWidget";
 import Octicons from "@expo/vector-icons/Octicons";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
@@ -53,7 +54,7 @@ export default function CategoryTransactions() {
     useCallback(() => {
       reloadSpend();
       reloadCurrency();
-    }, [reloadSpend, reloadCurrency])
+    }, [reloadSpend, reloadCurrency]),
   );
 
   const handleEditCategory = () => {
@@ -64,7 +65,7 @@ export default function CategoryTransactions() {
           reloadSpend();
         }}
         category={category}
-      />
+      />,
     );
   };
 
@@ -78,10 +79,11 @@ export default function CategoryTransactions() {
         }}
         onSave={async (newTransaction: TransactionType) => {
           await DatabaseService.updateTransaction(newTransaction);
+          await syncBudgetWidget();
           loadTransaction();
           closeModal();
         }}
-      />
+      />,
     );
   };
 
@@ -92,7 +94,7 @@ export default function CategoryTransactions() {
       const transactionsData = await DatabaseService.getCategoryTransactions(
         category.id,
         year,
-        month
+        month,
       );
       const savedTransactions = transactionsData.map((row) => {
         const transaction: TransactionType = {

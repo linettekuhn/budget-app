@@ -9,6 +9,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { useModal } from "@/hooks/useModal";
 import DatabaseService from "@/services/DatabaseService";
 import { TransactionType } from "@/types";
+import { syncBudgetWidget } from "@/utils/syncBudgetWidget";
 import Octicons from "@expo/vector-icons/Octicons";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
@@ -58,7 +59,7 @@ export default function MonthlyTransactions() {
       savedTransactions.forEach((transaction) => {
         const date = new Date(transaction.date);
         const key = `${date.getFullYear()}-${String(
-          date.getMonth() + 1
+          date.getMonth() + 1,
         ).padStart(2, "0")}`;
         if (!grouped[key]) {
           grouped[key] = [];
@@ -74,7 +75,7 @@ export default function MonthlyTransactions() {
         const [year, month] = key.split("-");
         const monthName = new Date(
           parseInt(year),
-          parseInt(month) - 1
+          parseInt(month) - 1,
         ).toLocaleString("en-US", { month: "long", year: "numeric" });
         return { title: monthName, data: grouped[key] };
       });
@@ -107,10 +108,11 @@ export default function MonthlyTransactions() {
         }}
         onSave={async (newTransaction: TransactionType) => {
           await DatabaseService.updateTransaction(newTransaction);
+          await syncBudgetWidget();
           loadTransaction();
           closeModal();
         }}
-      />
+      />,
     );
   };
 

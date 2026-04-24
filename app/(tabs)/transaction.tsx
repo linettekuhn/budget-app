@@ -6,6 +6,7 @@ import { useBadgeCheck } from "@/hooks/useBadgeCheck";
 import DatabaseService from "@/services/DatabaseService";
 import { TransactionFormData } from "@/types";
 import buildRRule from "@/utils/buildRRule";
+import { syncBudgetWidget } from "@/utils/syncBudgetWidget";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -85,6 +86,7 @@ export default function Transaction() {
       }
 
       await checkBadges();
+      await syncBudgetWidget();
 
       router.setParams({});
       setFormData(null);

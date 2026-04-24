@@ -7,6 +7,7 @@ import OnboardingControls from "@/components/ui/onboarding-controls";
 import { Colors } from "@/constants/theme";
 import DatabaseService from "@/services/DatabaseService";
 import SyncService from "@/services/SyncService";
+import { syncBudgetWidget } from "@/utils/syncBudgetWidget";
 import Octicons from "@expo/vector-icons/Octicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
@@ -53,7 +54,7 @@ export default function FinishOnboarding() {
         salary.type,
         salary.amount,
         salary.monthly,
-        salary.hoursPerWeek
+        salary.hoursPerWeek,
       );
 
       // mark onboarding as completed
@@ -64,6 +65,7 @@ export default function FinishOnboarding() {
 
       // sync changes after onboarding
       await SyncService.sync();
+      await syncBudgetWidget();
 
       setLoading(false);
 
