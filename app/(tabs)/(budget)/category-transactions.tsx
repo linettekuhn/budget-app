@@ -182,9 +182,13 @@ export default function CategoryTransactions() {
                 style={{ textAlign: "center", paddingHorizontal: 32 }}
               >
                 You have spent{" "}
-                {formatMoney({ amount: budget.totalSpent, code: currency })} out
-                of your {formatMoney({ amount: budget.budget, code: currency })}{" "}
-                budget for{" "}
+                {formatMoney({
+                  amount: budget.totalSpent,
+                  code: currency,
+                })}{" "}
+                out of your{" "}
+                {formatMoney({ amount: budget.budget, code: currency })} budget
+                for{" "}
                 {category.name
                   .split(" ")
                   .map((word) => word[0].toLowerCase() + word.slice(1))

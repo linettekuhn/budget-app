@@ -295,6 +295,7 @@ function SalaryChangeContent({
         {formatMoney({
           amount: Number(monthlyAmount.toFixed(2)),
           code: currency,
+          decimals: true,
         })}
       </ThemedText>
     </SettingsModal>

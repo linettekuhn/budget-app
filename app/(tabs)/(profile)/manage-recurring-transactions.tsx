@@ -306,7 +306,11 @@ export default function ManageRecurringTransactions() {
                     </View>
                     <View style={{ flexDirection: "row", gap: 8 }}>
                       <ThemedText type="h3">
-                        {formatMoney({ amount: item.amount, code: currency })}
+                        {formatMoney({
+                          amount: item.amount,
+                          code: currency,
+                          decimals: true,
+                        })}
                       </ThemedText>
                       <Pressable
                         onPress={() => handleOpen(item)}

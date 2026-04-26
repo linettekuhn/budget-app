@@ -106,8 +106,17 @@ export default function Budget() {
                   <MonthlyBudgetPieChart budgets={budgets} />
                   <View style={styles.monthWrapper}>
                     <ThemedText type="captionLarge">
-                      {formatMoney({ code: currency, amount: totalSpent })} /{" "}
-                      {formatMoney({ code: currency, amount: totalBudget })}
+                      {formatMoney({
+                        code: currency,
+                        amount: totalSpent,
+                        decimals: true,
+                      })}{" "}
+                      /{" "}
+                      {formatMoney({
+                        code: currency,
+                        amount: totalBudget,
+                        decimals: true,
+                      })}
                     </ThemedText>
                     <MonthSelect
                       handleDateChange={updateMonthData}

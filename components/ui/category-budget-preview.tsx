@@ -131,8 +131,12 @@ export default function CategoryBudgetPreview({
             darkColor={Colors["dark"].background}
             lightColor={Colors["light"].background}
           >
-            {formatMoney({ code: currency, amount: totalSpent })} /{" "}
-            {formatMoney({ code: currency, amount: budget })}
+            {formatMoney({
+              code: currency,
+              amount: totalSpent,
+              decimals: true,
+            })}{" "}
+            / {formatMoney({ code: currency, amount: budget, decimals: true })}
           </ThemedText>
         </View>
         <View style={styles.progressBar}>

@@ -1,4 +1,4 @@
-import { formatCurrency } from "react-native-format-currency";
+import { formatCurrency } from "@/utils/currency";
 
 export default function getCurrencySymbol(params: { code?: string }) {
   const { code = "USD" } = params;

@@ -101,7 +101,8 @@ export default function RootLayout() {
       }
     };
 
-    checkUpdate();
+    // TODO: FIX
+    //checkUpdate();
   }, []);
 
   const createDatabase = useCallback(async (db: SQLiteDatabase) => {

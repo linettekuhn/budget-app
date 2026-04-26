@@ -1,7 +1,7 @@
 import { useCurrency } from "@/hooks/useCurrency";
 import { useModal } from "@/hooks/useModal";
+import { getSupportedCurrencies } from "@/utils/currency";
 import { useState } from "react";
-import { getSupportedCurrencies } from "react-native-format-currency";
 import { Toast } from "toastify-react-native";
 import { ThemedText } from "../themed-text";
 import CapsuleDropdown from "../ui/capsule-dropdown";
@@ -74,7 +74,7 @@ export default function ChangeCurrencyOption() {
           closeModal();
         }}
         onCancel={closeModal}
-      />
+      />,
     );
   };
 

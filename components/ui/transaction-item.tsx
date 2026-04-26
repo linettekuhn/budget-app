@@ -60,7 +60,11 @@ export default function TransactionItem({
       </ThemedView>
       <View style={{ flexDirection: "row", gap: 4 }}>
         <ThemedText style={{ color: typeColor }} type="h6">
-          {formatMoney({ code: currency, amount: transaction.amount })}
+          {formatMoney({
+            code: currency,
+            amount: transaction.amount,
+            decimals: true,
+          })}
         </ThemedText>
         <Pressable
           onPress={() => handleEdit(transaction)}
