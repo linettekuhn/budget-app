@@ -12,9 +12,9 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { useModal } from "@/hooks/useModal";
 import { useTabBarPadding } from "@/hooks/useTabBarPadding";
 import DatabaseService from "@/services/DatabaseService";
+import WidgetService from "@/services/WidgetService";
 import { CategoryType, TransactionType } from "@/types";
 import { formatMoney } from "@/utils/formatMoney";
-import { syncBudgetWidget } from "@/utils/syncBudgetWidget";
 import Octicons from "@expo/vector-icons/Octicons";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -84,7 +84,7 @@ export default function CategoryTransactions() {
         }}
         onSave={async (newTransaction: TransactionType) => {
           await DatabaseService.updateTransaction(newTransaction);
-          await syncBudgetWidget();
+          await WidgetService.syncAll();
           loadTransaction();
           closeModal();
         }}

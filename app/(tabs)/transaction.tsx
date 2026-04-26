@@ -4,9 +4,9 @@ import TransactionForm from "@/components/ui/transaction-form";
 import { Colors, getTheme } from "@/constants/theme";
 import { useBadgeCheck } from "@/hooks/useBadgeCheck";
 import DatabaseService from "@/services/DatabaseService";
+import WidgetService from "@/services/WidgetService";
 import { TransactionFormData } from "@/types";
 import buildRRule from "@/utils/buildRRule";
-import { syncBudgetWidget } from "@/utils/syncBudgetWidget";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -86,7 +86,7 @@ export default function Transaction() {
       }
 
       await checkBadges();
-      await syncBudgetWidget();
+      await WidgetService.syncAll();
 
       router.setParams({});
       setFormData(null);

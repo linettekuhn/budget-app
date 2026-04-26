@@ -7,8 +7,8 @@ import OnboardingControls from "@/components/ui/onboarding-controls";
 import { Colors, getTheme } from "@/constants/theme";
 import DatabaseService from "@/services/DatabaseService";
 import SyncService from "@/services/SyncService";
+import WidgetService from "@/services/WidgetService";
 import { formatMoney } from "@/utils/formatMoney";
-import { syncBudgetWidget } from "@/utils/syncBudgetWidget";
 import Octicons from "@expo/vector-icons/Octicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
@@ -69,8 +69,7 @@ export default function FinishOnboarding() {
 
       // sync changes after onboarding
       await SyncService.sync();
-      await syncBudgetWidget();
-
+      await WidgetService.syncAll();
       setLoading(false);
 
       // access app

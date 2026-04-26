@@ -8,8 +8,8 @@ import { Colors, getTheme } from "@/constants/theme";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useModal } from "@/hooks/useModal";
 import DatabaseService from "@/services/DatabaseService";
+import WidgetService from "@/services/WidgetService";
 import { TransactionType } from "@/types";
-import { syncBudgetWidget } from "@/utils/syncBudgetWidget";
 import Octicons from "@expo/vector-icons/Octicons";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
@@ -108,7 +108,7 @@ export default function MonthlyTransactions() {
         }}
         onSave={async (newTransaction: TransactionType) => {
           await DatabaseService.updateTransaction(newTransaction);
-          await syncBudgetWidget();
+          await WidgetService.syncAll();
           loadTransaction();
           closeModal();
         }}

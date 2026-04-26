@@ -79,8 +79,7 @@ export async function pingBackend(
   currentStreak: number,
 ) {
   try {
-    // TODO: FIX!!!!
-    /* await fetch(`${BACKEND_URL}/ping`, {
+    await fetch(`${BACKEND_URL}/ping`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -91,8 +90,7 @@ export async function pingBackend(
         weeklySpent,
         currentStreak,
       }),
-    }); */
-    console.log("Skipping backend ping");
+    });
   } catch (error) {
     console.error("Error pinging backend", error);
   }

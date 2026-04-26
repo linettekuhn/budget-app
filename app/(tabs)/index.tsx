@@ -10,8 +10,8 @@ import { useCategoriesSpend } from "@/hooks/useCategoriesSpend";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useSalary } from "@/hooks/useSalary";
 import DatabaseService from "@/services/DatabaseService";
-import { registerPushToken } from "@/services/NotificationService";
-import { syncBudgetWidget } from "@/utils/syncBudgetWidget";
+import { pingBackend, registerPushToken } from "@/services/NotificationService";
+import WidgetService from "@/services/WidgetService";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -56,16 +56,14 @@ export default function HomeScreen() {
       }
 
       const ping = async () => {
-        console.log("syncing widget begin");
-        await syncBudgetWidget();
-        console.log("syncing widget end");
+        await WidgetService.syncAll();
 
         const spentPercent = await DatabaseService.getSpentPercentFirstHalf();
 
         const weeklySpent = await DatabaseService.getWeeklySpent();
 
         const currentStreak = await DatabaseService.getStreak();
-        //await pingBackend(user.uid, spentPercent, weeklySpent, currentStreak);
+        await pingBackend(user.uid, spentPercent, weeklySpent, currentStreak);
       };
 
       ping();

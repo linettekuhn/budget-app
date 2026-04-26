@@ -10,7 +10,7 @@ import { useBadgeCheck } from "@/hooks/useBadgeCheck";
 import DatabaseService from "@/services/DatabaseService";
 import StreakService from "@/services/StreakService";
 import SyncService from "@/services/SyncService";
-import { syncBudgetWidget } from "@/utils/syncBudgetWidget";
+import WidgetService from "@/services/WidgetService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   DarkTheme,
@@ -178,9 +178,9 @@ export default function RootLayout() {
   }, [fontsLoaded, authLoading, user, dbReady, checkBadges]);
 
   useEffect(() => {
-    const sub = AppState.addEventListener("change", (state) => {
+    const sub = AppState.addEventListener("change", async (state) => {
       if (state === "active") {
-        syncBudgetWidget();
+        await WidgetService.syncAll();
       }
     });
     return () => sub.remove();
