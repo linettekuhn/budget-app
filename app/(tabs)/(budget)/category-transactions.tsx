@@ -10,13 +10,14 @@ import { Colors, getTheme } from "@/constants/theme";
 import { useCategorySpend } from "@/hooks/useCategorySpend";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useModal } from "@/hooks/useModal";
+import { useTabBarPadding } from "@/hooks/useTabBarPadding";
 import DatabaseService from "@/services/DatabaseService";
 import { CategoryType, TransactionType } from "@/types";
 import { formatMoney } from "@/utils/formatMoney";
 import { syncBudgetWidget } from "@/utils/syncBudgetWidget";
 import Octicons from "@expo/vector-icons/Octicons";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -31,8 +32,12 @@ import { Toast } from "toastify-react-native";
 export default function CategoryTransactions() {
   const params = useLocalSearchParams();
   const category: CategoryType = JSON.parse(params.category as string);
-  const date: Date = new Date(JSON.parse(params.date as string));
+  const date: Date = useMemo(
+    () => new Date(JSON.parse(params.date as string)),
+    [params.date],
+  );
 
+  const tabBarPadding = useTabBarPadding();
   const colorScheme = useColorScheme();
   const bgColor = Colors[getTheme(colorScheme)].background;
 
@@ -87,7 +92,7 @@ export default function CategoryTransactions() {
     );
   };
 
-  const loadTransaction = async () => {
+  const loadTransaction = useCallback(async () => {
     try {
       const year = date.getFullYear();
       const month = date.getMonth() + 1;
@@ -125,11 +130,11 @@ export default function CategoryTransactions() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [category.id, date]);
 
   useEffect(() => {
     loadTransaction();
-  }, []);
+  }, [loadTransaction]);
 
   if (loading || loadingBudget || loadingCurrency || !budget) {
     return (
@@ -150,7 +155,12 @@ export default function CategoryTransactions() {
   }
   return (
     <AnimatedScreen entering="slideRight">
-      <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
+      <SafeAreaView
+        style={[
+          styles.safeArea,
+          { backgroundColor: bgColor, paddingBottom: tabBarPadding },
+        ]}
+      >
         <ThemedView style={styles.container}>
           <ThemedView style={styles.main}>
             <TextButton
@@ -187,32 +197,36 @@ export default function CategoryTransactions() {
               onPress={handleEditCategory}
               bgFocused={Colors[getTheme(colorScheme)].primary[500]}
             />
-            <FlatList
-              contentContainerStyle={[
-                styles.transactionList,
+            <View
+              style={[
+                styles.transactionListWrapper,
                 {
                   backgroundColor: Colors[getTheme(colorScheme)].primary[200],
                 },
               ]}
-              data={transactions}
-              keyExtractor={(item) => item.id}
-              refreshControl={
-                <RefreshControl
-                  refreshing={loading}
-                  onRefresh={loadTransaction}
-                />
-              }
-              renderItem={({ item }) => (
-                <TransactionItem
-                  currency={currency ?? "USD"}
-                  transaction={item}
-                  handleEdit={handleEditTransaction}
-                />
-              )}
-              ListEmptyComponent={
-                <ThemedText>No transactions found</ThemedText>
-              }
-            />
+            >
+              <FlatList
+                contentContainerStyle={[styles.transactionList]}
+                data={transactions}
+                keyExtractor={(item) => item.id}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={loading}
+                    onRefresh={loadTransaction}
+                  />
+                }
+                renderItem={({ item }) => (
+                  <TransactionItem
+                    currency={currency ?? "USD"}
+                    transaction={item}
+                    handleEdit={handleEditTransaction}
+                  />
+                )}
+                ListEmptyComponent={
+                  <ThemedText>No transactions found</ThemedText>
+                }
+              />
+            </View>
           </ThemedView>
         </ThemedView>
       </SafeAreaView>
@@ -252,8 +266,11 @@ const styles = StyleSheet.create({
   },
 
   transactionList: {
+    gap: 8,
+  },
+
+  transactionListWrapper: {
     borderRadius: 20,
-    gap: 20,
     padding: 16,
     alignItems: "center",
     flex: 1,
