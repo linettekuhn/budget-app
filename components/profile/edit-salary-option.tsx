@@ -14,6 +14,7 @@ import AmountDisplay from "../ui/amount-display";
 import CapsuleNumberInput from "../ui/capsule-input-number";
 import CapsuleToggle from "../ui/capsule-toggle";
 import SettingsModal from "../ui/modal/settings-modal";
+import MoneyText from "../ui/money-text";
 import ProfileOption from "./profile-option";
 
 function SalaryChangeContent({
@@ -290,14 +291,19 @@ function SalaryChangeContent({
           </ThemedView>
         </ThemedView>
       )}
-      <ThemedText type="h4">
-        Monthly income:{" "}
-        {formatMoney({
-          amount: Number(monthlyAmount.toFixed(2)),
-          code: currency,
-          decimals: true,
-        })}
-      </ThemedText>
+      <ThemedView
+        style={{ flexDirection: "row", alignItems: "center", marginTop: 10 }}
+      >
+        <ThemedText type="h4">Monthly income: </ThemedText>
+        <MoneyText
+          variant="block"
+          type="h4"
+          amount={Number(monthlyAmount.toFixed(2))}
+          currency={currency}
+          decimals={true}
+          align="left"
+        />
+      </ThemedView>
     </SettingsModal>
   );
 }

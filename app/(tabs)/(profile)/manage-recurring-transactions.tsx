@@ -1,7 +1,10 @@
+// app/(tabs)/(profile)/manage-recurring-transactions.tsx
+
 import { ThemedView } from "@/components/themed-view";
 import AnimatedScreen from "@/components/ui/animated-screen";
 import CapsuleButton from "@/components/ui/capsule-button";
 import SettingsModal from "@/components/ui/modal/settings-modal";
+import MoneyText from "@/components/ui/money-text";
 import TextButton from "@/components/ui/text-button";
 import TransactionForm from "@/components/ui/transaction-form";
 import { Colors, getTheme } from "@/constants/theme";
@@ -17,7 +20,6 @@ import {
 } from "@/types";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
 import buildRRule from "@/utils/buildRRule";
-import { formatMoney } from "@/utils/formatMoney";
 import Octicons from "@expo/vector-icons/Octicons";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
@@ -79,6 +81,7 @@ function EditRecurringTransaction({
       yearMonth: yearMonth,
     },
   };
+
   const saveRecurring = async () => {
     if (!formData) return;
     try {
@@ -104,10 +107,7 @@ function EditRecurringTransaction({
         };
 
         const rrule = buildRRule(formData);
-
-        // compute most recent recurrence date
         const lastDate = rrule.before(new Date(), true);
-
         if (lastDate) {
           transaction.date = lastDate.toISOString();
         }
@@ -122,10 +122,7 @@ function EditRecurringTransaction({
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
-        Toast.show({
-          type: "error",
-          text1: error.message,
-        });
+        Toast.show({ type: "error", text1: error.message });
       } else {
         Toast.show({
           type: "error",
@@ -152,10 +149,7 @@ function EditRecurringTransaction({
               onCancel();
             } catch (error: unknown) {
               if (error instanceof Error) {
-                Toast.show({
-                  type: "error",
-                  text1: error.message,
-                });
+                Toast.show({ type: "error", text1: error.message });
               } else {
                 Toast.show({
                   type: "error",
@@ -298,32 +292,34 @@ export default function ManageRecurringTransactions() {
                       },
                     ]}
                   >
-                    <View>
-                      <ThemedText type="bodyLarge">{item.name}</ThemedText>
+                    <View style={{ flexGrow: 1 }}>
+                      <ThemedText type="bodyLarge" numberOfLines={1}>
+                        {item.name}
+                      </ThemedText>
                       <ThemedText type="captionSmall">
                         {rruleObj.toText()}
                       </ThemedText>
                     </View>
-                    <View style={{ flexDirection: "row", gap: 8 }}>
-                      <ThemedText type="h3">
-                        {formatMoney({
-                          amount: item.amount,
-                          code: currency,
-                          decimals: true,
-                        })}
-                      </ThemedText>
-                      <Pressable
-                        onPress={() => handleOpen(item)}
-                        style={{ transform: [{ rotate: "90deg" }] }}
-                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                      >
-                        <Octicons
-                          name="kebab-horizontal"
-                          size={20}
-                          color={Colors[getTheme(colorScheme)].text}
-                        />
-                      </Pressable>
-                    </View>
+
+                    <MoneyText
+                      variant="block"
+                      amount={item.amount}
+                      currency={currency ?? "USD"}
+                      type="h3"
+                      align="right"
+                      decimals
+                    />
+                    <Pressable
+                      onPress={() => handleOpen(item)}
+                      style={{ transform: [{ rotate: "90deg" }] }}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                      <Octicons
+                        name="kebab-horizontal"
+                        size={20}
+                        color={Colors[getTheme(colorScheme)].text}
+                      />
+                    </Pressable>
                   </ThemedView>
                 );
               }}
@@ -357,19 +353,25 @@ const styles = StyleSheet.create({
 
   recurringWrapper: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 20,
     width: "100%",
+    alignSelf: "stretch",
+    gap: 12,
+    overflow: "hidden",
+  },
+
+  recurringLabel: {
+    flex: 1,
   },
 
   recurringList: {
     borderRadius: 20,
     gap: 20,
     padding: 16,
-    alignItems: "center",
+    alignItems: "stretch",
     flex: 1,
   },
 });

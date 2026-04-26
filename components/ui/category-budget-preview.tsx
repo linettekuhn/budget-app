@@ -2,7 +2,6 @@ import { Motion } from "@/constants/motion";
 import { Colors, getTheme } from "@/constants/theme";
 import { CategorySpend } from "@/types";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
-import { formatMoney } from "@/utils/formatMoney";
 import mixColors from "@/utils/mixColors";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useEffect } from "react";
@@ -15,6 +14,7 @@ import Animated, {
 } from "react-native-reanimated";
 import tinycolor from "tinycolor2";
 import { ThemedText } from "../themed-text";
+import MoneyText from "./money-text";
 
 type Props = {
   currency: string;
@@ -106,11 +106,12 @@ export default function CategoryBudgetPreview({
         }}
       >
         <View style={styles.categoryData}>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <View style={styles.categoryNameRow}>
             <ThemedText
               type="bodyLarge"
               darkColor={Colors["dark"].background}
               lightColor={Colors["light"].background}
+              numberOfLines={1}
             >
               {category.name
                 .split(" ")
@@ -126,18 +127,16 @@ export default function CategoryBudgetPreview({
             </Animated.View>
           </View>
 
-          <ThemedText
+          <MoneyText
+            variant="pair"
+            amount={totalSpent}
+            secondAmount={budget}
+            currency={currency}
+            decimals
             type="body"
             darkColor={Colors["dark"].background}
             lightColor={Colors["light"].background}
-          >
-            {formatMoney({
-              code: currency,
-              amount: totalSpent,
-              decimals: true,
-            })}{" "}
-            / {formatMoney({ code: currency, amount: budget, decimals: true })}
-          </ThemedText>
+          />
         </View>
         <View style={styles.progressBar}>
           <View style={[styles.backBar, { backgroundColor: bgColor }]} />
@@ -177,6 +176,13 @@ const styles = StyleSheet.create({
   categoryData: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+    width: "100%",
+  },
+
+  categoryNameRow: {
+    flexDirection: "row",
     alignItems: "center",
   },
 

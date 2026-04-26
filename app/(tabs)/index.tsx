@@ -2,6 +2,7 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import AnimatedScreen from "@/components/ui/animated-screen";
 import CategoryBudgetPreview from "@/components/ui/category-budget-preview";
+import MoneyText from "@/components/ui/money-text";
 import SalaryBreakdownPieChart from "@/components/ui/pie-chart/salary-breakdown-pie-chart";
 import { Colors, getTheme } from "@/constants/theme";
 import { auth } from "@/firebase/firebaseConfig";
@@ -10,7 +11,6 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { useSalary } from "@/hooks/useSalary";
 import DatabaseService from "@/services/DatabaseService";
 import { registerPushToken } from "@/services/NotificationService";
-import { formatMoney } from "@/utils/formatMoney";
 import { syncBudgetWidget } from "@/utils/syncBudgetWidget";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
@@ -124,9 +124,14 @@ export default function HomeScreen() {
                       salary={salary}
                     />
                     <View style={styles.savedWrapper}>
-                      <ThemedText type="displayMedium" style={styles.percent}>
-                        {formatMoney({ code: currency, amount: difference })}
-                      </ThemedText>
+                      <MoneyText
+                        variant="hero"
+                        amount={difference}
+                        currency={currency ?? "USD"}
+                        type="displayMedium"
+                        style={styles.percent}
+                        minimumFontScale={0.4}
+                      />
                       <ThemedText type="h5" style={styles.saved}>
                         {overBudget ? "short!" : "saved!"}
                       </ThemedText>
@@ -221,6 +226,7 @@ const styles = StyleSheet.create({
   savedWrapper: {
     position: "absolute",
     alignItems: "center",
+    width: 150,
   },
 
   percent: {

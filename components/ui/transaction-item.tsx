@@ -1,11 +1,11 @@
 import { Colors, getTheme } from "@/constants/theme";
 import { TransactionType } from "@/types";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
-import { formatMoney } from "@/utils/formatMoney";
 import Octicons from "@expo/vector-icons/Octicons";
-import { Pressable, StyleSheet, useColorScheme, View } from "react-native";
+import { Pressable, StyleSheet, useColorScheme } from "react-native";
 import { ThemedText } from "../themed-text";
 import { ThemedView } from "../themed-view";
+import MoneyText from "./money-text";
 
 export default function TransactionItem({
   currency,
@@ -36,6 +36,7 @@ export default function TransactionItem({
       <ThemedView
         style={{
           backgroundColor: transactionBgColor,
+          flexGrow: 1,
         }}
       >
         <ThemedText
@@ -44,6 +45,7 @@ export default function TransactionItem({
             margin: 0,
             lineHeight: 0,
           }}
+          numberOfLines={1}
         >
           {transaction.name}
         </ThemedText>
@@ -58,22 +60,23 @@ export default function TransactionItem({
           {date.toLocaleDateString()}
         </ThemedText>
       </ThemedView>
-      <View style={{ flexDirection: "row", gap: 4 }}>
-        <ThemedText style={{ color: typeColor }} type="h6">
-          {formatMoney({
-            code: currency,
-            amount: transaction.amount,
-            decimals: true,
-          })}
-        </ThemedText>
-        <Pressable
-          onPress={() => handleEdit(transaction)}
-          style={{ transform: [{ rotate: "90deg" }] }}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Octicons name="kebab-horizontal" size={20} color={bgColor} />
-        </Pressable>
-      </View>
+      <MoneyText
+        variant="block"
+        amount={Number(transaction.amount.toFixed(2))}
+        currency={currency}
+        type="h4"
+        align="right"
+        decimals
+        darkColor={typeColor}
+        lightColor={typeColor}
+      />
+      <Pressable
+        onPress={() => handleEdit(transaction)}
+        style={{ transform: [{ rotate: "90deg" }] }}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      >
+        <Octicons name="kebab-horizontal" size={20} color={bgColor} />
+      </Pressable>
     </ThemedView>
   );
 }
@@ -81,12 +84,14 @@ export default function TransactionItem({
 const styles = StyleSheet.create({
   transactionWrapper: {
     flexDirection: "row",
-    width: "100%",
-    justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 25,
     paddingVertical: 10,
+    paddingHorizontal: 25,
     borderRadius: 25,
-    marginVertical: 10,
+    marginTop: 12,
+    width: "100%",
+    alignSelf: "stretch",
+    gap: 12,
+    overflow: "hidden",
   },
 });

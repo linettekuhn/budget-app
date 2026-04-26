@@ -271,12 +271,14 @@ const styles = StyleSheet.create({
 
   transactionList: {
     gap: 8,
+    alignItems: "stretch",
+    flex: 1,
   },
 
   transactionListWrapper: {
     borderRadius: 20,
     padding: 16,
-    alignItems: "center",
+    alignItems: "stretch",
     flex: 1,
   },
 });

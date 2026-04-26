@@ -4,6 +4,7 @@ import AnimatedScreen from "@/components/ui/animated-screen";
 import CapsuleButton from "@/components/ui/capsule-button";
 import CategoryBudgetPreview from "@/components/ui/category-budget-preview";
 import CustomCategory from "@/components/ui/modal/category-modal";
+import MoneyText from "@/components/ui/money-text";
 import MonthSelect from "@/components/ui/month-select";
 import MonthlyBudgetPieChart from "@/components/ui/pie-chart/monthly-budget-pie-chart";
 import { Colors, getTheme } from "@/constants/theme";
@@ -12,7 +13,6 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { useModal } from "@/hooks/useModal";
 import { CategorySpend } from "@/types";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
-import { formatMoney } from "@/utils/formatMoney";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
@@ -105,19 +105,15 @@ export default function Budget() {
                 <ThemedView style={styles.pieChartWrapper}>
                   <MonthlyBudgetPieChart budgets={budgets} />
                   <View style={styles.monthWrapper}>
-                    <ThemedText type="captionLarge">
-                      {formatMoney({
-                        code: currency,
-                        amount: totalSpent,
-                        decimals: true,
-                      })}{" "}
-                      /{" "}
-                      {formatMoney({
-                        code: currency,
-                        amount: totalBudget,
-                        decimals: true,
-                      })}
-                    </ThemedText>
+                    <MoneyText
+                      variant="pair"
+                      amount={totalSpent}
+                      secondAmount={totalBudget}
+                      currency={currency ?? "USD"}
+                      decimals
+                      type="captionLarge"
+                      minimumFontScale={0.2}
+                    />
                     <MonthSelect
                       handleDateChange={updateMonthData}
                       initialDate={selectedDate}
@@ -250,6 +246,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     alignItems: "center",
     gap: -15,
+    width: 160,
   },
 
   month: {
