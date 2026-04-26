@@ -34,7 +34,7 @@ export default function WelcomeOnboarding() {
   const startOnboardingProcess = async () => {
     try {
       if (!state.name) throw new Error("Please enter a name");
-      router.push("/categories");
+      router.push("/currency");
     } catch (error: unknown) {
       if (error instanceof Error) {
         Toast.show({

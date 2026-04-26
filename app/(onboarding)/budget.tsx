@@ -8,12 +8,12 @@ import OnboardingControls from "@/components/ui/onboarding-controls";
 import { Colors, getTheme } from "@/constants/theme";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
 import { formatAmountDisplay } from "@/utils/formatDisplay";
+import { formatMoney } from "@/utils/formatMoney";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   Keyboard,
-  Platform,
   StyleSheet,
   TouchableWithoutFeedback,
   useColorScheme,
@@ -29,6 +29,7 @@ export default function BudgetOnboarding() {
   // get onboarding state's budgets
   const { state, setState } = useOnboarding();
   const categories = state.categories;
+  const currency = state.currency;
   const [total, setTotal] = useState(0);
   const [isValid, setIsValid] = useState(false);
 
@@ -98,48 +99,65 @@ export default function BudgetOnboarding() {
         ]}
       >
         <OnboardingControls />
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-          <KeyboardAwareScrollView
-            keyboardShouldPersistTaps="handled"
-            extraScrollHeight={Platform.OS === "ios" ? 80 : 100}
-            enableOnAndroid={true}
-            contentContainerStyle={styles.container}
+        <ThemedView style={styles.container}>
+          <TouchableWithoutFeedback
+            onPress={Keyboard.dismiss}
+            accessible={false}
           >
-            <ThemedView style={styles.main}>
+            <ThemedView style={styles.header}>
               <ThemedText type="h1">Set Your Monthly Budgets</ThemedText>
               <ThemedText type="h5" style={{ paddingHorizontal: 20 }}>
                 Decide how much you want to spend in each category.
               </ThemedText>
-              <ThemedView style={styles.categoriesWrapper}>
-                {categories.map((category) => {
-                  const categoryColor = adjustColorForScheme(
-                    category.color,
-                    colorScheme,
-                  );
-                  return (
-                    <ThemedView
-                      style={[
-                        styles.categoryBudget,
-                        { borderColor: categoryColor },
-                      ]}
-                      key={category.id}
-                    >
-                      <ThemedText type="bodyLarge">{category.name}</ThemedText>
-                      <AmountDisplay
-                        displayAmount={
-                          state.budgets[category.id]?.display || "0.00"
-                        }
-                        rawAmount={state.budgets[category.id]?.raw || "0"}
-                        onChangeText={(text) =>
-                          handleAmountChange(category.id, text)
-                        }
-                        textType="bodyLarge"
-                      />
-                    </ThemedView>
-                  );
-                })}
-              </ThemedView>
-              <ThemedText type="h4">Total: ${total.toFixed(2)}</ThemedText>
+            </ThemedView>
+          </TouchableWithoutFeedback>
+
+          <KeyboardAwareScrollView
+            keyboardShouldPersistTaps="handled"
+            extraScrollHeight={300}
+            enableOnAndroid={true}
+            style={styles.categoriesScroll}
+            contentContainerStyle={styles.categoriesContent}
+          >
+            {categories.map((category) => {
+              const categoryColor = adjustColorForScheme(
+                category.color,
+                colorScheme,
+              );
+              return (
+                <ThemedView
+                  style={[
+                    styles.categoryBudget,
+                    { borderColor: categoryColor },
+                  ]}
+                  key={category.id}
+                >
+                  <ThemedText type="bodyLarge">{category.name}</ThemedText>
+                  <AmountDisplay
+                    displayAmount={
+                      state.budgets[category.id]?.display || "0.00"
+                    }
+                    rawAmount={state.budgets[category.id]?.raw || "0"}
+                    onChangeText={(text) =>
+                      handleAmountChange(category.id, text)
+                    }
+                    textType="bodyLarge"
+                    currency={currency}
+                  />
+                </ThemedView>
+              );
+            })}
+          </KeyboardAwareScrollView>
+
+          <TouchableWithoutFeedback
+            onPress={Keyboard.dismiss}
+            accessible={false}
+          >
+            <ThemedView style={styles.footer}>
+              <ThemedText type="h4">
+                Total:{" "}
+                {formatMoney({ amount: total, decimals: true, code: currency })}
+              </ThemedText>
               {!isValid ? (
                 <ThemedText
                   type="overline"
@@ -148,7 +166,8 @@ export default function BudgetOnboarding() {
                     textAlign: "center",
                   }}
                 >
-                  All budgets must be at least $1.00
+                  All budgets must be at least{" "}
+                  {formatMoney({ amount: 1, code: currency })}
                 </ThemedText>
               ) : (
                 <CapsuleButton
@@ -160,8 +179,8 @@ export default function BudgetOnboarding() {
                 />
               )}
             </ThemedView>
-          </KeyboardAwareScrollView>
-        </TouchableWithoutFeedback>
+          </TouchableWithoutFeedback>
+        </ThemedView>
       </SafeAreaView>
     </AnimatedScreen>
   );
@@ -172,20 +191,28 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  container: {
-    paddingHorizontal: 20,
-    paddingTop: 70,
+  header: {
+    gap: 8,
+  },
+  footer: {
+    gap: 12,
   },
 
-  main: {
-    paddingVertical: 8,
-    justifyContent: "flex-start",
+  container: {
     flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 70,
+    paddingBottom: 20,
     gap: 20,
   },
 
-  categoriesWrapper: {
+  categoriesScroll: {
+    flex: 1,
+  },
+
+  categoriesContent: {
     gap: 10,
+    paddingBottom: 8,
   },
 
   categoryBudget: {

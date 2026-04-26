@@ -9,6 +9,7 @@ export default function OnboardingStackLayout() {
         <Stack.Screen name="categories" options={{ headerShown: false }} />
         <Stack.Screen name="budget" options={{ headerShown: false }} />
         <Stack.Screen name="salary" options={{ headerShown: false }} />
+        <Stack.Screen name="currency" options={{ headerShown: false }} />
         <Stack.Screen name="finish" options={{ headerShown: false }} />
       </Stack>
     </OnboardingProvider>

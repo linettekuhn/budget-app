@@ -7,6 +7,7 @@ import OnboardingControls from "@/components/ui/onboarding-controls";
 import { Colors, getTheme } from "@/constants/theme";
 import DatabaseService from "@/services/DatabaseService";
 import SyncService from "@/services/SyncService";
+import { formatMoney } from "@/utils/formatMoney";
 import { syncBudgetWidget } from "@/utils/syncBudgetWidget";
 import Octicons from "@expo/vector-icons/Octicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -30,7 +31,7 @@ export default function FinishOnboarding() {
 
   // get onboarding state's budgets
   const { state, reset } = useOnboarding();
-  const { name, categories, budgets, salary } = state;
+  const { name, categories, budgets, salary, currency } = state;
   const total = Object.values(state.budgets).reduce((sum, { raw }) => {
     const value = parseFloat((Number(raw) / 100).toFixed(2));
     return sum + value;
@@ -56,6 +57,9 @@ export default function FinishOnboarding() {
         salary.monthly,
         salary.hoursPerWeek,
       );
+
+      // save currency
+      await DatabaseService.updateCurrency(state.currency);
 
       // mark onboarding as completed
       await AsyncStorage.setItem("completedOnboarding", "true");
@@ -107,20 +111,38 @@ export default function FinishOnboarding() {
               <View>
                 <ThemedText type="h3">Category Budgets</ThemedText>
                 {categories.map((cat) => {
-                  const amount = budgets[cat.id]?.display ?? "0.00";
+                  const amount =
+                    Number(state.budgets[cat.id]?.raw || "0") / 100;
                   return (
                     <ThemedText type="h6" key={cat.id}>
                       <Octicons name="dot-fill" color={cat.color} size={20} />{" "}
-                      {cat.name} - ${amount}
+                      {cat.name} -{" "}
+                      {formatMoney({
+                        amount,
+                        code: currency,
+                        decimals: true,
+                      })}
                     </ThemedText>
                   );
                 })}
               </View>
               <View>
                 <ThemedText type="h3">Monthly Summary</ThemedText>
-                <ThemedText type="h6">Budget: ${total.toFixed(2)}</ThemedText>
                 <ThemedText type="h6">
-                  Salary: ${salary.monthly.toFixed(2)}
+                  Budget:{" "}
+                  {formatMoney({
+                    amount: total,
+                    code: currency,
+                    decimals: true,
+                  })}
+                </ThemedText>
+                <ThemedText type="h6">
+                  Salary:{" "}
+                  {formatMoney({
+                    amount: salary.monthly,
+                    code: currency,
+                    decimals: true,
+                  })}
                 </ThemedText>
               </View>
             </ThemedView>

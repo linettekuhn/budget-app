@@ -9,6 +9,7 @@ import CapsuleToggle from "@/components/ui/capsule-toggle";
 import OnboardingControls from "@/components/ui/onboarding-controls";
 import { Colors, getTheme } from "@/constants/theme";
 import { formatAmountDisplay } from "@/utils/formatDisplay";
+import { formatMoney } from "@/utils/formatMoney";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -32,6 +33,7 @@ export default function SalaryOnboarding() {
   // get onboarding state's budgets
   const { state, setState } = useOnboarding();
   const salary = state.salary;
+  const currency = state.currency;
 
   const [salaryType, setSalaryType] = useState<
     "Hourly" | "Biweekly" | "Monthly" | "Yearly" | "Varies"
@@ -66,7 +68,9 @@ export default function SalaryOnboarding() {
   const saveSalary = async () => {
     try {
       if (!rawAmount || parseFloat(rawAmount) < 1) {
-        throw new Error("Amount must be at least $1.00");
+        throw new Error(
+          `Amount must be at least ${formatMoney({ code: currency, amount: 1 })}`,
+        );
       }
 
       if (
@@ -202,6 +206,7 @@ export default function SalaryOnboarding() {
                         rawAmount={rawAmount}
                         onChangeText={handleAmountChange}
                         textType="h3"
+                        currency={currency}
                       />
                       <ThemedText type="h3"> per hour</ThemedText>
                     </ThemedView>
@@ -233,8 +238,9 @@ export default function SalaryOnboarding() {
                       rawAmount={rawAmount}
                       onChangeText={handleAmountChange}
                       textType="h3"
+                      currency={currency}
                     />
-                    <ThemedText type="h3"> every 2 weeks</ThemedText>
+                    <ThemedText type="h3"> per 2 weeks</ThemedText>
                   </ThemedView>
                 </ThemedView>
               )}
@@ -247,6 +253,7 @@ export default function SalaryOnboarding() {
                       rawAmount={rawAmount}
                       onChangeText={handleAmountChange}
                       textType="h3"
+                      currency={currency}
                     />
                     <ThemedText type="h3"> per month</ThemedText>
                   </ThemedView>
@@ -261,6 +268,7 @@ export default function SalaryOnboarding() {
                       rawAmount={rawAmount}
                       onChangeText={handleAmountChange}
                       textType="h3"
+                      currency={currency}
                     />
                     <ThemedText type="h3"> per year</ThemedText>
                   </ThemedView>
@@ -268,15 +276,16 @@ export default function SalaryOnboarding() {
               )}
               {salaryType === "Varies" && (
                 <ThemedView style={styles.quantityWrapper}>
-                  <ThemedText type="h2">How much?</ThemedText>
+                  <ThemedText type="h2">How much (estimated)?</ThemedText>
                   <ThemedView style={styles.salaryAmount}>
                     <AmountDisplay
                       displayAmount={displayAmount}
                       rawAmount={rawAmount}
                       onChangeText={handleAmountChange}
                       textType="h3"
+                      currency={currency}
                     />
-                    <ThemedText type="h3"> per month (estimated)</ThemedText>
+                    <ThemedText type="h3"> per month</ThemedText>
                   </ThemedView>
                 </ThemedView>
               )}
