@@ -304,3 +304,7 @@ cron.schedule(
 );
 
 app.listen(3005, () => console.log("Push backend running on port 3005"));
+
+app.get("/", (req, res) => {
+  res.send("Piggy backend is running!");
+});
