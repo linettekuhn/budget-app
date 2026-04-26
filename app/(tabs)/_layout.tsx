@@ -1,6 +1,6 @@
 import { HapticTab } from "@/components/haptic-tab";
 import NewTransactionButton from "@/components/ui/new-transaction-button";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import Entypo from "@expo/vector-icons/Entypo";
 import Octicons from "@expo/vector-icons/Octicons";
@@ -27,8 +27,8 @@ const TabIcon = (props: any) => {
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  const tabsBgColor = Colors[colorScheme ?? "light"].tabBackground;
-  const activeTabColor = Colors[colorScheme ?? "light"].secondary[500];
+  const tabsBgColor = Colors[getTheme(colorScheme)].tabBackground;
+  const activeTabColor = Colors[getTheme(colorScheme)].secondary[500];
 
   return (
     <Tabs

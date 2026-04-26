@@ -3,14 +3,15 @@ import { ThemedView } from "@/components/themed-view";
 import AnimatedScreen from "@/components/ui/animated-screen";
 import CategoryBudgetPreview from "@/components/ui/category-budget-preview";
 import SalaryBreakdownPieChart from "@/components/ui/pie-chart/salary-breakdown-pie-chart";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { auth } from "@/firebase/firebaseConfig";
 import { useCategoriesSpend } from "@/hooks/useCategoriesSpend";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useSalary } from "@/hooks/useSalary";
 import DatabaseService from "@/services/DatabaseService";
-import { pingBackend, registerPushToken } from "@/services/NotificationService";
+import { registerPushToken } from "@/services/NotificationService";
 import { formatMoney } from "@/utils/formatMoney";
+import { syncBudgetWidget } from "@/utils/syncBudgetWidget";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -25,7 +26,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function HomeScreen() {
   const colorScheme = useColorScheme();
   const router = useRouter();
-  const bgColor = Colors[colorScheme ?? "light"].background;
+  const bgColor = Colors[getTheme(colorScheme)].background;
   const { salary, loading: loadingSalary, reload: reloadSalary } = useSalary();
   const {
     budgets,
@@ -50,16 +51,21 @@ export default function HomeScreen() {
 
       const user = auth.currentUser;
       if (!user) {
+        console.log("no user");
         return;
       }
 
       const ping = async () => {
+        console.log("syncing widget begin");
+        await syncBudgetWidget();
+        console.log("syncing widget end");
+
         const spentPercent = await DatabaseService.getSpentPercentFirstHalf();
 
         const weeklySpent = await DatabaseService.getWeeklySpent();
 
         const currentStreak = await DatabaseService.getStreak();
-        await pingBackend(user.uid, spentPercent, weeklySpent, currentStreak);
+        //await pingBackend(user.uid, spentPercent, weeklySpent, currentStreak);
       };
 
       ping();
@@ -131,7 +137,7 @@ export default function HomeScreen() {
                       <ThemedText
                         type="overline"
                         style={{
-                          color: Colors[colorScheme ?? "light"].error,
+                          color: Colors[getTheme(colorScheme)].error,
                           textAlign: "center",
                         }}
                       >
@@ -140,7 +146,7 @@ export default function HomeScreen() {
                       <ThemedText
                         type="captionSmall"
                         style={{
-                          color: Colors[colorScheme ?? "light"].error,
+                          color: Colors[getTheme(colorScheme)].error,
                           textAlign: "center",
                         }}
                       >
@@ -155,7 +161,7 @@ export default function HomeScreen() {
                     styles.spendingTrackerWrapper,
                     {
                       backgroundColor:
-                        Colors[colorScheme ?? "light"].primary[200],
+                        Colors[getTheme(colorScheme)].primary[200],
                     },
                   ]}
                 >
@@ -169,7 +175,7 @@ export default function HomeScreen() {
                       name: "Total Spent",
                       budget: totalBudget,
                       totalSpent: totalSpent,
-                      color: Colors[colorScheme ?? "light"].primary[500],
+                      color: Colors[getTheme(colorScheme)].primary[500],
                       type: "need",
                     }}
                     currency={currency ?? "USD"}

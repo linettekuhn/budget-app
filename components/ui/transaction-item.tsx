@@ -1,4 +1,4 @@
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { TransactionType } from "@/types";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
 import { formatMoney } from "@/utils/formatMoney";
@@ -18,8 +18,8 @@ export default function TransactionItem({
 }) {
   const colorScheme = useColorScheme();
   const date = new Date(transaction.date);
-  const transactionBgColor = Colors[colorScheme ?? "light"].primary[700];
-  const bgColor = Colors[colorScheme ?? "light"].background;
+  const transactionBgColor = Colors[getTheme(colorScheme)].primary[700];
+  const bgColor = Colors[getTheme(colorScheme)].background;
   const typeColor =
     transaction.type === "income"
       ? adjustColorForScheme("#2EA64E", colorScheme)

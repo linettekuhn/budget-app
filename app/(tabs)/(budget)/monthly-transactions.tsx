@@ -4,7 +4,7 @@ import AnimatedScreen from "@/components/ui/animated-screen";
 import EditTransaction from "@/components/ui/edit-transaction";
 import TextButton from "@/components/ui/text-button";
 import TransactionItem from "@/components/ui/transaction-item";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useModal } from "@/hooks/useModal";
 import DatabaseService from "@/services/DatabaseService";
@@ -32,7 +32,7 @@ type SectionType = {
 export default function MonthlyTransactions() {
   const colorScheme = useColorScheme();
 
-  const bgColor = Colors[colorScheme ?? "light"].background;
+  const bgColor = Colors[getTheme(colorScheme)].background;
 
   const [loading, setLoading] = useState(true);
   const [sections, setSections] = useState<SectionType[]>([]);
@@ -124,7 +124,7 @@ export default function MonthlyTransactions() {
     return (
       <View
         style={{
-          backgroundColor: Colors[colorScheme ?? "light"].background,
+          backgroundColor: Colors[getTheme(colorScheme)].background,
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
@@ -132,7 +132,7 @@ export default function MonthlyTransactions() {
       >
         <ActivityIndicator
           size="large"
-          color={Colors[colorScheme ?? "light"].text}
+          color={Colors[getTheme(colorScheme)].text}
         />
       </View>
     );

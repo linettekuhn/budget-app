@@ -1,7 +1,7 @@
 import AnimatedScreen from "@/components/ui/animated-screen";
 import CapsuleButton from "@/components/ui/capsule-button";
 import TransactionForm from "@/components/ui/transaction-form";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { useBadgeCheck } from "@/hooks/useBadgeCheck";
 import DatabaseService from "@/services/DatabaseService";
 import { TransactionFormData } from "@/types";
@@ -31,7 +31,7 @@ export default function Transaction() {
   const [formData, setFormData] = useState<TransactionFormData | null>(null);
   const [resetKey, setResetKey] = useState(0);
 
-  const btnColor = Colors[colorScheme ?? "light"].secondary[500];
+  const btnColor = Colors[getTheme(colorScheme)].secondary[500];
 
   const handleTransaction = async () => {
     if (!formData) return;
@@ -117,7 +117,7 @@ export default function Transaction() {
       <SafeAreaView
         style={[
           styles.safeArea,
-          { backgroundColor: Colors[colorScheme ?? "light"].background },
+          { backgroundColor: Colors[getTheme(colorScheme)].background },
         ]}
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>

@@ -10,7 +10,7 @@ import { ThemedView } from "@/components/themed-view";
 import AnimatedScreen from "@/components/ui/animated-screen";
 import Avatar from "@/components/ui/avatar";
 import { Collapsible } from "@/components/ui/collapsible";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { auth } from "@/firebase/firebaseConfig";
 import { useName } from "@/hooks/useName";
 import DatabaseService from "@/services/DatabaseService";
@@ -35,9 +35,9 @@ import { Toast } from "toastify-react-native";
 
 export default function Profile() {
   const colorScheme = useColorScheme();
-  const bgColor = Colors[colorScheme ?? "light"].background;
-  const btnColor = Colors[colorScheme ?? "light"].secondary[500];
-  const color = Colors[colorScheme ?? "light"].text;
+  const bgColor = Colors[getTheme(colorScheme)].background;
+  const btnColor = Colors[getTheme(colorScheme)].secondary[500];
+  const color = Colors[getTheme(colorScheme)].text;
   const user = auth.currentUser;
   const email = user?.email ?? null;
 
@@ -160,7 +160,7 @@ export default function Profile() {
     return (
       <View
         style={{
-          backgroundColor: Colors[colorScheme ?? "light"].background,
+          backgroundColor: Colors[getTheme(colorScheme)].background,
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
@@ -168,7 +168,7 @@ export default function Profile() {
       >
         <ActivityIndicator
           size="large"
-          color={Colors[colorScheme ?? "light"].text}
+          color={Colors[getTheme(colorScheme)].text}
         />
       </View>
     );
@@ -184,8 +184,7 @@ export default function Profile() {
                 style={[
                   styles.settingsWrapper,
                   {
-                    backgroundColor:
-                      Colors[colorScheme ?? "light"].primary[300],
+                    backgroundColor: Colors[getTheme(colorScheme)].primary[300],
                   },
                 ]}
               >
@@ -194,7 +193,7 @@ export default function Profile() {
                     styles.profileWrapper,
                     {
                       backgroundColor:
-                        Colors[colorScheme ?? "light"].primary[200],
+                        Colors[getTheme(colorScheme)].primary[200],
                     },
                   ]}
                 >
@@ -282,7 +281,7 @@ export default function Profile() {
                         styles.wrapper,
                         {
                           backgroundColor:
-                            Colors[colorScheme ?? "light"].primary[200],
+                            Colors[getTheme(colorScheme)].primary[200],
                         },
                       ]}
                     >

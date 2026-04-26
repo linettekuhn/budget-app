@@ -4,7 +4,7 @@ import { ThemedView } from "@/components/themed-view";
 import AnimatedScreen from "@/components/ui/animated-screen";
 import CapsuleButton from "@/components/ui/capsule-button";
 import CapsuleInput from "@/components/ui/capsule-input-box";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import DatabaseService from "@/services/DatabaseService";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useRouter } from "expo-router";
@@ -22,7 +22,7 @@ import { Toast } from "toastify-react-native";
 
 export default function WelcomeOnboarding() {
   const colorScheme = useColorScheme();
-  const btnColor = Colors[colorScheme ?? "light"].secondary[500];
+  const btnColor = Colors[getTheme(colorScheme)].secondary[500];
   const router = useRouter();
 
   const { state, setState } = useOnboarding();
@@ -54,7 +54,7 @@ export default function WelcomeOnboarding() {
       <SafeAreaView
         style={[
           styles.safeArea,
-          { backgroundColor: Colors[colorScheme ?? "light"].background },
+          { backgroundColor: Colors[getTheme(colorScheme)].background },
         ]}
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>

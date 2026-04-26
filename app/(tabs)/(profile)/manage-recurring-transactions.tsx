@@ -4,7 +4,7 @@ import CapsuleButton from "@/components/ui/capsule-button";
 import SettingsModal from "@/components/ui/modal/settings-modal";
 import TextButton from "@/components/ui/text-button";
 import TransactionForm from "@/components/ui/transaction-form";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { useCategories } from "@/hooks/useCategories";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useModal } from "@/hooks/useModal";
@@ -147,7 +147,7 @@ function EditRecurringTransaction({
           onPress: async () => {
             try {
               await DatabaseService.deleteRecurringTransaction(
-                initialRecurring.id
+                initialRecurring.id,
               );
               onCancel();
             } catch (error: unknown) {
@@ -166,7 +166,7 @@ function EditRecurringTransaction({
           },
         },
       ],
-      { cancelable: true }
+      { cancelable: true },
     );
   };
 
@@ -178,7 +178,7 @@ function EditRecurringTransaction({
     >
       <CapsuleButton
         text="DELETE TRANSACTION"
-        bgFocused={Colors[colorScheme ?? "light"].error}
+        bgFocused={Colors[getTheme(colorScheme)].error}
         onPress={deleteRecurring}
       />
       <TransactionForm initial={initialFormData} onChange={setFormData} />
@@ -194,7 +194,7 @@ export default function ManageRecurringTransactions() {
     loading: loadingTransactions,
   } = useRecurringTransactions();
   const colorScheme = useColorScheme();
-  const bgColor = Colors[colorScheme ?? "light"].background;
+  const bgColor = Colors[getTheme(colorScheme)].background;
   const {
     categories,
     reload: reloadCategories,
@@ -211,7 +211,7 @@ export default function ManageRecurringTransactions() {
       reloadCategories();
       reloadTransactions();
       reloadCurrency();
-    }, [reloadCategories, reloadTransactions, reloadCurrency])
+    }, [reloadCategories, reloadTransactions, reloadCurrency]),
   );
 
   const handleOpen = (recurring: RecurringTransaction) => {
@@ -227,7 +227,7 @@ export default function ManageRecurringTransactions() {
           reloadTransactions();
           closeModal();
         }}
-      />
+      />,
     );
   };
 
@@ -235,7 +235,7 @@ export default function ManageRecurringTransactions() {
     return (
       <View
         style={{
-          backgroundColor: Colors[colorScheme ?? "light"].background,
+          backgroundColor: Colors[getTheme(colorScheme)].background,
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
@@ -243,7 +243,7 @@ export default function ManageRecurringTransactions() {
       >
         <ActivityIndicator
           size="large"
-          color={Colors[colorScheme ?? "light"].text}
+          color={Colors[getTheme(colorScheme)].text}
         />
       </View>
     );
@@ -267,7 +267,7 @@ export default function ManageRecurringTransactions() {
               contentContainerStyle={[
                 styles.recurringList,
                 {
-                  backgroundColor: Colors[colorScheme ?? "light"].primary[200],
+                  backgroundColor: Colors[getTheme(colorScheme)].primary[200],
                 },
               ]}
               data={recurringTransactions}
@@ -281,7 +281,7 @@ export default function ManageRecurringTransactions() {
               renderItem={({ item }) => {
                 const rruleObj = rrulestr(item.rrule);
                 const category = categories.find(
-                  (cat) => cat.id === item.categoryId
+                  (cat) => cat.id === item.categoryId,
                 );
                 return (
                   <ThemedView
@@ -292,8 +292,8 @@ export default function ManageRecurringTransactions() {
                         backgroundColor: adjustColorForScheme(
                           category
                             ? category.color
-                            : Colors[colorScheme ?? "light"].primary[500],
-                          colorScheme
+                            : Colors[getTheme(colorScheme)].primary[500],
+                          colorScheme,
                         ),
                       },
                     ]}
@@ -316,7 +316,7 @@ export default function ManageRecurringTransactions() {
                         <Octicons
                           name="kebab-horizontal"
                           size={20}
-                          color={Colors[colorScheme ?? "light"].text}
+                          color={Colors[getTheme(colorScheme)].text}
                         />
                       </Pressable>
                     </View>

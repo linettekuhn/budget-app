@@ -1,4 +1,4 @@
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import DatabaseService from "@/services/DatabaseService";
 import {
   TransactionFormData,
@@ -118,7 +118,7 @@ export default function EditTransaction({
     >
       <CapsuleButton
         text="DELETE TRANSACTION"
-        bgFocused={Colors[colorScheme ?? "light"].error}
+        bgFocused={Colors[getTheme(colorScheme)].error}
         onPress={deleteTransaction}
       />
       <TransactionForm initial={initialFormData} onChange={setFormData} />

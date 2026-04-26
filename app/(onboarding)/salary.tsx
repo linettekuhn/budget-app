@@ -7,7 +7,7 @@ import CapsuleButton from "@/components/ui/capsule-button";
 import CapsuleNumberInput from "@/components/ui/capsule-input-number";
 import CapsuleToggle from "@/components/ui/capsule-toggle";
 import OnboardingControls from "@/components/ui/onboarding-controls";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { formatAmountDisplay } from "@/utils/formatDisplay";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useRouter } from "expo-router";
@@ -26,7 +26,7 @@ import { Toast } from "toastify-react-native";
 
 export default function SalaryOnboarding() {
   const colorScheme = useColorScheme();
-  const btnColor = Colors[colorScheme ?? "light"].secondary[500];
+  const btnColor = Colors[getTheme(colorScheme)].secondary[500];
   const router = useRouter();
 
   // get onboarding state's budgets
@@ -37,16 +37,16 @@ export default function SalaryOnboarding() {
     "Hourly" | "Biweekly" | "Monthly" | "Yearly" | "Varies"
   >(salary.type || "Hourly");
   const [hoursRaw, setHoursRaw] = useState(
-    Math.round((salary.hoursPerWeek || 0) * 100).toString()
+    Math.round((salary.hoursPerWeek || 0) * 100).toString(),
   );
   const [hoursDisplay, setHoursDisplay] = useState(
-    formatAmountDisplay(hoursRaw)
+    formatAmountDisplay(hoursRaw),
   );
   const [rawAmount, setRawAmount] = useState(
-    Math.round(salary.amount * 100).toString() || "0"
+    Math.round(salary.amount * 100).toString() || "0",
   );
   const [displayAmount, setDisplayAmount] = useState(
-    formatAmountDisplay(rawAmount)
+    formatAmountDisplay(rawAmount),
   );
 
   const handleAmountChange = (text: string) => {
@@ -128,7 +128,7 @@ export default function SalaryOnboarding() {
       <SafeAreaView
         style={[
           styles.safeArea,
-          { backgroundColor: Colors[colorScheme ?? "light"].background },
+          { backgroundColor: Colors[getTheme(colorScheme)].background },
         ]}
       >
         <OnboardingControls />
@@ -148,7 +148,7 @@ export default function SalaryOnboarding() {
               <ThemedView style={styles.horizontalContainer}>
                 <CapsuleToggle
                   text={"Hourly"}
-                  bgFocused={Colors[colorScheme ?? "light"].primary[500]}
+                  bgFocused={Colors[getTheme(colorScheme)].primary[500]}
                   selected={salaryType === "Hourly"}
                   onPress={() => {
                     Keyboard.dismiss();
@@ -157,7 +157,7 @@ export default function SalaryOnboarding() {
                 />
                 <CapsuleToggle
                   text={"Biweekly"}
-                  bgFocused={Colors[colorScheme ?? "light"].primary[500]}
+                  bgFocused={Colors[getTheme(colorScheme)].primary[500]}
                   selected={salaryType === "Biweekly"}
                   onPress={() => {
                     Keyboard.dismiss();
@@ -166,7 +166,7 @@ export default function SalaryOnboarding() {
                 />
                 <CapsuleToggle
                   text={"Monthly"}
-                  bgFocused={Colors[colorScheme ?? "light"].primary[500]}
+                  bgFocused={Colors[getTheme(colorScheme)].primary[500]}
                   selected={salaryType === "Monthly"}
                   onPress={() => {
                     Keyboard.dismiss();
@@ -175,7 +175,7 @@ export default function SalaryOnboarding() {
                 />
                 <CapsuleToggle
                   text={"Yearly"}
-                  bgFocused={Colors[colorScheme ?? "light"].primary[500]}
+                  bgFocused={Colors[getTheme(colorScheme)].primary[500]}
                   selected={salaryType === "Yearly"}
                   onPress={() => {
                     Keyboard.dismiss();
@@ -184,7 +184,7 @@ export default function SalaryOnboarding() {
                 />
                 <CapsuleToggle
                   text={"Varies"}
-                  bgFocused={Colors[colorScheme ?? "light"].primary[500]}
+                  bgFocused={Colors[getTheme(colorScheme)].primary[500]}
                   selected={salaryType === "Varies"}
                   onPress={() => {
                     Keyboard.dismiss();

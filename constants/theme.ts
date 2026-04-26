@@ -1,5 +1,11 @@
 import { Platform } from "react-native";
 
+export type ThemeKey = keyof typeof Colors; // "light" | "dark"
+
+export function getTheme(colorScheme: string | null | undefined): ThemeKey {
+  return colorScheme === "dark" ? "dark" : "light";
+}
+
 export const Colors = {
   light: {
     primary: {

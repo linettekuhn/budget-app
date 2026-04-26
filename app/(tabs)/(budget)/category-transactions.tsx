@@ -6,7 +6,7 @@ import EditTransaction from "@/components/ui/edit-transaction";
 import EditCategory from "@/components/ui/modal/edit-category-modal";
 import TextButton from "@/components/ui/text-button";
 import TransactionItem from "@/components/ui/transaction-item";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { useCategorySpend } from "@/hooks/useCategorySpend";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useModal } from "@/hooks/useModal";
@@ -34,7 +34,7 @@ export default function CategoryTransactions() {
   const date: Date = new Date(JSON.parse(params.date as string));
 
   const colorScheme = useColorScheme();
-  const bgColor = Colors[colorScheme ?? "light"].background;
+  const bgColor = Colors[getTheme(colorScheme)].background;
 
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<TransactionType[]>([]);
@@ -135,7 +135,7 @@ export default function CategoryTransactions() {
     return (
       <View
         style={{
-          backgroundColor: Colors[colorScheme ?? "light"].background,
+          backgroundColor: Colors[getTheme(colorScheme)].background,
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
@@ -143,7 +143,7 @@ export default function CategoryTransactions() {
       >
         <ActivityIndicator
           size="large"
-          color={Colors[colorScheme ?? "light"].text}
+          color={Colors[getTheme(colorScheme)].text}
         />
       </View>
     );
@@ -185,13 +185,13 @@ export default function CategoryTransactions() {
             <CapsuleButton
               text="Edit Budget"
               onPress={handleEditCategory}
-              bgFocused={Colors[colorScheme ?? "light"].primary[500]}
+              bgFocused={Colors[getTheme(colorScheme)].primary[500]}
             />
             <FlatList
               contentContainerStyle={[
                 styles.transactionList,
                 {
-                  backgroundColor: Colors[colorScheme ?? "light"].primary[200],
+                  backgroundColor: Colors[getTheme(colorScheme)].primary[200],
                 },
               ]}
               data={transactions}

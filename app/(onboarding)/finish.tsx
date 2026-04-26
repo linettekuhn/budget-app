@@ -4,7 +4,7 @@ import { ThemedView } from "@/components/themed-view";
 import AnimatedScreen from "@/components/ui/animated-screen";
 import CapsuleButton from "@/components/ui/capsule-button";
 import OnboardingControls from "@/components/ui/onboarding-controls";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import DatabaseService from "@/services/DatabaseService";
 import SyncService from "@/services/SyncService";
 import { syncBudgetWidget } from "@/utils/syncBudgetWidget";
@@ -24,7 +24,7 @@ import { Toast } from "toastify-react-native";
 
 export default function FinishOnboarding() {
   const colorScheme = useColorScheme();
-  const btnColor = Colors[colorScheme ?? "light"].secondary[500];
+  const btnColor = Colors[getTheme(colorScheme)].secondary[500];
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -93,7 +93,7 @@ export default function FinishOnboarding() {
       <SafeAreaView
         style={[
           styles.safeArea,
-          { backgroundColor: Colors[colorScheme ?? "light"].background },
+          { backgroundColor: Colors[getTheme(colorScheme)].background },
         ]}
       >
         <OnboardingControls />
@@ -129,7 +129,7 @@ export default function FinishOnboarding() {
                 <ThemedText
                   type="overline"
                   style={{
-                    color: Colors[colorScheme ?? "light"].error,
+                    color: Colors[getTheme(colorScheme)].error,
                     textAlign: "center",
                   }}
                 >
@@ -138,7 +138,7 @@ export default function FinishOnboarding() {
                 <ThemedText
                   type="captionSmall"
                   style={{
-                    color: Colors[colorScheme ?? "light"].error,
+                    color: Colors[getTheme(colorScheme)].error,
                     textAlign: "center",
                   }}
                 >
@@ -171,7 +171,7 @@ export default function FinishOnboarding() {
           >
             <ActivityIndicator
               size="large"
-              color={Colors[colorScheme ?? "light"].text}
+              color={Colors[getTheme(colorScheme)].text}
             />
           </View>
         )}

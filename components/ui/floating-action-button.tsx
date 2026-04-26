@@ -1,4 +1,4 @@
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { ComponentType } from "react";
 import { Pressable, StyleSheet, useColorScheme } from "react-native";
 import Animated, {
@@ -31,7 +31,7 @@ export default function FloatingIconButton({
   iconName,
 }: Props) {
   const colorScheme = useColorScheme();
-  const color = Colors[colorScheme ?? "light"].text;
+  const color = Colors[getTheme(colorScheme)].text;
   const isOdd = index % 2 === 0;
 
   const animatedStyle = useAnimatedStyle(() => {

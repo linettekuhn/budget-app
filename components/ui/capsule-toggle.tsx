@@ -1,5 +1,5 @@
 import { Motion } from "@/constants/motion";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { ComponentType, useEffect } from "react";
 import { Pressable, StyleSheet, useColorScheme } from "react-native";
 import Animated, {
@@ -29,8 +29,8 @@ export default function CapsuleToggle({
   selected,
 }: Props) {
   const colorScheme = useColorScheme();
-  const bgColor = Colors[colorScheme ?? "light"].background;
-  const color = Colors[colorScheme ?? "light"].text;
+  const bgColor = Colors[getTheme(colorScheme)].background;
+  const color = Colors[getTheme(colorScheme)].text;
 
   const baseScale = useSharedValue(Motion.scale.default);
   const pressScale = useSharedValue(Motion.scale.default);
@@ -38,7 +38,7 @@ export default function CapsuleToggle({
   useEffect(() => {
     baseScale.value = withTiming(
       selected ? Motion.scale.focus : Motion.scale.default,
-      { duration: Motion.duration.fast }
+      { duration: Motion.duration.fast },
     );
   }, [selected, baseScale]);
 

@@ -3,7 +3,7 @@ import { ThemedView } from "@/components/themed-view";
 import AnimatedScreen from "@/components/ui/animated-screen";
 import CapsuleButton from "@/components/ui/capsule-button";
 import CapsuleInput from "@/components/ui/capsule-input-box";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { firebaseErrorMessages } from "@/firebase/errorMessages";
 import { auth } from "@/firebase/firebaseConfig";
 import DatabaseService from "@/services/DatabaseService";
@@ -32,9 +32,9 @@ export default function Register() {
   const colorScheme = useColorScheme();
   const router = useRouter();
 
-  const textColor = Colors[colorScheme ?? "light"].text;
-  const btnColor = Colors[colorScheme ?? "light"].secondary[500];
-  const bgColor = Colors[colorScheme ?? "light"].background;
+  const textColor = Colors[getTheme(colorScheme)].text;
+  const btnColor = Colors[getTheme(colorScheme)].secondary[500];
+  const bgColor = Colors[getTheme(colorScheme)].background;
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -174,7 +174,7 @@ export default function Register() {
           >
             <ActivityIndicator
               size="large"
-              color={Colors[colorScheme ?? "light"].text}
+              color={Colors[getTheme(colorScheme)].text}
             />
           </View>
         )}

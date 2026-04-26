@@ -1,4 +1,4 @@
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
@@ -76,8 +76,8 @@ export default function MonthSelect({ handleDateChange, initialDate }: Props) {
             <CapsuleButton
               text="CURRENT MONTH"
               onPress={() => onMonthSelect(new Date())}
-              bgDefault={Colors[colorScheme ?? "light"].primary[200]}
-              bgFocused={Colors[colorScheme ?? "light"].primary[200]}
+              bgDefault={Colors[getTheme(colorScheme)].primary[200]}
+              bgFocused={Colors[getTheme(colorScheme)].primary[200]}
             />
             <DateTimePicker
               value={tempDate}
@@ -90,7 +90,7 @@ export default function MonthSelect({ handleDateChange, initialDate }: Props) {
           <CapsuleButton
             text="CHANGE MONTH"
             onPress={() => onMonthSelect(tempDate)}
-            bgFocused={Colors[colorScheme ?? "light"].primary[500]}
+            bgFocused={Colors[getTheme(colorScheme)].primary[500]}
           />
         </AppModal>
       )}

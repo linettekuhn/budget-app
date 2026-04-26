@@ -1,4 +1,4 @@
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useModal } from "@/hooks/useModal";
 import { useSalary } from "@/hooks/useSalary";
@@ -32,16 +32,16 @@ function SalaryChangeContent({
     "Hourly" | "Biweekly" | "Monthly" | "Yearly" | "Varies"
   >(initialSalary.type || "Hourly");
   const [hoursRaw, setHoursRaw] = useState(
-    Math.round((initialSalary.hoursPerWeek || 0) * 100).toString()
+    Math.round((initialSalary.hoursPerWeek || 0) * 100).toString(),
   );
   const [hoursDisplay, setHoursDisplay] = useState(
-    formatAmountDisplay(hoursRaw)
+    formatAmountDisplay(hoursRaw),
   );
   const [rawAmount, setRawAmount] = useState(
-    Math.round(initialSalary.amount * 100).toString() || "0"
+    Math.round(initialSalary.amount * 100).toString() || "0",
   );
   const [displayAmount, setDisplayAmount] = useState(
-    formatAmountDisplay(rawAmount)
+    formatAmountDisplay(rawAmount),
   );
   const [monthlyAmount, setMonthlyAmount] = useState(initialSalary.monthly);
 
@@ -88,7 +88,7 @@ function SalaryChangeContent({
           `Amount must be at least ${formatMoney({
             code: currency,
             amount: 1,
-          })}`
+          })}`,
         );
       }
 
@@ -155,7 +155,7 @@ function SalaryChangeContent({
       <ThemedView style={styles.horizontalContainer}>
         <CapsuleToggle
           text={"Hourly"}
-          bgFocused={Colors[colorScheme ?? "light"].primary[500]}
+          bgFocused={Colors[getTheme(colorScheme)].primary[500]}
           selected={salaryType === "Hourly"}
           onPress={() => {
             Keyboard.dismiss();
@@ -164,7 +164,7 @@ function SalaryChangeContent({
         />
         <CapsuleToggle
           text={"Biweekly"}
-          bgFocused={Colors[colorScheme ?? "light"].primary[500]}
+          bgFocused={Colors[getTheme(colorScheme)].primary[500]}
           selected={salaryType === "Biweekly"}
           onPress={() => {
             Keyboard.dismiss();
@@ -173,7 +173,7 @@ function SalaryChangeContent({
         />
         <CapsuleToggle
           text={"Monthly"}
-          bgFocused={Colors[colorScheme ?? "light"].primary[500]}
+          bgFocused={Colors[getTheme(colorScheme)].primary[500]}
           selected={salaryType === "Monthly"}
           onPress={() => {
             Keyboard.dismiss();
@@ -182,7 +182,7 @@ function SalaryChangeContent({
         />
         <CapsuleToggle
           text={"Yearly"}
-          bgFocused={Colors[colorScheme ?? "light"].primary[500]}
+          bgFocused={Colors[getTheme(colorScheme)].primary[500]}
           selected={salaryType === "Yearly"}
           onPress={() => {
             Keyboard.dismiss();
@@ -191,7 +191,7 @@ function SalaryChangeContent({
         />
         <CapsuleToggle
           text={"Varies"}
-          bgFocused={Colors[colorScheme ?? "light"].primary[500]}
+          bgFocused={Colors[getTheme(colorScheme)].primary[500]}
           selected={salaryType === "Varies"}
           onPress={() => {
             Keyboard.dismiss();
@@ -327,7 +327,7 @@ export default function EditSalaryOption({
             newSalary.type,
             newSalary.amount,
             newSalary.monthly,
-            newSalary.hoursPerWeek ?? null
+            newSalary.hoursPerWeek ?? null,
           );
 
           if (onChange) {
@@ -338,7 +338,7 @@ export default function EditSalaryOption({
         }}
         onCancel={closeModal}
         currency={currency ?? "USD"}
-      />
+      />,
     );
   };
 

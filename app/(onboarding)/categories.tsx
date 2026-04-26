@@ -6,7 +6,7 @@ import CapsuleButton from "@/components/ui/capsule-button";
 import CapsuleToggle from "@/components/ui/capsule-toggle";
 import CustomCategory from "@/components/ui/modal/category-modal";
 import OnboardingControls from "@/components/ui/onboarding-controls";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { useCategories } from "@/hooks/useCategories";
 import { useModal } from "@/hooks/useModal";
 import { CategoryType } from "@/types";
@@ -25,7 +25,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function CategoriesOnboarding() {
   const colorScheme = useColorScheme();
-  const btnColor = Colors[colorScheme ?? "light"].secondary[500];
+  const btnColor = Colors[getTheme(colorScheme)].secondary[500];
   const router = useRouter();
 
   // get onboarding state's categories
@@ -40,7 +40,7 @@ export default function CategoriesOnboarding() {
       if (isSelected) {
         // remove if selected
         updatedCategories = prev.categories.filter(
-          (cat) => cat.id !== category.id
+          (cat) => cat.id !== category.id,
         );
       } else {
         // add if not selected
@@ -77,7 +77,7 @@ export default function CategoriesOnboarding() {
           closeModal();
           reload();
         }}
-      />
+      />,
     );
   };
 
@@ -85,7 +85,7 @@ export default function CategoriesOnboarding() {
     return (
       <View
         style={{
-          backgroundColor: Colors[colorScheme ?? "light"].background,
+          backgroundColor: Colors[getTheme(colorScheme)].background,
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
@@ -93,7 +93,7 @@ export default function CategoriesOnboarding() {
       >
         <ActivityIndicator
           size="large"
-          color={Colors[colorScheme ?? "light"].text}
+          color={Colors[getTheme(colorScheme)].text}
         />
       </View>
     );
@@ -104,7 +104,7 @@ export default function CategoriesOnboarding() {
       <SafeAreaView
         style={[
           styles.safeArea,
-          { backgroundColor: Colors[colorScheme ?? "light"].background },
+          { backgroundColor: Colors[getTheme(colorScheme)].background },
         ]}
       >
         <OnboardingControls />
@@ -120,7 +120,7 @@ export default function CategoriesOnboarding() {
               {categories.map((category) => {
                 const categoryColor = adjustColorForScheme(
                   category.color,
-                  colorScheme
+                  colorScheme,
                 );
                 return (
                   <CapsuleToggle
@@ -128,7 +128,7 @@ export default function CategoriesOnboarding() {
                     text={category.name}
                     bgFocused={categoryColor}
                     selected={selectedCategories.some(
-                      (cat) => cat.id === category.id
+                      (cat) => cat.id === category.id,
                     )}
                     onPress={() => toggleCategory(category)}
                   />

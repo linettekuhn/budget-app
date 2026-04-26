@@ -1,4 +1,4 @@
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { CategorySpend } from "@/types";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
 import calculateSvgArcPath from "@/utils/calcuateSvgArcPath";
@@ -21,7 +21,7 @@ export default function MonthlyBudgetPieChart({ budgets }: Props) {
   const otherTotal = other.reduce((sum, category) => sum + category.budget, 0);
   const otherTotalSpent = other.reduce(
     (sum, category) => sum + category.totalSpent,
-    0
+    0,
   );
 
   if (otherTotal > 0) {
@@ -43,7 +43,7 @@ export default function MonthlyBudgetPieChart({ budgets }: Props) {
   let startAngle = -(Math.PI / 2);
   const total = displayBudgets.reduce(
     (sum, category) => sum + category.budget,
-    0
+    0,
   );
   return (
     <Svg width={size} height={size}>
@@ -52,9 +52,9 @@ export default function MonthlyBudgetPieChart({ budgets }: Props) {
           const categoryColor = adjustColorForScheme(
             category.color,
             colorScheme,
-            30
+            30,
           );
-          const screenBgColor = Colors[colorScheme ?? "light"].background;
+          const screenBgColor = Colors[getTheme(colorScheme)].background;
           const bgColor = tinycolor
             .mix(screenBgColor, categoryColor, 40)
             .toHexString();
@@ -83,7 +83,7 @@ export default function MonthlyBudgetPieChart({ budgets }: Props) {
             radius,
             drawableAngle,
             center,
-            center
+            center,
           );
 
           const currentStartAngle = startAngle;

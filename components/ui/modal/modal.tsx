@@ -1,6 +1,6 @@
 import { ThemedView } from "@/components/themed-view";
 import { Motion } from "@/constants/motion";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { useEffect, useState } from "react";
 import {
   Dimensions,
@@ -64,7 +64,7 @@ export default function AppModal({ onClose, visible, children }: Props) {
           if (finished) {
             scheduleOnRN(handleUnmount);
           }
-        }
+        },
       );
     }
   }, [visible, opacity, translateY, isModalMounted]);
@@ -95,7 +95,7 @@ export default function AppModal({ onClose, visible, children }: Props) {
           style={[
             styles.backdrop,
             animatedBackdropStyle,
-            { backgroundColor: Colors[colorScheme ?? "light"].primary[300] },
+            { backgroundColor: Colors[getTheme(colorScheme)].primary[300] },
           ]}
         >
           <Pressable onPress={onClose} style={StyleSheet.absoluteFill} />

@@ -1,6 +1,6 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { useBadgeCheck } from "@/hooks/useBadgeCheck";
 import { useCurrency } from "@/hooks/useCurrency";
 import DatabaseService from "@/services/DatabaseService";
@@ -88,7 +88,7 @@ export default function CustomCategory({
         name,
         categoryColor,
         categoryType,
-        budget
+        budget,
       );
       await checkBadges();
     } catch (error: unknown) {
@@ -119,7 +119,7 @@ export default function CustomCategory({
     return (
       <View
         style={{
-          backgroundColor: Colors[colorScheme ?? "light"].background,
+          backgroundColor: Colors[getTheme(colorScheme)].background,
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
@@ -127,7 +127,7 @@ export default function CustomCategory({
       >
         <ActivityIndicator
           size="large"
-          color={Colors[colorScheme ?? "light"].text}
+          color={Colors[getTheme(colorScheme)].text}
         />
       </View>
     );
@@ -169,7 +169,7 @@ export default function CustomCategory({
         <ThemedView style={styles.horizontalContainer}>
           <CapsuleToggle
             text="NEED"
-            bgFocused={Colors[colorScheme ?? "light"].primary[300]}
+            bgFocused={Colors[getTheme(colorScheme)].primary[300]}
             selected={typeSelected === "NEED"}
             onPress={() => {
               Keyboard.dismiss();
@@ -178,7 +178,7 @@ export default function CustomCategory({
           />
           <CapsuleToggle
             text="WANT"
-            bgFocused={Colors[colorScheme ?? "light"].primary[300]}
+            bgFocused={Colors[getTheme(colorScheme)].primary[300]}
             selected={typeSelected === "WANT"}
             onPress={() => {
               Keyboard.dismiss();

@@ -3,7 +3,7 @@ import { ThemedView } from "@/components/themed-view";
 import AnimatedScreen from "@/components/ui/animated-screen";
 import CapsuleButton from "@/components/ui/capsule-button";
 import CapsuleInput from "@/components/ui/capsule-input-box";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { firebaseErrorMessages } from "@/firebase/errorMessages";
 import { auth } from "@/firebase/firebaseConfig";
 import DatabaseService from "@/services/DatabaseService";
@@ -32,8 +32,8 @@ export default function Login() {
   const colorScheme = useColorScheme();
   const router = useRouter();
 
-  const textColor = Colors[colorScheme ?? "light"].text;
-  const btnColor = Colors[colorScheme ?? "light"].secondary[500];
+  const textColor = Colors[getTheme(colorScheme)].text;
+  const btnColor = Colors[getTheme(colorScheme)].secondary[500];
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -103,7 +103,7 @@ export default function Login() {
       <SafeAreaView
         style={[
           styles.safeArea,
-          { backgroundColor: Colors[colorScheme ?? "light"].background },
+          { backgroundColor: Colors[getTheme(colorScheme)].background },
         ]}
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
@@ -183,7 +183,7 @@ export default function Login() {
           >
             <ActivityIndicator
               size="large"
-              color={Colors[colorScheme ?? "light"].text}
+              color={Colors[getTheme(colorScheme)].text}
             />
           </View>
         )}

@@ -1,5 +1,5 @@
 import { ThemedText } from "@/components/themed-text";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { PropsWithChildren } from "react";
 import { StyleSheet, useColorScheme, View } from "react-native";
 import CapsuleButton from "../capsule-button";
@@ -19,7 +19,7 @@ export default function SettingsModal({
   proceedLabel = "SAVE CHANGES",
 }: Props & PropsWithChildren) {
   const colorScheme = useColorScheme();
-  const btnColor = Colors[colorScheme ?? "light"].primary[500];
+  const btnColor = Colors[getTheme(colorScheme)].primary[500];
 
   return (
     <View style={styles.modalContent}>

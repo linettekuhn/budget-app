@@ -1,4 +1,4 @@
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import Octicons from "@expo/vector-icons/Octicons";
 import * as Haptics from "expo-haptics";
 import { usePathname, useRouter } from "expo-router";
@@ -80,8 +80,8 @@ export default function NewTransactionButton({
           styles.transactionBtn,
           {
             backgroundColor: isTransactionScreen
-              ? Colors[colorScheme ?? "light"].secondary[500]
-              : Colors[colorScheme ?? "light"].primary[500],
+              ? Colors[getTheme(colorScheme)].secondary[500]
+              : Colors[getTheme(colorScheme)].primary[500],
           },
         ]}
         onPress={isTransactionScreen ? null : toggleExpanded}
@@ -96,7 +96,7 @@ export default function NewTransactionButton({
           <Octicons
             name="plus"
             size={25}
-            color={Colors[colorScheme ?? "light"].tabBackground}
+            color={Colors[getTheme(colorScheme)].tabBackground}
           />
         </Animated.Text>
       </Pressable>

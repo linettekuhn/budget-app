@@ -5,7 +5,7 @@ import AmountDisplay from "@/components/ui/amount-display";
 import AnimatedScreen from "@/components/ui/animated-screen";
 import CapsuleButton from "@/components/ui/capsule-button";
 import OnboardingControls from "@/components/ui/onboarding-controls";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
 import { formatAmountDisplay } from "@/utils/formatDisplay";
 import Octicons from "@expo/vector-icons/Octicons";
@@ -23,7 +23,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function BudgetOnboarding() {
   const colorScheme = useColorScheme();
-  const btnColor = Colors[colorScheme ?? "light"].secondary[500];
+  const btnColor = Colors[getTheme(colorScheme)].secondary[500];
   const router = useRouter();
 
   // get onboarding state's budgets
@@ -94,7 +94,7 @@ export default function BudgetOnboarding() {
       <SafeAreaView
         style={[
           styles.safeArea,
-          { backgroundColor: Colors[colorScheme ?? "light"].background },
+          { backgroundColor: Colors[getTheme(colorScheme)].background },
         ]}
       >
         <OnboardingControls />
@@ -114,7 +114,7 @@ export default function BudgetOnboarding() {
                 {categories.map((category) => {
                   const categoryColor = adjustColorForScheme(
                     category.color,
-                    colorScheme
+                    colorScheme,
                   );
                   return (
                     <ThemedView
@@ -144,7 +144,7 @@ export default function BudgetOnboarding() {
                 <ThemedText
                   type="overline"
                   style={{
-                    color: Colors[colorScheme ?? "light"].error,
+                    color: Colors[getTheme(colorScheme)].error,
                     textAlign: "center",
                   }}
                 >

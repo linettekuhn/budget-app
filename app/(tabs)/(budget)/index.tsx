@@ -6,7 +6,7 @@ import CategoryBudgetPreview from "@/components/ui/category-budget-preview";
 import CustomCategory from "@/components/ui/modal/category-modal";
 import MonthSelect from "@/components/ui/month-select";
 import MonthlyBudgetPieChart from "@/components/ui/pie-chart/monthly-budget-pie-chart";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { useCategoriesSpend } from "@/hooks/useCategoriesSpend";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useModal } from "@/hooks/useModal";
@@ -27,8 +27,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Budget() {
   const colorScheme = useColorScheme();
-  const bgColor = Colors[colorScheme ?? "light"].background;
-  const btnColor = Colors[colorScheme ?? "light"].secondary[500];
+  const bgColor = Colors[getTheme(colorScheme)].background;
+  const btnColor = Colors[getTheme(colorScheme)].secondary[500];
   const router = useRouter();
   const [seeAll, setSeeAll] = useState(false);
   const [budgets, setBudgets] = useState<CategorySpend[]>([]);
@@ -55,7 +55,7 @@ export default function Budget() {
     useCallback(() => {
       reloadSpend();
       reloadCurrency();
-    }, [reloadSpend, reloadCurrency])
+    }, [reloadSpend, reloadCurrency]),
   );
 
   let totalBudget = budgets.reduce((sum, category) => sum + category.budget, 0);
@@ -64,7 +64,7 @@ export default function Budget() {
 
   let totalSpent = budgets.reduce(
     (sum, category) => sum + category.totalSpent,
-    0
+    0,
   );
   totalSpent =
     totalSpent % 2 === 0 ? totalSpent : Number(totalSpent.toFixed(2));
@@ -91,7 +91,7 @@ export default function Budget() {
           closeModal();
           reloadSpend();
         }}
-      />
+      />,
     );
   };
 
