@@ -1,5 +1,6 @@
 import { useCurrency } from "@/hooks/useCurrency";
 import { useModal } from "@/hooks/useModal";
+import WidgetService from "@/services/WidgetService";
 import { getSupportedCurrencies } from "@/utils/currency";
 import { useState } from "react";
 import { Toast } from "toastify-react-native";
@@ -71,6 +72,7 @@ export default function ChangeCurrencyOption() {
             return;
           }
           await updateCurrency(newCurrency);
+          await WidgetService.syncAll();
           closeModal();
         }}
         onCancel={closeModal}

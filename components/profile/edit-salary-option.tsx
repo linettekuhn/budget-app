@@ -2,6 +2,7 @@ import { Colors, getTheme } from "@/constants/theme";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useModal } from "@/hooks/useModal";
 import { useSalary } from "@/hooks/useSalary";
+import WidgetService from "@/services/WidgetService";
 import { Salary } from "@/types";
 import { formatAmountDisplay } from "@/utils/formatDisplay";
 import { formatMoney } from "@/utils/formatMoney";
@@ -341,6 +342,7 @@ export default function EditSalaryOption({
             onChange();
           }
 
+          await WidgetService.syncAll();
           closeModal();
         }}
         onCancel={closeModal}

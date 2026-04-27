@@ -5,6 +5,7 @@ import DeleteAccountOption from "@/components/profile/delete-account-option";
 import EditNotificationSettingsOption from "@/components/profile/edit-notification-settings-option";
 import EditSalaryOption from "@/components/profile/edit-salary-option";
 import ProfileOption from "@/components/profile/profile-option";
+import WidgetCategoryOption from "@/components/profile/widget-category-option";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import AnimatedScreen from "@/components/ui/animated-screen";
@@ -251,6 +252,7 @@ export default function Profile() {
                           );
                         }}
                       />
+                      <WidgetCategoryOption />
                     </View>
                   </Collapsible>
                   {user && (

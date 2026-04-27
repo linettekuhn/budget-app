@@ -31,11 +31,17 @@ import { Toast } from "toastify-react-native";
 
 export default function CategoryTransactions() {
   const params = useLocalSearchParams();
-  const category: CategoryType = JSON.parse(params.category as string);
-  const date: Date = useMemo(
-    () => new Date(JSON.parse(params.date as string)),
-    [params.date],
+
+  // entry points:
+  // - from within the app: params.category (full JSON) + params.date
+  // - from widget deep link: params.categoryId only
+  const [category, setCategory] = useState<CategoryType | null>(
+    params.category ? JSON.parse(params.category as string) : null,
   );
+  const date: Date = useMemo(() => {
+    if (params.date) return new Date(JSON.parse(params.date as string));
+    return new Date();
+  }, [params.date]);
 
   const tabBarPadding = useTabBarPadding();
   const colorScheme = useColorScheme();
@@ -47,13 +53,23 @@ export default function CategoryTransactions() {
     budget,
     loading: loadingBudget,
     reload: reloadSpend,
-  } = useCategorySpend(category.id, date.toISOString());
+  } = useCategorySpend(category?.id ?? "", date.toISOString());
   const {
     currency,
     loading: loadingCurrency,
     reload: reloadCurrency,
   } = useCurrency();
   const { openModal, closeModal } = useModal();
+
+  // when arriving from widget, fetch the category by ID
+  useEffect(() => {
+    if (!params.category && params.categoryId) {
+      DatabaseService.getCategories().then((cats) => {
+        const match = cats.find((c) => c.id === params.categoryId);
+        if (match) setCategory(match);
+      });
+    }
+  }, [params.category, params.categoryId]);
 
   useFocusEffect(
     useCallback(() => {
@@ -63,6 +79,7 @@ export default function CategoryTransactions() {
   );
 
   const handleEditCategory = () => {
+    if (!category) return;
     openModal(
       <EditCategory
         onComplete={() => {
@@ -93,6 +110,7 @@ export default function CategoryTransactions() {
   };
 
   const loadTransaction = useCallback(async () => {
+    if (!category) return;
     try {
       const year = date.getFullYear();
       const month = date.getMonth() + 1;
@@ -117,10 +135,7 @@ export default function CategoryTransactions() {
       setTransactions(savedTransactions);
     } catch (error: unknown) {
       if (error instanceof Error) {
-        Toast.show({
-          type: "error",
-          text1: error.message,
-        });
+        Toast.show({ type: "error", text1: error.message });
       } else {
         Toast.show({
           type: "error",
@@ -130,13 +145,13 @@ export default function CategoryTransactions() {
     } finally {
       setLoading(false);
     }
-  }, [category.id, date]);
+  }, [category, date]);
 
   useEffect(() => {
     loadTransaction();
   }, [loadTransaction]);
 
-  if (loading || loadingBudget || loadingCurrency || !budget) {
+  if (loading || loadingBudget || loadingCurrency || !budget || !category) {
     return (
       <View
         style={{
@@ -153,6 +168,7 @@ export default function CategoryTransactions() {
       </View>
     );
   }
+
   return (
     <AnimatedScreen entering="slideRight">
       <SafeAreaView
@@ -182,13 +198,9 @@ export default function CategoryTransactions() {
                 style={{ textAlign: "center", paddingHorizontal: 32 }}
               >
                 You have spent{" "}
-                {formatMoney({
-                  amount: budget.totalSpent,
-                  code: currency,
-                })}{" "}
-                out of your{" "}
-                {formatMoney({ amount: budget.budget, code: currency })} budget
-                for{" "}
+                {formatMoney({ amount: budget.totalSpent, code: currency })} out
+                of your {formatMoney({ amount: budget.budget, code: currency })}{" "}
+                budget for{" "}
                 {category.name
                   .split(" ")
                   .map((word) => word[0].toLowerCase() + word.slice(1))

@@ -3,6 +3,7 @@ import { ThemedView } from "@/components/themed-view";
 import { Colors, getTheme } from "@/constants/theme";
 import { useCurrency } from "@/hooks/useCurrency";
 import DatabaseService from "@/services/DatabaseService";
+import WidgetService from "@/services/WidgetService";
 import { CategoryType } from "@/types";
 import { formatAmountDisplay } from "@/utils/formatDisplay";
 import { router } from "expo-router";
@@ -78,6 +79,8 @@ export default function EditCategory({ onComplete, category }: Props) {
         category.id,
       );
 
+      await WidgetService.syncAll();
+
       Toast.show({
         type: "success",
         text1: "Category updated successfully!",
@@ -118,6 +121,7 @@ export default function EditCategory({ onComplete, category }: Props) {
           onPress: async () => {
             try {
               await DatabaseService.deleteCategory(category.id);
+              await WidgetService.syncAll();
               onComplete();
               router.replace("/(tabs)/(budget)");
             } catch (error: unknown) {

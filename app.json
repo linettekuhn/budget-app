@@ -57,9 +57,21 @@
               "supportedFamilies": ["systemSmall", "systemMedium"]
             },
             {
-              "name": "HelloWidget",
-              "displayName": "Hello",
-              "description": "Test Widget",
+              "name": "CategoryWidget",
+              "displayName": "Category Budget",
+              "description": "Track spending for a specific category",
+              "supportedFamilies": ["systemSmall", "systemMedium"]
+            },
+            {
+              "name": "StreakWidget",
+              "displayName": "Savings Streak",
+              "description": "Stay motivated with your current savings streak and badge count",
+              "supportedFamilies": ["systemSmall"]
+            },
+            {
+              "name": "AddTransactionWidget",
+              "displayName": "Add Transaction",
+              "description": "Quickly jump to adding a new transaction",
               "supportedFamilies": ["systemSmall"]
             }
           ]

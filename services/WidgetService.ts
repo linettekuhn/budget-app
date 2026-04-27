@@ -1,6 +1,7 @@
 import { Colors } from "@/constants/theme";
 import { formatMoney } from "@/utils/formatMoney";
 import BudgetWidget from "@/widgets/BudgetWidget";
+import CategoryWidget from "@/widgets/CategoryWidget";
 import DatabaseService from "./DatabaseService";
 
 const estimateWidth = (str: string): number => {
@@ -72,17 +73,89 @@ export default class WidgetService {
         heroFontSizeSmall: heroFontSize(formattedRemaining, true),
         heroFontSizeLarge: heroFontSize(formattedRemaining, false),
       };
-      console.log(
-        "[WidgetService.syncBudgetWidget] syncing with payload:",
-        payload,
-      );
+
       await BudgetWidget.updateSnapshot(payload);
     } catch (error) {
       console.warn("[WidgetService.syncBudgetWidget]", error);
     }
   }
+  static async syncCategoryWidget(): Promise<void> {
+    try {
+      const categoryId = await DatabaseService.getWidgetCategoryId();
+      const currency = (await DatabaseService.getCurrency()) ?? "USD";
+      const now = new Date();
+      const daysLeft =
+        new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() -
+        now.getDate();
+
+      if (!categoryId) {
+        await CategoryWidget.updateSnapshot({
+          noCategorySet: true,
+          categoryName: "",
+          categoryColor: "",
+          remainingFormatted: "",
+          totalBudgetFormatted: "",
+          dailyRemainingFormatted: "",
+          isOverBudget: false,
+          noBudgetSet: false,
+          daysLeft,
+          monthName: now.toLocaleString("default", { month: "long" }),
+          colors: Colors,
+          heroFontSizeSmall: 20,
+          heroFontSizeLarge: 34,
+          widgetUrl: "budgetapp:///(tabs)/(profile)",
+        });
+        return;
+      }
+
+      const spend = await DatabaseService.getCategorySpend(categoryId);
+      if (!spend) return;
+
+      const budget = spend.budget ?? 0;
+      const remaining = budget - Math.max(0, spend.totalSpent);
+      const dailyRemaining =
+        daysLeft > 0 && remaining > 0
+          ? parseFloat((remaining / daysLeft).toFixed(2))
+          : 0;
+
+      const fmt = (amount: number) =>
+        formatMoney({ code: currency, amount, decimals: false });
+
+      const formattedRemaining = fmt(Math.abs(remaining));
+
+      const categoryParam = encodeURIComponent(JSON.stringify(spend));
+      const dateParam = encodeURIComponent(JSON.stringify(now));
+      const widgetUrl = `budgetapp:///(tabs)/(budget)/category-transactions?categoryId=${spend.id}&date=${encodeURIComponent(JSON.stringify(now))}`;
+
+      const payload = {
+        noCategorySet: false,
+        categoryName: spend.name,
+        categoryColor: spend.color,
+        remainingFormatted: formattedRemaining,
+        totalBudgetFormatted: fmt(budget),
+        dailyRemainingFormatted: dailyRemaining > 0 ? fmt(dailyRemaining) : "",
+        isOverBudget: remaining < 0,
+        noBudgetSet: budget === 0,
+        daysLeft,
+        monthName: now.toLocaleString("default", { month: "long" }),
+        colors: Colors,
+        heroFontSizeSmall: heroFontSize(formattedRemaining, true),
+        heroFontSizeLarge: heroFontSize(formattedRemaining, false),
+        widgetUrl,
+      };
+
+      console.log(
+        "[WidgetService.syncCategoryWidget] syncing with payload:",
+        payload,
+      );
+
+      await CategoryWidget.updateSnapshot(payload);
+    } catch (error) {
+      console.warn("[WidgetService.syncCategoryWidget]", error);
+    }
+  }
 
   static async syncAll(): Promise<void> {
-    await Promise.all([this.syncBudgetWidget()]);
+    await Promise.all([this.syncBudgetWidget(), this.syncCategoryWidget()]);
   }
 }

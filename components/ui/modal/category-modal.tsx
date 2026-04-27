@@ -4,6 +4,7 @@ import { Colors, getTheme } from "@/constants/theme";
 import { useBadgeCheck } from "@/hooks/useBadgeCheck";
 import { useCurrency } from "@/hooks/useCurrency";
 import DatabaseService from "@/services/DatabaseService";
+import WidgetService from "@/services/WidgetService";
 import { CategorySpend } from "@/types";
 import { formatAmountDisplay } from "@/utils/formatDisplay";
 import { useState } from "react";
@@ -90,6 +91,7 @@ export default function CustomCategory({
         categoryType,
         budget,
       );
+      await WidgetService.syncAll();
       await checkBadges();
     } catch (error: unknown) {
       if (error instanceof Error) {

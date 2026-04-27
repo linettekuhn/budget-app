@@ -53,7 +53,7 @@ export function useSalary() {
       type: string,
       amount: number,
       monthly: number,
-      hoursPerWeek: number | null
+      hoursPerWeek: number | null,
     ) => {
       try {
         await DatabaseService.updateSalary(type, amount, monthly, hoursPerWeek);
@@ -72,7 +72,7 @@ export function useSalary() {
         });
       }
     },
-    [reload]
+    [reload],
   );
 
   return { salary, loading, setSalary, reload, updateSalary };

@@ -1271,6 +1271,33 @@ export default class DatabaseService {
     });
   }
 
+  static async getWidgetCategoryId(): Promise<string | undefined> {
+    const db = await this.getDatabase();
+    const row = await db.getFirstAsync<{ value: string }>(
+      "SELECT value FROM app_meta WHERE id = 'widget_category_id' AND deletedAt IS NULL",
+    );
+    return row?.value;
+  }
+
+  static async setWidgetCategoryId(categoryId: string): Promise<void> {
+    const db = await this.getDatabase();
+    const existing = await this.getWidgetCategoryId();
+    if (existing) {
+      await db.runAsync(
+        "UPDATE app_meta SET value = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = 'widget_category_id'",
+        [categoryId],
+      );
+    } else {
+      await db.runAsync(
+        "INSERT INTO app_meta (id, value) VALUES ('widget_category_id', ?)",
+        [categoryId],
+      );
+    }
+    await this.logChange("app_meta", "widget_category_id", "update", {
+      value: categoryId,
+    });
+  }
+
   static async getLastSyncDate() {
     const db = await this.getDatabase();
 
