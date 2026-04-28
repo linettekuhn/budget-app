@@ -564,7 +564,14 @@ export default class DatabaseService {
     const id = "primary_salary";
 
     await db.runAsync(
-      `INSERT INTO salary (id, type, amount, monthly, hoursPerWeek) VALUES (?, ?, ?, ?, ?)`,
+      `INSERT INTO salary (id, type, amount, monthly, hoursPerWeek)
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+          type = excluded.type,
+          amount = excluded.amount,
+          monthly = excluded.monthly,
+          hoursPerWeek = excluded.hoursPerWeek,
+          updatedAt = CURRENT_TIMESTAMP`,
       [id, type, amount, monthly, hoursPerWeek],
     );
 
