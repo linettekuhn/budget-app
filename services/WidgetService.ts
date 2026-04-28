@@ -164,7 +164,6 @@ export default class WidgetService {
 
       if (transactions.length) {
         const transaction = transactions[0];
-        console.log("Transaction:", transaction);
 
         const fmt = (amount: number) =>
           formatMoney({ code: currency, amount, decimals: false });
@@ -249,11 +248,6 @@ export default class WidgetService {
         streakColorEnd: streakColors.end,
         colors: Colors,
       };
-
-      console.log(
-        "[WidgetService.syncStreakWidget] syncing with payload:",
-        payload,
-      );
 
       await StreakWidget.updateSnapshot(payload);
     } catch (error) {

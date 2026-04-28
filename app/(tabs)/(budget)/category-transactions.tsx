@@ -284,7 +284,6 @@ const styles = StyleSheet.create({
   transactionList: {
     gap: 8,
     alignItems: "stretch",
-    flex: 1,
   },
 
   transactionListWrapper: {
