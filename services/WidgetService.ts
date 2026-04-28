@@ -169,21 +169,25 @@ export default class WidgetService {
           formatMoney({ code: currency, amount, decimals: false });
 
         const formattedAmount = fmt(Math.abs(transaction.amount));
-        const heroFontSizeSmall = heroFontSize("x" + formattedAmount, true);
+        const heroFontSizeSmall = heroFontSize("x " + formattedAmount, true);
+        const widgetUrl = `budgetapp:///(tabs)/transaction?type=${transaction.type === "income" ? "INCOME" : "EXPENSE"}`;
 
         payload = {
           lastTransaction: transaction,
           formattedAmount,
           heroFontSize: heroFontSizeSmall,
           categoryColor: transaction.categoryColor,
+          widgetUrl,
           colors: Colors,
         };
       } else {
+        const widgetUrl = "budgetapp:///(tabs)/transaction?type=EXPENSE";
         payload = {
           lastTransaction: undefined,
           formattedAmount: "",
           heroFontSize: 20,
           categoryColor: undefined,
+          widgetUrl,
           colors: Colors,
         };
       }

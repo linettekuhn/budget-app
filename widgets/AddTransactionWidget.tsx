@@ -19,6 +19,7 @@ type AddTransactionWidgetProps = {
   categoryColor?: string;
   pillBackgroundLight: string;
   pillBackgroundDark: string;
+  widgetUrl: string;
   colors: typeof Colors;
 };
 
@@ -36,9 +37,7 @@ const AddTransactionWidget = (
   const dimmedColor = c.primary[500];
   const accentColor = c.primary[500];
 
-  const url = transaction
-    ? `budgetapp:///(tabs)/transaction?type=${transaction.type === "income" ? "INCOME" : "EXPENSE"}`
-    : "budgetapp:///(tabs)/transaction?type=EXPENSE";
+  const url = props.widgetUrl ?? "budgetapp:///(tabs)/transaction?type=EXPENSE";
 
   if (!transaction) {
     return (
@@ -95,8 +94,7 @@ const AddTransactionWidget = (
             foregroundStyle(typeColor),
           ]}
         >
-          {typeLabel}
-          {props.formattedAmount}
+          {typeLabel} {props.formattedAmount}
         </Text>
         <Text
           modifiers={[
