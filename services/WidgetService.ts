@@ -4,6 +4,7 @@ import { formatMoney } from "@/utils/formatMoney";
 import AddTransactionWidget from "@/widgets/AddTransactionWidget";
 import BudgetWidget from "@/widgets/BudgetWidget";
 import CategoryWidget from "@/widgets/CategoryWidget";
+import StreakWidget from "@/widgets/StreakWidget";
 import DatabaseService from "./DatabaseService";
 
 const estimateWidth = (str: string): number => {
@@ -192,10 +193,6 @@ export default class WidgetService {
         };
       }
 
-      console.log(
-        "[WidgetService.syncTransactionWidget] syncing with payload:",
-        payload,
-      );
       await AddTransactionWidget.updateSnapshot({
         ...payload,
         pillBackgroundLight,
@@ -205,12 +202,71 @@ export default class WidgetService {
       console.warn("[WidgetService.syncTransactionWidget]", error);
     }
   }
+  static async syncStreakWidget(): Promise<void> {
+    try {
+      const currentStreak = await DatabaseService.getStreak();
+      const getStreakMessage = (streak: number): string => {
+        if (streak === 0) return "Start your streak today";
+        if (streak === 1) return "Great start! Keep it up";
+        if (streak <= 6) return "Don't break the chain!";
+        if (streak <= 13) return `${streak} days strong`;
+        if (streak <= 29) return "On fire! Keep going";
+        return "Legendary streak!";
+      };
+
+      const getStreakColors = (
+        streak: number,
+      ): { start: string; end: string } => {
+        if (streak === 0) {
+          // cold/ash gray
+          return { start: "#9CA3AF", end: "#D1D5DB" };
+        }
+        if (streak <= 2) {
+          // blue-ish flame base (light/dark safe)
+          return { start: "#4e3bf6", end: "#9a93fd" };
+        }
+        if (streak <= 6) {
+          // early orange glow
+          return { start: "#F59E0B", end: "#FCD34D" };
+        }
+        if (streak <= 13) {
+          // bright orange
+          return { start: "#EA580C", end: "#FDBA74" };
+        }
+        if (streak <= 29) {
+          // intense red-orange
+          return { start: "#DC2626", end: "#F87171" };
+        }
+        // deepest red fire
+        return { start: "#B91C1C", end: "#FECACA" };
+      };
+      const streakColors = getStreakColors(currentStreak);
+
+      const payload = {
+        currentStreak,
+        streakMessage: getStreakMessage(currentStreak),
+        streakColorStart: streakColors.start,
+        streakColorEnd: streakColors.end,
+        colors: Colors,
+      };
+
+      console.log(
+        "[WidgetService.syncStreakWidget] syncing with payload:",
+        payload,
+      );
+
+      await StreakWidget.updateSnapshot(payload);
+    } catch (error) {
+      console.warn("[WidgetService.syncStreakWidget]", error);
+    }
+  }
 
   static async syncAll(): Promise<void> {
     await Promise.all([
       this.syncBudgetWidget(),
       this.syncCategoryWidget(),
       this.syncTransactionWidget(),
+      this.syncStreakWidget(),
     ]);
   }
 }
