@@ -673,7 +673,6 @@ export default class DatabaseService {
       ],
     );
     await this.logChange("recurring_transactions", id, "create", transaction);
-    await this.addTransaction(transactionData);
   }
 
   static async addMissedRecurringTransactions() {

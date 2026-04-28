@@ -73,6 +73,10 @@ export default function Transaction() {
           ...transaction,
           rrule: rrule.toString(),
         });
+
+        // generate occurrences
+        await DatabaseService.addMissedRecurringTransactions();
+
         Toast.show({
           type: "success",
           text1: "Recurring transaction added!",
