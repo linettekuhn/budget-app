@@ -691,6 +691,13 @@ export default class DatabaseService {
       // add a transaction on each missed date
       if (!datesMissed.length) continue;
       for (const occurrenceDate of datesMissed) {
+        const existing = await db.getFirstAsync(
+          `SELECT id FROM transactions WHERE date = ? AND categoryId = ? AND name = ?`,
+          [occurrenceDate.toISOString(), recurring.categoryId, recurring.name],
+        );
+
+        if (existing) continue;
+
         this.addTransaction({
           name: recurring.name,
           amount: recurring.amount,
@@ -831,7 +838,7 @@ export default class DatabaseService {
     const monthStr = month.toString().padStart(2, "0");
 
     const startDate = `${year}-${monthStr}-01`;
-    const endDate = `${year}-${monthStr}-31`;
+    const endDate = new Date(year, month, 0).toISOString();
 
     return await db.getAllAsync<TransactionType>(
       `
@@ -860,7 +867,7 @@ export default class DatabaseService {
     const monthStr = month.toString().padStart(2, "0");
 
     const startDate = `${year}-${monthStr}-01`;
-    const endDate = `${year}-${monthStr}-31`;
+    const endDate = new Date(year, month, 0).toISOString();
 
     return await db.getAllAsync<TransactionType>(
       `
@@ -897,7 +904,7 @@ export default class DatabaseService {
     const monthStr = m.toString().padStart(2, "0");
 
     const startDate = `${y}-${monthStr}-01`;
-    const endDate = `${y}-${monthStr}-31`;
+    const endDate = new Date(y, m, 0).toISOString();
 
     return await db.getAllAsync<CategorySpend>(
       `
@@ -939,7 +946,7 @@ export default class DatabaseService {
     const monthStr = m.toString().padStart(2, "0");
 
     const startDate = `${y}-${monthStr}-01`;
-    const endDate = `${y}-${monthStr}-31`;
+    const endDate = new Date(y, m, 0).toISOString();
 
     return await db.getFirstAsync<CategorySpend>(
       `

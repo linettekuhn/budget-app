@@ -2,7 +2,7 @@ import { TransactionFormData } from "@/types";
 import { Options, RRule } from "rrule";
 
 export default function buildRRule(
-  data: Extract<TransactionFormData, { isRecurring: true }>
+  data: Extract<TransactionFormData, { isRecurring: true }>,
 ) {
   const startDate = data.date;
   const year = startDate.getUTCFullYear();
@@ -11,7 +11,9 @@ export default function buildRRule(
   const hours = startDate.getUTCHours();
   const minutes = startDate.getUTCMinutes();
   const seconds = startDate.getUTCSeconds();
-  const utcStartDate = new Date(year, month, day, hours, minutes, seconds);
+  const utcStartDate = new Date(
+    Date.UTC(year, month, day, hours, minutes, seconds),
+  );
 
   // build RRULE options object
   const rruleOptions: Partial<Options> = {

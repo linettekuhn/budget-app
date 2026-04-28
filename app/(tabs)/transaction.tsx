@@ -18,6 +18,7 @@ import {
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { RRule } from "rrule";
 import { Toast } from "toastify-react-native";
 
 export default function Transaction() {
@@ -56,21 +57,31 @@ export default function Transaction() {
       };
 
       if (formData.isRecurring) {
-        if (!formData.interval || Number(formData.interval) < 1) {
+        const interval = Number(formData.interval);
+
+        if (!interval || interval < 1) {
           throw new Error("Interval must be at least 1");
         }
 
-        const rrule = buildRRule(formData);
-
-        // compute most recent recurrence date
-        const lastDate = rrule.before(new Date(), true);
-
-        if (lastDate) {
-          transaction.date = lastDate.toISOString();
+        if (formData.frequency === RRule.MONTHLY) {
+          if (formData.monthDay < 1 || formData.monthDay > 31) {
+            throw new Error("Invalid day of month");
+          }
         }
+
+        if (formData.frequency === RRule.YEARLY) {
+          if (formData.monthDay < 1 || formData.monthDay > 31) {
+            throw new Error("Invalid day");
+          }
+          if (formData.yearMonth < 1 || formData.yearMonth > 12) {
+            throw new Error("Invalid month");
+          }
+        }
+        const rrule = buildRRule(formData);
 
         await DatabaseService.addRecurringTransaction({
           ...transaction,
+          date: formData.date.toISOString(),
           rrule: rrule.toString(),
         });
 
