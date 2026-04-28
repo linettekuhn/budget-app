@@ -1,5 +1,7 @@
 import { Colors } from "@/constants/theme";
+import adjustColorForScheme from "@/utils/adjustColorForScheme";
 import { formatMoney } from "@/utils/formatMoney";
+import AddTransactionWidget from "@/widgets/AddTransactionWidget";
 import BudgetWidget from "@/widgets/BudgetWidget";
 import CategoryWidget from "@/widgets/CategoryWidget";
 import DatabaseService from "./DatabaseService";
@@ -123,8 +125,6 @@ export default class WidgetService {
 
       const formattedRemaining = fmt(Math.abs(remaining));
 
-      const categoryParam = encodeURIComponent(JSON.stringify(spend));
-      const dateParam = encodeURIComponent(JSON.stringify(now));
       const widgetUrl = `budgetapp:///(tabs)/(budget)/category-transactions?categoryId=${spend.id}&date=${encodeURIComponent(JSON.stringify(now))}`;
 
       const payload = {
@@ -144,18 +144,69 @@ export default class WidgetService {
         widgetUrl,
       };
 
-      console.log(
-        "[WidgetService.syncCategoryWidget] syncing with payload:",
-        payload,
-      );
-
       await CategoryWidget.updateSnapshot(payload);
     } catch (error) {
       console.warn("[WidgetService.syncCategoryWidget]", error);
     }
   }
 
+  static async syncTransactionWidget(): Promise<void> {
+    try {
+      const transactions = await DatabaseService.getAllTransactions();
+      const currency = (await DatabaseService.getCurrency()) ?? "USD";
+      let payload;
+
+      const pillBackgroundLight =
+        adjustColorForScheme(Colors.light.primary[700], "dark") + "33";
+      const pillBackgroundDark =
+        adjustColorForScheme(Colors.dark.primary[700], "light") + "33";
+
+      if (transactions.length) {
+        const transaction = transactions[0];
+        console.log("Transaction:", transaction);
+
+        const fmt = (amount: number) =>
+          formatMoney({ code: currency, amount, decimals: false });
+
+        const formattedAmount = fmt(Math.abs(transaction.amount));
+        const heroFontSizeSmall = heroFontSize("x" + formattedAmount, true);
+
+        payload = {
+          lastTransaction: transaction,
+          formattedAmount,
+          heroFontSize: heroFontSizeSmall,
+          categoryColor: transaction.categoryColor,
+          colors: Colors,
+        };
+      } else {
+        payload = {
+          lastTransaction: undefined,
+          formattedAmount: "",
+          heroFontSize: 20,
+          categoryColor: undefined,
+          colors: Colors,
+        };
+      }
+
+      console.log(
+        "[WidgetService.syncTransactionWidget] syncing with payload:",
+        payload,
+      );
+      await AddTransactionWidget.updateSnapshot({
+        ...payload,
+        pillBackgroundLight,
+        pillBackgroundDark,
+      });
+    } catch (error) {
+      console.warn("[WidgetService.syncTransactionWidget]", error);
+    }
+  }
+
   static async syncAll(): Promise<void> {
-    await Promise.all([this.syncBudgetWidget(), this.syncCategoryWidget()]);
+    await Promise.all([
+      this.syncBudgetWidget(),
+      this.syncCategoryWidget(),
+      this.syncTransactionWidget(),
+    ]);
   }
 }

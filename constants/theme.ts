@@ -25,6 +25,8 @@ export const Colors = {
     text: "#170015",
     tabBackground: "#391A36",
     error: "#A10000",
+    income: "#5dd07c",
+    expense: "#df5b5b",
   },
 
   dark: {
@@ -45,6 +47,8 @@ export const Colors = {
     text: "#FFF1FE",
     tabBackground: "#FFDEFD",
     error: "#FF5C5C",
+    income: "#2c8745",
+    expense: "#cf3d3d",
   },
 };
 
