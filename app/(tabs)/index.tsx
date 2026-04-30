@@ -8,7 +8,7 @@ import { Colors, getTheme } from "@/constants/theme";
 import { auth } from "@/firebase/firebaseConfig";
 import { useCategoriesSpend } from "@/hooks/useCategoriesSpend";
 import { useCurrency } from "@/hooks/useCurrency";
-import { useSalary } from "@/hooks/useSalary";
+import { useIncomeSources } from "@/hooks/useIncomeSources";
 import DatabaseService from "@/services/DatabaseService";
 import { pingBackend, registerPushToken } from "@/services/NotificationService";
 import WidgetService from "@/services/WidgetService";
@@ -27,7 +27,12 @@ export default function HomeScreen() {
   const colorScheme = useColorScheme();
   const router = useRouter();
   const bgColor = Colors[getTheme(colorScheme)].background;
-  const { salary, loading: loadingSalary, reload: reloadSalary } = useSalary();
+  const {
+    sources,
+    loading: loadingSalary,
+    reload: reloadSalary,
+    getMonthlyTotal,
+  } = useIncomeSources();
   const {
     budgets,
     loading: loadingBudgets,
@@ -88,15 +93,37 @@ export default function HomeScreen() {
     setTotalSpent(Number(spent.toFixed(2)));
     setTotalBudget(Number(budget.toFixed(2)));
 
-    if (salary) {
-      const difference = salary.monthly - totalBudget;
-      const isOverBudget = difference < 0;
-      setOverBudget(isOverBudget);
-      const saved = Number(Math.max(0, difference).toFixed(2));
-      const deficit = Number(Math.abs(Math.min(0, difference)).toFixed(2));
-      setDifference(isOverBudget ? deficit : saved);
+    const now = new Date();
+    const monthlyIncome = getMonthlyTotal(
+      now.getFullYear(),
+      now.getMonth() + 1,
+    );
+
+    if (monthlyIncome > 0) {
+      const diff = monthlyIncome - budget;
+      const isOver = diff < 0;
+      setOverBudget(isOver);
+      setDifference(
+        isOver
+          ? Number(Math.abs(diff).toFixed(2))
+          : Number(Math.max(0, diff).toFixed(2)),
+      );
     }
-  }, [salary, budgets, totalBudget]);
+  }, [sources, getMonthlyTotal, budgets, totalBudget]);
+
+  const syntheticSalary =
+    sources.length > 0
+      ? {
+          id: sources[0].id,
+          type: sources[0].basisType,
+          amount: sources[0].basisAmount,
+          monthly: getMonthlyTotal(
+            new Date().getFullYear(),
+            new Date().getMonth() + 1,
+          ),
+          hoursPerWeek: sources[0].hoursPerWeek ?? undefined,
+        }
+      : null;
 
   return (
     <AnimatedScreen>
@@ -106,7 +133,7 @@ export default function HomeScreen() {
             !loadingBudgets &&
             !loadingCurrency &&
             budgets &&
-            salary && (
+            syntheticSalary && (
               <ThemedView style={styles.main}>
                 <View>
                   <ThemedText type="displayLarge">Monthly Report</ThemedText>
@@ -119,7 +146,7 @@ export default function HomeScreen() {
                   <ThemedView style={styles.pieChartWrapper}>
                     <SalaryBreakdownPieChart
                       budgets={budgets}
-                      salary={salary}
+                      salary={syntheticSalary}
                     />
                     <View style={styles.savedWrapper}>
                       <MoneyText

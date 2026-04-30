@@ -115,6 +115,7 @@ export default class SyncService {
       "transactions",
       "recurring_transactions",
       "salary",
+      "income_sources",
     ];
 
     interface LocalRow {

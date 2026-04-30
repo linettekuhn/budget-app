@@ -30,7 +30,7 @@ export function useSalary() {
       } else {
         Toast.show({
           type: "error",
-          text1: "An error occurred loading categories",
+          text1: "An error occurred loading salary",
         });
       }
     } finally {
