@@ -4,10 +4,13 @@ import {
   BadgeDefinition,
   CategorySpend,
   CategoryType,
+  IncomeSource,
+  PayType,
   RecurringTransaction,
   Salary,
   TransactionType,
 } from "@/types";
+import { buildPaydayRule } from "@/utils/incomeUtils";
 import * as crypto from "expo-crypto";
 import * as SQLite from "expo-sqlite";
 import { rrulestr } from "rrule";
@@ -125,6 +128,38 @@ export default class DatabaseService {
         synced INTEGER DEFAULT 0
       )
     `);
+
+    await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS income_sources (
+      id TEXT PRIMARY KEY NOT NULL,
+      name TEXT NOT NULL,
+      basisType TEXT NOT NULL,
+      basisAmount DECIMAL(13, 2) NOT NULL,
+      payAmount DECIMAL(13, 2) NOT NULL,
+      paydayRule TEXT NOT NULL,
+      startDate TEXT NOT NULL,
+      endDate TEXT,
+      isActive INTEGER NOT NULL DEFAULT 1,
+      effectiveFrom TEXT NOT NULL,
+      effectiveTo TEXT,
+      sourceVersion INTEGER NOT NULL DEFAULT 1,
+      hoursPerWeek DECIMAL(5, 2),
+      createdAt TEXT DEFAULT (CURRENT_TIMESTAMP),
+      updatedAt TEXT DEFAULT (CURRENT_TIMESTAMP),
+      deletedAt TEXT
+    )
+  `);
+
+    await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS salary_migration_log (
+      id TEXT PRIMARY KEY NOT NULL,
+      migratedAt TEXT NOT NULL,
+      originalSalaryId TEXT NOT NULL,
+      newIncomeSourceId TEXT NOT NULL
+    )
+  `);
+
+    await this.migrateFromSalaryTable();
   }
 
   static async initializeDefaultData() {
@@ -296,6 +331,8 @@ export default class DatabaseService {
     await db.execAsync(`DROP TABLE IF EXISTS badges`);
     await db.execAsync(`DROP TABLE IF EXISTS app_meta`);
     await db.execAsync(`DROP TABLE IF EXISTS pending_changes`);
+    await db.execAsync(`DROP TABLE IF EXISTS income_sources`);
+    await db.execAsync(`DROP TABLE IF EXISTS salary_migration_log`);
   }
 
   // Pending Changes Table Integration
@@ -615,6 +652,177 @@ export default class DatabaseService {
       monthly,
       hoursPerWeek,
     });
+  }
+
+  // Income Sources Table Interaction
+  static async getActiveIncomeSources(): Promise<IncomeSource[]> {
+    const db = await this.getDatabase();
+    return await db.getAllAsync<IncomeSource>(
+      `SELECT * FROM income_sources 
+     WHERE isActive = 1 
+       AND deletedAt IS NULL 
+       AND effectiveTo IS NULL
+     ORDER BY createdAt ASC`,
+    );
+  }
+
+  static async getIncomeSourceById(id: string): Promise<IncomeSource | null> {
+    const db = await this.getDatabase();
+    return (
+      (await db.getFirstAsync<IncomeSource>(
+        `SELECT * FROM income_sources WHERE id = ? AND deletedAt IS NULL`,
+        [id],
+      )) ?? null
+    );
+  }
+
+  static async saveIncomeSource(source: {
+    id: string;
+    name: string;
+    basisType: string;
+    basisAmount: number;
+    payAmount: number;
+    paydayRule: string;
+    startDate: string;
+    endDate: string | null;
+    hoursPerWeek: number | null;
+    effectiveFrom: string;
+    sourceVersion: number;
+  }): Promise<void> {
+    const db = await this.getDatabase();
+
+    await db.runAsync(
+      `INSERT INTO income_sources (
+      id, name, basisType, basisAmount, payAmount, paydayRule,
+      startDate, endDate, isActive, effectiveFrom, effectiveTo,
+      sourceVersion, hoursPerWeek
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, NULL, ?, ?)`,
+      [
+        source.id,
+        source.name,
+        source.basisType,
+        source.basisAmount,
+        source.payAmount,
+        source.paydayRule,
+        source.startDate,
+        source.endDate,
+        source.effectiveFrom,
+        source.sourceVersion,
+        source.hoursPerWeek,
+      ],
+    );
+
+    await this.logChange("income_sources", source.id, "create", source);
+  }
+
+  static async editIncomeSource(
+    id: string,
+    updates: {
+      name: string;
+      basisType: string;
+      basisAmount: number;
+      payAmount: number;
+      paydayRule: string;
+      hoursPerWeek: number | null;
+    },
+  ): Promise<string> {
+    const db = await this.getDatabase();
+    const today = new Date().toISOString();
+    const existing = await this.getIncomeSourceById(id);
+
+    if (!existing) throw new Error("Income source not found");
+
+    // close the current version
+    await db.runAsync(
+      `UPDATE income_sources SET effectiveTo = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?`,
+      [today, id],
+    );
+    await this.logChange("income_sources", id, "update", {
+      effectiveTo: today,
+    });
+
+    // insert the new version with a fresh ID
+    const newId = crypto.randomUUID();
+    await this.saveIncomeSource({
+      id: newId,
+      name: updates.name,
+      basisType: updates.basisType,
+      basisAmount: updates.basisAmount,
+      payAmount: updates.payAmount,
+      paydayRule: updates.paydayRule,
+      startDate: today,
+      endDate: existing.endDate,
+      hoursPerWeek: updates.hoursPerWeek,
+      effectiveFrom: today,
+      sourceVersion: existing.sourceVersion + 1,
+    });
+
+    return newId;
+  }
+
+  static async deactivateIncomeSource(id: string): Promise<void> {
+    const db = await this.getDatabase();
+    const today = new Date().toISOString();
+
+    await db.runAsync(
+      `UPDATE income_sources 
+     SET isActive = 0, endDate = ?, updatedAt = CURRENT_TIMESTAMP 
+     WHERE id = ?`,
+      [today, id],
+    );
+
+    await this.logChange("income_sources", id, "update", {
+      isActive: 0,
+      endDate: today,
+    });
+  }
+
+  static async migrateFromSalaryTable(): Promise<void> {
+    const db = await this.getDatabase();
+
+    // check if already migrated
+    const alreadyMigrated = await db.getFirstAsync<{ id: string }>(
+      `SELECT id FROM salary_migration_log LIMIT 1`,
+    );
+    if (alreadyMigrated) return;
+
+    // check if there's anything to migrate
+    const existingSalary = await this.getSalary();
+    if (!existingSalary) return;
+
+    const today = new Date();
+    const startDate = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      1,
+    ).toISOString();
+
+    const basisType = existingSalary.type as PayType;
+    const paydayRule = buildPaydayRule(basisType, today);
+    const payAmount = existingSalary.monthly;
+
+    const newId = crypto.randomUUID();
+
+    await this.saveIncomeSource({
+      id: newId,
+      name: "Primary Income",
+      basisType,
+      basisAmount: existingSalary.amount,
+      payAmount,
+      paydayRule,
+      startDate,
+      endDate: null,
+      hoursPerWeek: existingSalary.hoursPerWeek ?? null,
+      effectiveFrom: startDate,
+      sourceVersion: 1,
+    });
+
+    // Log the migration
+    await db.runAsync(
+      `INSERT INTO salary_migration_log (id, migratedAt, originalSalaryId, newIncomeSourceId)
+     VALUES (?, ?, ?, ?)`,
+      [crypto.randomUUID(), today.toISOString(), existingSalary.id, newId],
+    );
   }
 
   // Transactions Table Interaction
