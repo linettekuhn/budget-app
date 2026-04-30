@@ -111,20 +111,6 @@ export default function HomeScreen() {
     }
   }, [sources, getMonthlyTotal, budgets, totalBudget]);
 
-  const syntheticSalary =
-    sources.length > 0
-      ? {
-          id: sources[0].id,
-          type: sources[0].basisType,
-          amount: sources[0].basisAmount,
-          monthly: getMonthlyTotal(
-            new Date().getFullYear(),
-            new Date().getMonth() + 1,
-          ),
-          hoursPerWeek: sources[0].hoursPerWeek ?? undefined,
-        }
-      : null;
-
   return (
     <AnimatedScreen>
       <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
@@ -133,7 +119,7 @@ export default function HomeScreen() {
             !loadingBudgets &&
             !loadingCurrency &&
             budgets &&
-            syntheticSalary && (
+            sources.length > 0 && (
               <ThemedView style={styles.main}>
                 <View>
                   <ThemedText type="displayLarge">Monthly Report</ThemedText>
@@ -146,7 +132,10 @@ export default function HomeScreen() {
                   <ThemedView style={styles.pieChartWrapper}>
                     <SalaryBreakdownPieChart
                       budgets={budgets}
-                      salary={syntheticSalary}
+                      monthlyIncome={getMonthlyTotal(
+                        new Date().getFullYear(),
+                        new Date().getMonth() + 1,
+                      )}
                     />
                     <View style={styles.savedWrapper}>
                       <MoneyText

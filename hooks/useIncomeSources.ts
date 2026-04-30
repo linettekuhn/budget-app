@@ -6,6 +6,7 @@ import {
   getTotalIncomeForMonth,
   toDateString,
 } from "@/utils/incomeUtils";
+import * as crypto from "expo-crypto";
 import { useCallback, useEffect, useState } from "react";
 import { Toast } from "toastify-react-native";
 

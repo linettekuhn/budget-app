@@ -9,8 +9,14 @@ import DatabaseService from "@/services/DatabaseService";
 import SyncService from "@/services/SyncService";
 import WidgetService from "@/services/WidgetService";
 import { formatMoney } from "@/utils/formatMoney";
+import {
+  buildPaydayRule,
+  derivePayAmount,
+  toDateString,
+} from "@/utils/incomeUtils";
 import Octicons from "@expo/vector-icons/Octicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as crypto from "expo-crypto";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -50,13 +56,29 @@ export default function FinishOnboarding() {
       await DatabaseService.clearCategories();
       await DatabaseService.insertCategories(categories, budgets);
 
-      // save salary
-      await DatabaseService.saveSalary(
+      // save income source
+      const today = new Date();
+      const startDate = toDateString(today);
+      const payAmount = derivePayAmount(
         salary.type,
         salary.amount,
-        salary.monthly,
         salary.hoursPerWeek,
       );
+      const paydayRule = buildPaydayRule(salary.type, today);
+
+      await DatabaseService.saveIncomeSource({
+        id: crypto.randomUUID(),
+        name: salary.name,
+        basisType: salary.type,
+        basisAmount: salary.amount,
+        payAmount,
+        paydayRule,
+        startDate,
+        endDate: null,
+        hoursPerWeek: salary.hoursPerWeek ?? null,
+        effectiveFrom: startDate,
+        sourceVersion: 1,
+      });
 
       // save currency
       await DatabaseService.updateCurrency(state.currency);

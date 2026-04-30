@@ -105,6 +105,7 @@ export default function SalaryOnboarding() {
       setState((prev) => ({
         ...prev,
         salary: {
+          name: "Primary Income",
           type: salaryType,
           amount,
           monthly: Number(monthlySalary.toFixed(2)),

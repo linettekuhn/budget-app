@@ -8,6 +8,7 @@ type OnboardingState = {
   categories: CategoryType[];
   budgets: Record<string, { raw: string; display: string }>;
   salary: {
+    name: string;
     type: "Hourly" | "Biweekly" | "Monthly" | "Yearly" | "Varies";
     amount: number;
     monthly: number;
@@ -31,6 +32,7 @@ const DEFAULT_STATE: OnboardingState = {
   categories: [],
   budgets: {},
   salary: {
+    name: "Primary Income",
     type: "Hourly",
     amount: 0,
     monthly: 0,

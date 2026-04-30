@@ -3,7 +3,7 @@ import ChangeNameOption from "@/components/profile/change-name-option";
 import ChangePasswordOption from "@/components/profile/change-password-option";
 import DeleteAccountOption from "@/components/profile/delete-account-option";
 import EditNotificationSettingsOption from "@/components/profile/edit-notification-settings-option";
-import EditSalaryOption from "@/components/profile/edit-salary-option";
+import ManageIncomeOption from "@/components/profile/edit-salary-option";
 import ProfileOption from "@/components/profile/profile-option";
 import WidgetCategoryOption from "@/components/profile/widget-category-option";
 import { ThemedText } from "@/components/themed-text";
@@ -243,7 +243,7 @@ export default function Profile() {
                     iconName="gear"
                   >
                     <View>
-                      <EditSalaryOption />
+                      <ManageIncomeOption />
                       <ProfileOption
                         text="Manage recurring transactions"
                         onPress={() => {
