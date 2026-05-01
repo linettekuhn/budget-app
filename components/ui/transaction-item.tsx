@@ -18,12 +18,14 @@ export default function TransactionItem({
 }) {
   const colorScheme = useColorScheme();
   const date = new Date(transaction.date);
-  const transactionBgColor = Colors[getTheme(colorScheme)].primary[700];
-  const bgColor = Colors[getTheme(colorScheme)].background;
+  const transactionBgColor = Colors[getTheme(colorScheme)].primary[50];
+  const txtColor = Colors[getTheme(colorScheme)].text;
   const typeColor =
     transaction.type === "income"
       ? adjustColorForScheme("#2EA64E", colorScheme)
       : adjustColorForScheme("#CF3D3D", colorScheme);
+
+  const sign = transaction.type === "income" ? "positive" : "negative";
 
   return (
     <ThemedView
@@ -41,7 +43,7 @@ export default function TransactionItem({
       >
         <ThemedText
           style={{
-            color: bgColor,
+            color: txtColor,
             margin: 0,
             lineHeight: 0,
           }}
@@ -52,7 +54,7 @@ export default function TransactionItem({
         <ThemedText
           type="captionSmall"
           style={{
-            color: bgColor,
+            color: txtColor,
             margin: 0,
             lineHeight: 0,
           }}
@@ -67,6 +69,7 @@ export default function TransactionItem({
         type="h4"
         align="right"
         decimals
+        sign={sign}
         darkColor={typeColor}
         lightColor={typeColor}
       />
@@ -75,7 +78,7 @@ export default function TransactionItem({
         style={{ transform: [{ rotate: "90deg" }] }}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
-        <Octicons name="kebab-horizontal" size={20} color={bgColor} />
+        <Octicons name="kebab-horizontal" size={20} color={txtColor} />
       </Pressable>
     </ThemedView>
   );

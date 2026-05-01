@@ -30,6 +30,7 @@ export type MoneyTextVariant = "inline" | "hero" | "block" | "pair";
 type BaseProps = Omit<ThemedTextProps, "children"> & {
   currency: string;
   decimals?: boolean;
+  sign?: "auto" | "positive" | "negative" | "none";
   minimumFontScale?: number;
   align?: "left" | "center" | "right";
   noShrink?: boolean;
@@ -54,6 +55,7 @@ type MoneyTextProps = SingleProps | PairProps;
 export default function MoneyText({
   amount,
   currency,
+  sign,
   decimals = false,
   variant = "inline",
   minimumFontScale = 0.6,
@@ -68,9 +70,40 @@ export default function MoneyText({
 
   const { secondAmount: _sa, separator: _sep, ...textRest } = rest as PairProps;
 
+  const getDisplaySign = () => {
+    if (!sign || sign === "none") return "";
+
+    if (sign === "positive") return "+";
+    if (sign === "negative") return "-";
+
+    if (sign === "auto") {
+      if (amount > 0) return "+";
+      if (amount < 0) return "-";
+    }
+
+    return "";
+  };
+
+  const signPrefix = getDisplaySign();
+
+  const absAmount = Math.abs(amount);
+  const absSecondAmount = Math.abs(secondAmount ?? 0);
+
   const formatted = isPair
-    ? `${formatMoney({ code: currency, amount, decimals })}${separator}${formatMoney({ code: currency, amount: secondAmount!, decimals })}`
-    : formatMoney({ code: currency, amount, decimals });
+    ? `${signPrefix}${formatMoney({
+        code: currency,
+        amount: absAmount,
+        decimals,
+      })}${separator}${formatMoney({
+        code: currency,
+        amount: absSecondAmount,
+        decimals,
+      })}`
+    : `${signPrefix}${formatMoney({
+        code: currency,
+        amount: absAmount,
+        decimals,
+      })}`;
 
   const variantStyle: StyleProp<TextStyle> = (() => {
     switch (variant) {
@@ -90,6 +123,7 @@ export default function MoneyText({
           flexShrink: 1,
           minWidth: 40,
           textAlign: align ?? "right",
+          lineHeight: undefined,
         };
       case "pair":
         return {

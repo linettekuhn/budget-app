@@ -9,12 +9,16 @@ export function getTheme(colorScheme: string | null | undefined): ThemeKey {
 export const Colors = {
   light: {
     primary: {
-      900: "#170015", // darkest (text on light background)
-      700: "#ab39a0ff", // darker
-      500: "#FF00E5", // primary accent
-      300: "#FFB9F8", // lighter
-      200: "#FFD0FA", // lighter background
-      100: "#FFF1FE", // lightest (contrast text)
+      900: "#170015", // darkest (text)
+      800: "#5e0b57",
+      700: "#ab39a0ff",
+      600: "#d61fc4",
+      500: "#FF00E5", // base accent
+      400: "#ff66ef",
+      300: "#FFB9F8",
+      200: "#FFD0FA",
+      100: "#FFF1FE", // lightest
+      50: "#fafafa",
     },
 
     secondary: {
@@ -25,18 +29,42 @@ export const Colors = {
     text: "#170015",
     tabBackground: "#391A36",
     error: "#A10000",
-    income: "#5dd07c",
-    expense: "#df5b5b",
+    income: {
+      900: "#0f3d1f",
+      800: "#1f6b38",
+      700: "#2c8745",
+      600: "#3fa65a",
+      500: "#5dd07c", // base
+      400: "#7ee09a",
+      300: "#a8e6b8",
+      200: "#c9f2d2",
+      100: "#e9fbec",
+    },
+    expense: {
+      900: "#5a1a1a",
+      800: "#8c2f2f",
+      700: "#b44444",
+      600: "#d35252",
+      500: "#df5b5b", // base
+      400: "#e87c7c",
+      300: "#f2a3a3",
+      200: "#f7caca",
+      100: "#fdeeee",
+    },
   },
 
   dark: {
     primary: {
-      900: "#FFF1FE", // lightest (text on dark background)
-      700: "#FFB9F8", // lighter
-      500: "#B600A4", // primary accent
-      300: "#64005A", // darker
-      200: "#2D0029", // lighter background
-      100: "#170015", // darkest (contrast text)
+      900: "#FFF1FE", // lightest (text)
+      800: "#ffd6fb",
+      700: "#FFB9F8",
+      600: "#e87de0",
+      500: "#B600A4", // base accent
+      400: "#8a007c",
+      300: "#64005A",
+      200: "#2D0029",
+      100: "#170015", // darkest
+      50: "#000000",
     },
 
     secondary: {
@@ -47,8 +75,29 @@ export const Colors = {
     text: "#FFF1FE",
     tabBackground: "#FFDEFD",
     error: "#FF5C5C",
-    income: "#2c8745",
-    expense: "#cf3d3d",
+    income: {
+      900: "#e9fbec",
+      800: "#c9f2d2",
+      700: "#a8e6b8",
+      600: "#7ee09a",
+      500: "#2c8745", // base (your current dark income)
+      400: "#226c37",
+      300: "#1a522a",
+      200: "#133b1e",
+      100: "#0b2413",
+    },
+
+    expense: {
+      900: "#fdeeee",
+      800: "#f7caca",
+      700: "#f2a3a3",
+      600: "#e87c7c",
+      500: "#cf3d3d", // base (your current dark expense)
+      400: "#a83232",
+      300: "#7f2626",
+      200: "#591b1b",
+      100: "#331010",
+    },
   },
 };
 
