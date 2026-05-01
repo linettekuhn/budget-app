@@ -1,4 +1,3 @@
-import { ThemedText } from "@/components/themed-text";
 import { Motion } from "@/constants/motion";
 import { Colors, getTheme } from "@/constants/theme";
 import { useEffect, useRef, useState } from "react";
@@ -9,6 +8,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import tinycolor from "tinycolor2";
+import { FitText } from "./fit-text";
 
 type Props = {
   displayAmount: string;
@@ -118,15 +118,12 @@ export default function CapsuleNumberInput({
           });
         }}
       >
-        <ThemedText
-          numberOfLines={1}
-          adjustsFontSizeToFit
-          minimumFontScale={0.4}
+        <FitText
+          text={displayAmount}
           type={textType}
-          style={[styles.amountInput, { color: textColor }]}
-        >
-          {displayAmount}
-        </ThemedText>
+          minFontSize={20}
+          style={{ textAlign: "center" }}
+        />
       </Pressable>
 
       <TextInput

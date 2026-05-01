@@ -306,7 +306,6 @@ export default function TransactionForm({ initial, onChange }: Props) {
           rawAmount={rawAmount}
           onChangeText={handleAmountChange}
           textType="displayLarge"
-          style={{ minWidth: 180 }}
         />
       </ThemedView>
 
@@ -422,7 +421,7 @@ export default function TransactionForm({ initial, onChange }: Props) {
               displayAmount={intervalDisplay}
               rawAmount={intervalRaw}
               min={1}
-              max={10000}
+              max={100}
               textType="body"
               onChangeText={handleIntervalChange}
             />

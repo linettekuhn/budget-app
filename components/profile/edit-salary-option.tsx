@@ -163,6 +163,7 @@ function IncomeSourceForm({
                   setHoursDisplay(formatAmountDisplay(numeric));
                 }}
                 textType="h3"
+                max={10000}
               />
               <ThemedText type="h3"> hours per week</ThemedText>
             </ThemedView>
@@ -189,7 +190,7 @@ function IncomeSourceForm({
               {payType === "Biweekly" && " every 2 weeks"}
               {payType === "Monthly" && " per month"}
               {payType === "Yearly" && " per year"}
-              {payType === "Varies" && " per month (est.)"}
+              {payType === "Varies" && " per month"}
             </ThemedText>
           </ThemedView>
         </ThemedView>
