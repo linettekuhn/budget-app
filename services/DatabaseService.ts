@@ -1053,7 +1053,10 @@ export default class DatabaseService {
     const monthStr = month.toString().padStart(2, "0");
 
     const startDate = `${year}-${monthStr}-01`;
-    const endDate = new Date(year, month, 0).toISOString();
+    const nextMonth = month === 12 ? 1 : month + 1;
+    const nextYear = month === 12 ? year + 1 : year;
+    const nextMonthStr = String(nextMonth).padStart(2, "0");
+    const endDate = `${nextYear}-${nextMonthStr}-01`;
 
     return await db.getAllAsync<TransactionType>(
       `
@@ -1069,26 +1072,29 @@ export default class DatabaseService {
       FROM transactions t
       INNER JOIN categories c ON t.categoryId = c.id
       WHERE t.categoryId = ? AND t.deletedAt IS NULL
-      AND t.date BETWEEN ? AND ?
+      AND t.date >= ? AND t.date < ?
       ORDER BY t.date DESC
     `,
       [categoryId, startDate, endDate],
     );
   }
 
-  static async getTransactionsByMonth(year: number, month: number) {
+  static async sByMonth(year: number, month: number) {
     const db = await this.getDatabase();
 
     const monthStr = month.toString().padStart(2, "0");
 
     const startDate = `${year}-${monthStr}-01`;
-    const endDate = new Date(year, month, 0).toISOString();
+    const nextMonth = month === 12 ? 1 : month + 1;
+    const nextYear = month === 12 ? year + 1 : year;
+    const nextMonthStr = String(nextMonth).padStart(2, "0");
+    const endDate = `${nextYear}-${nextMonthStr}-01`;
 
     return await db.getAllAsync<TransactionType>(
       `
       SELECT id, name, amount, type, categoryId, date
       FROM transactions
-      WHERE deletedAt IS NULL AND date BETWEEN ? AND ? 
+      WHERE deletedAt IS NULL AND date >= ? AND date < ? 
       ORDER BY date DESC
       `,
       [startDate, endDate],
@@ -1119,7 +1125,10 @@ export default class DatabaseService {
     const monthStr = m.toString().padStart(2, "0");
 
     const startDate = `${y}-${monthStr}-01`;
-    const endDate = new Date(y, m, 0).toISOString();
+    const nextMonth = m === 12 ? 1 : m + 1;
+    const nextYear = m === 12 ? y + 1 : y;
+    const nextMonthStr = String(nextMonth).padStart(2, "0");
+    const endDate = `${nextYear}-${nextMonthStr}-01`;
 
     return await db.getAllAsync<CategorySpend>(
       `
@@ -1139,7 +1148,7 @@ export default class DatabaseService {
       FROM categories c
       LEFT JOIN transactions t 
           ON c.id = t.categoryId
-          AND t.date BETWEEN ? AND ?
+          AND t.date >= ? AND t.date < ?
           AND t.deletedAt IS NULL
       WHERE c.deletedAt IS NULL
       GROUP BY c.id
@@ -1198,7 +1207,7 @@ export default class DatabaseService {
     const month = String(now.getMonth() + 1).padStart(2, "0");
 
     const start = `${year}-${month}-01`;
-    const mid = `${year}-${month}-15`;
+    const mid = `${year}-${month}-16`;
 
     const row = await db.getFirstAsync<{ spent: number; budget: number }>(
       `
@@ -1209,7 +1218,7 @@ export default class DatabaseService {
       LEFT JOIN transactions t
         ON c.id = t.categoryId
         AND t.deletedAt IS NULL
-        AND t.date BETWEEN ? AND ?
+        AND t.date >= ? AND t.date < ?
       WHERE c.deletedAt IS NULL
     `,
       [start, mid],
@@ -1229,8 +1238,8 @@ export default class DatabaseService {
     const startOfWeek = new Date(now.setDate(diff));
     startOfWeek.setHours(0, 0, 0, 0);
 
-    const endOfWeek = new Date();
-    endOfWeek.setHours(23, 59, 59, 999);
+    const startOfNextWeek = new Date(startOfWeek);
+    startOfNextWeek.setDate(startOfWeek.getDate() + 7);
 
     const row = await db.getFirstAsync<{ spent: number }>(
       `
@@ -1238,9 +1247,9 @@ export default class DatabaseService {
       FROM transactions
       WHERE deletedAt IS NULL
         AND type = 'expense'
-        AND date BETWEEN ? AND ?
+        AND date >= ? AND date < ?
     `,
-      [startOfWeek.toISOString(), endOfWeek.toISOString()],
+      [startOfWeek.toISOString(), startOfNextWeek.toISOString()],
     );
 
     return Number(row?.spent?.toFixed(2) || 0);
