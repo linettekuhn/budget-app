@@ -33,6 +33,7 @@ type Props = {
     | "captionSmall"
     | "overline"
     | "link";
+  style?: object;
 };
 
 export default function CapsuleNumberInput({
@@ -42,6 +43,7 @@ export default function CapsuleNumberInput({
   min,
   max,
   textType,
+  style,
 }: Props) {
   const colorScheme = useColorScheme();
   const textColor = Colors[getTheme(colorScheme)].text;
@@ -100,6 +102,7 @@ export default function CapsuleNumberInput({
           backgroundColor: bgColor,
           borderColor: focused ? focusColor : bgColor,
         },
+        style,
       ]}
     >
       <Pressable

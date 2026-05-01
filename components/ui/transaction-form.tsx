@@ -251,7 +251,9 @@ export default function TransactionForm({ initial, onChange }: Props) {
 
   return (
     <ThemedView style={styles.main}>
-      <ThemedView style={styles.options}>
+      <ThemedView
+        style={[styles.options, { position: "relative", marginBottom: 12 }]}
+      >
         <ThemedView style={styles.horizontalContainer}>
           <CapsuleToggle
             text="INCOME"
@@ -276,6 +278,17 @@ export default function TransactionForm({ initial, onChange }: Props) {
             }}
           />
         </ThemedView>
+        <ThemedText
+          type="captionSmall"
+          style={{
+            textAlign: "center",
+            opacity: typeSelected === "INCOME" ? 0.6 : 0,
+            position: "absolute",
+            bottom: -16,
+          }}
+        >
+          Salary is auto-tracked. Use this for one-time payments.
+        </ThemedText>
       </ThemedView>
       <ThemedView style={[styles.options, { alignItems: "stretch" }]}>
         <CapsuleInput
@@ -293,6 +306,7 @@ export default function TransactionForm({ initial, onChange }: Props) {
           rawAmount={rawAmount}
           onChangeText={handleAmountChange}
           textType="displayLarge"
+          style={{ minWidth: 180 }}
         />
       </ThemedView>
 
@@ -360,47 +374,48 @@ export default function TransactionForm({ initial, onChange }: Props) {
       </ThemedView>
 
       <ThemedView style={styles.options}>
-        <ThemedText style={styles.heading} type="h1">
-          Date
-        </ThemedText>
-        <DateTimePicker
-          value={startDate}
-          mode="date"
-          is24Hour={true}
-          display={Platform.OS === "ios" ? "compact" : "default"}
-          onChange={(event, selectedDate?: Date) => {
-            if (selectedDate) {
-              setStartDate(selectedDate);
-            }
-          }}
-          style={{
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 0,
-            marginLeft: -10,
-          }}
-        />
+        <View style={[styles.horizontalContainer, { gap: 24 }]}>
+          <DateTimePicker
+            value={startDate}
+            mode="date"
+            is24Hour={true}
+            display={Platform.OS === "ios" ? "compact" : "default"}
+            onChange={(event, selectedDate?: Date) => {
+              if (selectedDate) {
+                setStartDate(selectedDate);
+              }
+            }}
+            style={{
+              alignItems: "center",
+              justifyContent: "center",
+              padding: 0,
+              marginLeft: -10,
+            }}
+          />
+          <ThemedView
+            style={{
+              flexDirection: "row",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <Checkbox
+              value={isRecurring}
+              onValueChange={setRecurring}
+              color={
+                isRecurring ? btnColor : Colors[getTheme(colorScheme)].text
+              }
+            />
+            <ThemedText type="h5">Set recurring</ThemedText>
+          </ThemedView>
+        </View>
       </ThemedView>
 
-      <ThemedView
-        style={{
-          flexDirection: "row",
-          justifyContent: "center",
-          alignItems: "center",
-          gap: 16,
-        }}
-      >
-        <Checkbox
-          value={isRecurring}
-          onValueChange={setRecurring}
-          color={isRecurring ? btnColor : Colors[getTheme(colorScheme)].text}
-        />
-        <ThemedText type="h3">Mark as recurring</ThemedText>
-      </ThemedView>
       {isRecurring && (
         <ThemedView style={styles.options}>
           <ThemedView style={styles.horizontalContainer}>
-            <ThemedText style={styles.heading} type="h3">
+            <ThemedText style={styles.heading} type="h5">
               Repeat every
             </ThemedText>
             <CapsuleNumberInteger
@@ -408,7 +423,7 @@ export default function TransactionForm({ initial, onChange }: Props) {
               rawAmount={intervalRaw}
               min={1}
               max={10000}
-              textType="bodyLarge"
+              textType="body"
               onChangeText={handleIntervalChange}
             />
             <CapsuleDropdown
@@ -419,11 +434,11 @@ export default function TransactionForm({ initial, onChange }: Props) {
               }))}
               value={frequency}
               onChange={setFrequency}
-              textType="bodyLarge"
+              textType="body"
             />
           </ThemedView>
           <ThemedView style={styles.horizontalContainer}>
-            <ThemedText style={styles.heading} type="h3">
+            <ThemedText style={styles.heading} type="h5">
               on
             </ThemedText>
             {frequency === RRule.WEEKLY && (
@@ -431,11 +446,12 @@ export default function TransactionForm({ initial, onChange }: Props) {
                 options={weekdays}
                 value={weekday}
                 onChange={setWeekday}
+                textType="body"
               />
             )}
             {frequency === RRule.MONTHLY && (
               <>
-                <ThemedText style={styles.heading} type="h3">
+                <ThemedText style={styles.heading} type="h5">
                   the
                 </ThemedText>
                 <CapsuleNumberInteger
@@ -443,17 +459,17 @@ export default function TransactionForm({ initial, onChange }: Props) {
                   rawAmount={monthDay.toString()}
                   min={1}
                   max={31}
-                  textType="bodyLarge"
+                  textType="captionSmall"
                   onChangeText={(text) => setMonthDay(Number(text))}
                 />
-                <ThemedText style={styles.heading} type="h3">
+                <ThemedText style={styles.heading} type="h5">
                   of the month{" "}
                 </ThemedText>
               </>
             )}
             {frequency === RRule.YEARLY && (
               <View style={{ flexDirection: "row", gap: 8 }}>
-                <ThemedText style={styles.heading} type="h3">
+                <ThemedText style={styles.heading} type="h5">
                   the
                 </ThemedText>
                 <CapsuleNumberInteger
@@ -461,16 +477,17 @@ export default function TransactionForm({ initial, onChange }: Props) {
                   rawAmount={monthDay.toString()}
                   min={1}
                   max={31}
-                  textType="bodyLarge"
+                  textType="captionSmall"
                   onChangeText={(text) => setMonthDay(Number(text))}
                 />
-                <ThemedText style={styles.heading} type="h3">
+                <ThemedText style={styles.heading} type="h5">
                   of
                 </ThemedText>
                 <CapsuleDropdown
                   options={months}
                   value={yearMonth}
                   onChange={setYearMonth}
+                  textType="captionSmall"
                 />
               </View>
             )}

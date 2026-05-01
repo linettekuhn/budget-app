@@ -25,6 +25,8 @@ type Props = {
     | "captionSmall"
     | "overline"
     | "link";
+
+  style?: object;
 };
 
 export default function AmountDisplay({
@@ -35,6 +37,7 @@ export default function AmountDisplay({
   max = 1_000_000_000,
   currency = "USD",
   textType,
+  style,
 }: Props) {
   return (
     <CapsuleNumberInput
@@ -44,6 +47,7 @@ export default function AmountDisplay({
       min={min}
       max={max}
       textType={textType}
+      style={style}
     />
   );
 }
