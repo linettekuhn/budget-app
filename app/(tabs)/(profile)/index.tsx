@@ -44,6 +44,7 @@ export default function Profile() {
 
   const { name, loading, reload } = useName();
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     const loadStartDate = async () => {
@@ -104,6 +105,11 @@ export default function Profile() {
 
   const logout = async () => {
     try {
+      setLoggingOut(true);
+
+      // push any unsynced changes BEFORE wiping
+      await SyncService.sync();
+
       // wipe to avoid data from this session bleeding into the next account on this device
       await DatabaseService.resetTables();
       await AsyncStorage.clear();
@@ -124,6 +130,8 @@ export default function Profile() {
         type: "error",
         text1: "Failed to log out",
       });
+    } finally {
+      setLoggingOut(false);
     }
   };
 
@@ -313,6 +321,22 @@ export default function Profile() {
             </ThemedView>
           )}
         </ScrollView>
+        {loggingOut && (
+          <View
+            style={{
+              ...StyleSheet.absoluteFill,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: "rgba(0,0,0,0.4)",
+              zIndex: 999,
+            }}
+          >
+            <ActivityIndicator
+              size="large"
+              color={Colors[getTheme(colorScheme)].text}
+            />
+          </View>
+        )}
       </SafeAreaView>
     </AnimatedScreen>
   );

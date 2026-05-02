@@ -41,6 +41,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
+    Keyboard.dismiss();
     if (loading) return;
 
     setLoading(true);
@@ -74,6 +75,7 @@ export default function Login() {
   };
 
   const handleOffline = async () => {
+    Keyboard.dismiss();
     try {
       await AsyncStorage.setItem("offlineMode", "true");
 

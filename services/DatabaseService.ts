@@ -734,11 +734,12 @@ export default class DatabaseService {
 
     // close the current version
     await db.runAsync(
-      `UPDATE income_sources SET effectiveTo = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?`,
-      [today, id],
+      `UPDATE income_sources SET effectiveTo = ?, deletedAt = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?`,
+      [today, today, id],
     );
-    await this.logChange("income_sources", id, "update", {
+    await this.logChange("income_sources", id, "delete", {
       effectiveTo: today,
+      deletedAt: today,
     });
 
     // insert the new version with a fresh ID
@@ -766,14 +767,15 @@ export default class DatabaseService {
 
     await db.runAsync(
       `UPDATE income_sources 
-     SET isActive = 0, endDate = ?, updatedAt = CURRENT_TIMESTAMP 
+     SET isActive = 0, endDate = ?, deletedAt = ?, updatedAt = CURRENT_TIMESTAMP 
      WHERE id = ?`,
-      [today, id],
+      [today, today, id],
     );
 
-    await this.logChange("income_sources", id, "update", {
+    await this.logChange("income_sources", id, "delete", {
       isActive: 0,
       endDate: today,
+      deletedAt: today,
     });
   }
 
@@ -1170,7 +1172,10 @@ export default class DatabaseService {
     const monthStr = m.toString().padStart(2, "0");
 
     const startDate = `${y}-${monthStr}-01`;
-    const endDate = new Date(y, m, 0).toISOString();
+    const nextMonth = m === 12 ? 1 : m + 1;
+    const nextYear = m === 12 ? y + 1 : y;
+    const nextMonthStr = String(nextMonth).padStart(2, "0");
+    const endDate = `${nextYear}-${nextMonthStr}-01`;
 
     return await db.getFirstAsync<CategorySpend>(
       `
@@ -1190,7 +1195,7 @@ export default class DatabaseService {
       FROM categories c
       LEFT JOIN transactions t 
           ON c.id = t.categoryId
-          AND t.date BETWEEN ? AND ?
+          AND t.date >= ? AND t.date < ?
           AND t.deletedAt IS NULL
       WHERE c.id = ? AND c.deletedAt IS NULL
       GROUP BY c.id

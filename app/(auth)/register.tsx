@@ -43,6 +43,7 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
+    Keyboard.dismiss();
     if (loading) return;
     setLoading(true);
 
@@ -53,8 +54,6 @@ export default function Register() {
         password,
       );
       await updateProfile(userCred.user, { displayName: name });
-
-      await DatabaseService.initializeSchema();
 
       // check if they have existing offline data worth migrating
       const hasCompleted = await AsyncStorage.getItem("completedOnboarding");
