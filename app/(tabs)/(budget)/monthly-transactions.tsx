@@ -311,6 +311,73 @@ export default function MonthlyTransactions() {
           >
             Transactions
           </ThemedText>
+          {sections.length > 0 &&
+            (() => {
+              const current = sections[0];
+              const theme = getTheme(colorScheme);
+              const inColor = Colors[theme].income[600];
+              const outColor = Colors[theme].expense[600];
+              const netColor = current.net >= 0 ? inColor : outColor;
+
+              return (
+                <View
+                  style={[
+                    styles.summaryCard,
+                    { backgroundColor: Colors[theme].primary[200] },
+                  ]}
+                >
+                  <ThemedText
+                    type="overline"
+                    style={{ fontFamily: "Onest-Bold" }}
+                  >
+                    This Month's Spending
+                  </ThemedText>
+                  <MoneyText
+                    variant="block"
+                    type="displayMedium"
+                    amount={current.spent}
+                    currency={currency ?? "USD"}
+                    decimals
+                  />
+                  <View
+                    style={[
+                      styles.summaryPill,
+                      { backgroundColor: Colors[theme].primary[300] },
+                    ]}
+                  >
+                    <View style={styles.summaryItem}>
+                      <ThemedText type="caption" style={styles.label}>
+                        Income
+                      </ThemedText>
+                      <MoneyText
+                        variant="block"
+                        type="caption"
+                        amount={current.income}
+                        currency={currency ?? "USD"}
+                        decimals
+                      />
+                    </View>
+                    <View style={styles.pillDivider} />
+                    <View style={styles.summaryItem}>
+                      <ThemedText type="caption" style={styles.label}>
+                        Left Over
+                      </ThemedText>
+                      <MoneyText
+                        variant="block"
+                        type="caption"
+                        amount={current.net}
+                        currency={currency ?? "USD"}
+                        decimals
+                        style={{
+                          color: netColor,
+                          fontFamily: "Onest-SemiBold",
+                        }}
+                      />
+                    </View>
+                  </View>
+                </View>
+              );
+            })()}
           <SectionList
             sections={sections}
             keyExtractor={(item) => item.id}
@@ -329,19 +396,24 @@ export default function MonthlyTransactions() {
             )}
             renderSectionHeader={({
               section: { title, spent, income, net },
-            }) => (
-              <MonthHeader
-                title={title}
-                spent={spent}
-                income={income}
-                net={net}
-                currency={currency}
-                inColor={Colors[getTheme(colorScheme)].income[600]}
-                outColor={Colors[getTheme(colorScheme)].expense[600]}
-                background={Colors[getTheme(colorScheme)].primary[200]}
-                pillBackground={Colors[getTheme(colorScheme)].primary[300]}
-              />
-            )}
+            }) => {
+              const isFirst = sections[0]?.title === title;
+              if (isFirst) return null;
+
+              return (
+                <MonthHeader
+                  title={title}
+                  spent={spent}
+                  income={income}
+                  net={net}
+                  currency={currency}
+                  inColor={Colors[getTheme(colorScheme)].income[600]}
+                  outColor={Colors[getTheme(colorScheme)].expense[600]}
+                  background={Colors[getTheme(colorScheme)].primary[200]}
+                  pillBackground={Colors[getTheme(colorScheme)].primary[300]}
+                />
+              );
+            }}
             ListEmptyComponent={<ThemedText>No transactions found</ThemedText>}
           />
         </ThemedView>
@@ -366,6 +438,7 @@ const styles = StyleSheet.create({
   },
 
   monthHeader: {
+    marginTop: 16,
     marginBottom: 4,
     width: "100%",
     paddingVertical: 8,
@@ -391,5 +464,28 @@ const styles = StyleSheet.create({
 
   label: {
     flexShrink: 0,
+  },
+
+  summaryCard: {
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 16,
+    gap: 4,
+  },
+
+  summaryPill: {
+    flexDirection: "row",
+    borderRadius: 100,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    marginTop: 12,
+    alignItems: "center",
+  },
+
+  pillDivider: {
+    width: 1,
+    height: "100%",
+    backgroundColor: "rgba(0,0,0,0.1)",
+    marginHorizontal: 16,
   },
 });
