@@ -42,6 +42,12 @@ app.post("/register-push-token", (req, res) => {
 
   // get stored tokens
   const tokens = readTokens();
+
+  // remove this notification token from any other user that has it
+  tokens.users = tokens.users.filter(
+    (user) => user.token !== token || user.userId === userId,
+  );
+
   const existing = tokens.users.find((user) => user.userId === userId);
 
   // update or store new token
@@ -133,9 +139,11 @@ function getDateKey() {
 
 function getWeekKey() {
   const now = new Date();
-  const start = new Date(now.getFullYear(), 0, 1);
-  const week = Math.ceil(((now - start) / 86400000 + start.getDay() + 1) / 7);
-  return `${now.getFullYear()}-w${week}`;
+  const day = now.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + diff);
+  return monday.toISOString().slice(0, 10);
 }
 
 function getMonthKey() {
@@ -223,23 +231,31 @@ cron.schedule(
         continue;
       }
 
+      const hoursSinceActive =
+        (Date.now() - (user.lastActive || 0)) / 1000 / 3600;
       const weeklySpent = user.weeklySpent || 0;
+
       try {
         console.log(`[${user.userId}] Sending weekly summary`);
-        if (weeklySpent > 0) {
+        if (weeklySpent > 0 && hoursSinceActive < 48) {
           await sendPush(
             user.token,
             "Weekly Summary",
             `You've spent $${weeklySpent} this week. Keep tracking!`,
           );
-        } else {
+          user.lastSentWeekly = weekKey;
+        } else if (hoursSinceActive < 48) {
           await sendPush(
             user.token,
             "Weekly Summary",
-            `You haven't spent anything this week. Remember to track your expenses!`,
+            `You haven't logged any spending this week. Open the app to track your expenses!`,
+          );
+          user.lastSentWeekly = weekKey;
+        } else {
+          console.log(
+            `[${user.userId}] Weekly skipped. Data too stale (${hoursSinceActive.toFixed(2)}h)`,
           );
         }
-        user.lastSentWeekly = weekKey;
       } catch (e) {
         console.error(`Failed to send push to ${user.userId}:`, e);
       }
@@ -280,10 +296,12 @@ cron.schedule(
         continue;
       }
 
+      const hoursSinceActive =
+        (Date.now() - (user.lastActive || 0)) / 1000 / 3600;
       const spentPercent = user.spentPercent || 0;
-      if (spentPercent > 0) {
+
+      if (spentPercent > 0 && hoursSinceActive < 48) {
         try {
-          console.log(`[${user.userId}] Sending mid-month summary`);
           await sendPush(
             user.token,
             "Mid-Month Budget Check",
@@ -293,8 +311,21 @@ cron.schedule(
         } catch (e) {
           console.error(`Failed to send push to ${user.userId}:`, e);
         }
+      } else if (hoursSinceActive < 48) {
+        try {
+          await sendPush(
+            user.token,
+            "Mid-Month Budget Check",
+            `You're halfway through the month. Open the app to check your budget!`,
+          );
+          user.lastSentMidMonth = monthKey;
+        } catch (e) {
+          console.error(`Failed to send push to ${user.userId}:`, e);
+        }
       } else {
-        console.log(`[${user.userId}] Mid-month skipped — spentPercent is 0`);
+        console.log(
+          `[${user.userId}] Mid-month skipped. Data too stale (${hoursSinceActive.toFixed(2)}h)`,
+        );
       }
     }
 
