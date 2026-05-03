@@ -1239,7 +1239,7 @@ export default class DatabaseService {
 
     const now = new Date();
     const day = now.getDay(); // 0 = Sunday
-    const diff = now.getDate() - day;
+    const diff = now.getDate() - (day === 0 ? 6 : day - 1);
     const startOfWeek = new Date(now.setDate(diff));
     startOfWeek.setHours(0, 0, 0, 0);
 
