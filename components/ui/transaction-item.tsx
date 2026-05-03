@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 25,
     borderRadius: 25,
-    marginTop: 12,
+    marginBottom: 12,
     width: "100%",
     alignSelf: "stretch",
     gap: 12,

@@ -311,73 +311,6 @@ export default function MonthlyTransactions() {
           >
             Transactions
           </ThemedText>
-          {sections.length > 0 &&
-            (() => {
-              const current = sections[0];
-              const theme = getTheme(colorScheme);
-              const inColor = Colors[theme].income[600];
-              const outColor = Colors[theme].expense[600];
-              const netColor = current.net >= 0 ? inColor : outColor;
-
-              return (
-                <View
-                  style={[
-                    styles.summaryCard,
-                    { backgroundColor: Colors[theme].primary[200] },
-                  ]}
-                >
-                  <ThemedText
-                    type="overline"
-                    style={{ fontFamily: "Onest-Bold" }}
-                  >
-                    This Month's Spending
-                  </ThemedText>
-                  <MoneyText
-                    variant="block"
-                    type="displayMedium"
-                    amount={current.spent}
-                    currency={currency ?? "USD"}
-                    decimals
-                  />
-                  <View
-                    style={[
-                      styles.summaryPill,
-                      { backgroundColor: Colors[theme].primary[300] },
-                    ]}
-                  >
-                    <View style={styles.summaryItem}>
-                      <ThemedText type="caption" style={styles.label}>
-                        Income
-                      </ThemedText>
-                      <MoneyText
-                        variant="block"
-                        type="caption"
-                        amount={current.income}
-                        currency={currency ?? "USD"}
-                        decimals
-                      />
-                    </View>
-                    <View style={styles.pillDivider} />
-                    <View style={styles.summaryItem}>
-                      <ThemedText type="caption" style={styles.label}>
-                        Left Over
-                      </ThemedText>
-                      <MoneyText
-                        variant="block"
-                        type="caption"
-                        amount={current.net}
-                        currency={currency ?? "USD"}
-                        decimals
-                        style={{
-                          color: netColor,
-                          fontFamily: "Onest-SemiBold",
-                        }}
-                      />
-                    </View>
-                  </View>
-                </View>
-              );
-            })()}
           <SectionList
             sections={sections}
             keyExtractor={(item) => item.id}
@@ -398,7 +331,79 @@ export default function MonthlyTransactions() {
               section: { title, spent, income, net },
             }) => {
               const isFirst = sections[0]?.title === title;
-              if (isFirst) return null;
+              const current = sections[0];
+              const theme = getTheme(colorScheme);
+              const inColor = Colors[theme].income[600];
+              const outColor = Colors[theme].expense[600];
+              const netColor = current.net >= 0 ? inColor : outColor;
+
+              if (isFirst)
+                return (
+                  <View
+                    style={[
+                      styles.summaryCard,
+                      { backgroundColor: Colors[theme].primary[200] },
+                    ]}
+                  >
+                    <ThemedText
+                      type="overline"
+                      style={{ fontFamily: "Onest-Medium" }}
+                    >
+                      This Month&apos;s Spending
+                    </ThemedText>
+                    <MoneyText
+                      variant="block"
+                      type="displayMedium"
+                      amount={current.spent}
+                      currency={currency ?? "USD"}
+                      decimals
+                      style={{ textAlign: "left" }}
+                    />
+                    <View
+                      style={[
+                        styles.summaryPill,
+                        { backgroundColor: Colors[theme].primary[300] },
+                      ]}
+                    >
+                      <View style={[styles.summaryItem, { opacity: 1 }]}>
+                        <ThemedText type="caption" style={styles.label}>
+                          Income
+                        </ThemedText>
+                        <MoneyText
+                          variant="block"
+                          type="caption"
+                          amount={current.income}
+                          currency={currency ?? "USD"}
+                          decimals
+                        />
+                      </View>
+                      <View
+                        style={[
+                          styles.pillDivider,
+                          {
+                            backgroundColor: Colors[theme].primary[600],
+                          },
+                        ]}
+                      />
+                      <View style={[styles.summaryItem, { opacity: 1 }]}>
+                        <ThemedText type="caption" style={styles.label}>
+                          Left Over
+                        </ThemedText>
+                        <MoneyText
+                          variant="block"
+                          type="caption"
+                          amount={current.net}
+                          currency={currency ?? "USD"}
+                          decimals
+                          style={{
+                            color: netColor,
+                            fontFamily: "Onest-SemiBold",
+                          }}
+                        />
+                      </View>
+                    </View>
+                  </View>
+                );
 
               return (
                 <MonthHeader
@@ -433,13 +438,8 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
 
-  header: {
-    marginBottom: 20,
-  },
-
   monthHeader: {
-    marginTop: 16,
-    marginBottom: 4,
+    marginBottom: 12,
     width: "100%",
     paddingVertical: 8,
     paddingHorizontal: 16,
@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
   },
 
   summaryItem: {
-    opacity: 0.5,
+    opacity: 0.6,
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
@@ -469,23 +469,23 @@ const styles = StyleSheet.create({
   summaryCard: {
     borderRadius: 24,
     padding: 20,
-    marginBottom: 16,
+    marginBottom: 12,
     gap: 4,
   },
 
   summaryPill: {
     flexDirection: "row",
     borderRadius: 100,
-    paddingVertical: 12,
+    paddingVertical: 16,
     paddingHorizontal: 20,
-    marginTop: 12,
+    marginTop: 8,
     alignItems: "center",
   },
 
   pillDivider: {
     width: 1,
     height: "100%",
-    backgroundColor: "rgba(0,0,0,0.1)",
+    opacity: 0.5,
     marginHorizontal: 16,
   },
 });
