@@ -49,10 +49,6 @@ export default function FinishOnboarding() {
       // save name
       await DatabaseService.insertName(name);
 
-      // TODO: FIX THIS GARGBAGE
-      // save categories
-      //const defaultCategories = await DatabaseService.getCategories();
-      //console.log(defaultCategories);
       await DatabaseService.clearCategories();
       await DatabaseService.insertCategories(categories, budgets);
 

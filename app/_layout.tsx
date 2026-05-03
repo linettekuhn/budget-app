@@ -11,6 +11,7 @@ import DatabaseService from "@/services/DatabaseService";
 import StreakService from "@/services/StreakService";
 import SyncService from "@/services/SyncService";
 import WidgetService from "@/services/WidgetService";
+import { isVersionLessThan } from "@/utils/updateUtils";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   DarkTheme,
@@ -22,7 +23,6 @@ import { useFonts } from "expo-font";
 import { Stack, router } from "expo-router";
 import { SQLiteDatabase, SQLiteProvider } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
-import * as Updates from "expo-updates";
 import { fetchAndActivate, getString } from "firebase/remote-config";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, AppState, Linking, Platform } from "react-native";
@@ -56,29 +56,21 @@ export default function RootLayout() {
   const initialCheckDone = useRef(false);
 
   const showForceUpdateAlert = () => {
+    const openStore = () => {
+      const url =
+        Platform.OS === "ios"
+          ? "https://apps.apple.com/us/app/piggystash/id6757825917"
+          : ""; // TODO: add Play Store URL
+      if (url) Linking.openURL(url);
+      // re-show alert after returning from store so they can't just dismiss
+      setTimeout(showForceUpdateAlert, 500);
+    };
+
     Alert.alert(
-      "Critical Update Required",
-      "To continue using the app, you must update to the latest version to apply fixes.",
-      [
-        {
-          text: "Update Now",
-          onPress: async () => {
-            const update = await Updates.checkForUpdateAsync();
-            if (update.isAvailable) {
-              await Updates.fetchUpdateAsync();
-              await Updates.reloadAsync(); // restarts app with new code immediately
-            } else {
-              // fallback: send them to the App Store
-              const storeUrl =
-                Platform.OS === "ios"
-                  ? "https://apps.apple.com/us/app/piggystash/id6757825917"
-                  : "";
-              Linking.openURL(storeUrl);
-            }
-          },
-        },
-      ],
-      { cancelable: false }, // user cannot click outside the alert to dismiss
+      "Update Required",
+      "A new version of Piggy Stash is required to continue. Please update the app.",
+      [{ text: "Update Now", onPress: openStore }],
+      { cancelable: false },
     );
   };
 
@@ -93,7 +85,7 @@ export default function RootLayout() {
         const currentVersion = Constants.expoConfig?.version || "1.0.0";
 
         // simple version comparison (e.g., "1.0.1" < "1.1.0")
-        if (currentVersion < minVersion) {
+        if (minVersion && isVersionLessThan(currentVersion, minVersion)) {
           showForceUpdateAlert();
         }
       } catch (error) {
@@ -101,8 +93,7 @@ export default function RootLayout() {
       }
     };
 
-    // TODO: FIX
-    //checkUpdate();
+    checkUpdate();
   }, []);
 
   const createDatabase = useCallback(async (db: SQLiteDatabase) => {

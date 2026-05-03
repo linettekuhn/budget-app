@@ -132,7 +132,6 @@ export default class SyncService {
 
         // for each table get firestore snapshot
         for (const table of tables) {
-          // TODO: HERES THE ERROR
           // filter out docs updated before last synced
           const collectionRef = query(
             collection(firestoreDb, `users/${userId}/${table}`),
