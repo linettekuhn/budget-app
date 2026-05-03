@@ -30,6 +30,11 @@ const heroFontSize = (formatted: string, isSmall: boolean): number => {
   return Math.round(base * 0.6);
 };
 
+const truncateWidgetName = (name: string, maxChars: number = 18): string => {
+  if (name.length <= maxChars) return name;
+  return name.slice(0, maxChars).trimEnd() + "…";
+};
+
 export default class WidgetService {
   static async syncBudgetWidget(): Promise<void> {
     try {
@@ -174,6 +179,7 @@ export default class WidgetService {
 
         payload = {
           lastTransaction: transaction,
+          transactionName: truncateWidgetName(transaction.name),
           formattedAmount,
           heroFontSize: heroFontSizeSmall,
           categoryColor: transaction.categoryColor,
@@ -184,6 +190,7 @@ export default class WidgetService {
         const widgetUrl = "budgetapp:///(tabs)/transaction?type=EXPENSE";
         payload = {
           lastTransaction: undefined,
+          transactionName: "",
           formattedAmount: "",
           heroFontSize: 20,
           categoryColor: undefined,

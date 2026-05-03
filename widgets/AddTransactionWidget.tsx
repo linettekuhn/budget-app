@@ -14,6 +14,7 @@ import { createWidget, WidgetEnvironment } from "expo-widgets";
 
 type AddTransactionWidgetProps = {
   lastTransaction: TransactionType | undefined;
+  transactionName: string;
   formattedAmount: string;
   heroFontSize: number;
   categoryColor?: string;
@@ -34,7 +35,7 @@ const AddTransactionWidget = (
   const transaction = props.lastTransaction ?? undefined;
 
   const mutedColor = c.primary[700];
-  const dimmedColor = c.primary[500];
+  const dimmedColor = c.primary[400];
   const accentColor = c.primary[500];
 
   const url = props.widgetUrl ?? "budgetapp:///(tabs)/transaction?type=EXPENSE";
@@ -65,17 +66,12 @@ const AddTransactionWidget = (
     );
   }
 
-  const typeColor = transaction.type === "income" ? c.income : c.expense;
+  const typeColor =
+    transaction.type === "income" ? c.income[500] : c.expense[500];
   const typeLabel = transaction.type === "income" ? "↑" : "↓";
 
   const pillBackground =
     scheme === "dark" ? props.pillBackgroundDark : props.pillBackgroundLight;
-
-  const date = new Date(transaction.date);
-  const dateLabel = date.toLocaleDateString("default", {
-    month: "short",
-    day: "numeric",
-  });
 
   return (
     <VStack spacing={12} modifiers={[widgetURL(url)]}>
@@ -103,7 +99,7 @@ const AddTransactionWidget = (
             multilineTextAlignment("leading"),
           ]}
         >
-          {transaction.name} · {dateLabel}
+          {props.transactionName}
         </Text>
       </VStack>
       <HStack
