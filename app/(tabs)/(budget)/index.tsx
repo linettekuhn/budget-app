@@ -70,13 +70,22 @@ export default function Budget() {
     totalSpent % 2 === 0 ? totalSpent : Number(totalSpent.toFixed(2));
 
   const sortedBudgets = [...budgets].sort((a, b) => b.budget - a.budget);
-  const topThree = sortedBudgets.slice(0, 3);
-  const other = sortedBudgets.slice(3);
+
+  // Only group into Other when there are more than 4 categories
+  const useGrouping = sortedBudgets.length > 4;
+  const topThree = useGrouping ? sortedBudgets.slice(0, 3) : sortedBudgets;
+  const other = useGrouping ? sortedBudgets.slice(3) : [];
 
   const otherTotal = other.reduce((sum, category) => sum + category.budget, 0);
-  const otherTotalSpent = other
-    .reduce((sum, category) => sum + category.totalSpent, 0)
-    .toFixed(2);
+  const otherTotalSpent = Number(
+    other.reduce((sum, category) => sum + category.totalSpent, 0).toFixed(2),
+  );
+
+  const sortBySpendPercent = (a: CategorySpend, b: CategorySpend) => {
+    const aPercent = a.totalSpent / a.budget;
+    const bPercent = b.totalSpent / b.budget;
+    return bPercent - aPercent;
+  };
 
   const updateMonthData = (date: Date) => {
     setSelectedDate(date);
@@ -121,16 +130,51 @@ export default function Budget() {
                   </View>
                 </ThemedView>
               </Pressable>
+
               <ThemedView style={styles.categoryPreviews}>
                 {topThree
                   .slice()
-                  .sort((a, b) => {
-                    const aPercent = a.totalSpent / a.budget;
-                    const bPercent = b.totalSpent / b.budget;
-                    return bPercent - aPercent;
-                  })
-                  .map((category) => {
-                    return (
+                  .sort(sortBySpendPercent)
+                  .map((category) => (
+                    <CategoryBudgetPreview
+                      key={category.id}
+                      category={category}
+                      onPress={() =>
+                        router.push({
+                          pathname: "/category-transactions",
+                          params: {
+                            category: JSON.stringify(category),
+                            date: JSON.stringify(selectedDate),
+                          },
+                        })
+                      }
+                      currency={currency ?? "USD"}
+                    />
+                  ))}
+
+                {useGrouping && !seeAll && other.length > 0 && (
+                  <CategoryBudgetPreview
+                    key={-1}
+                    category={{
+                      id: "",
+                      name: "Other",
+                      budget: otherTotal,
+                      totalSpent: otherTotalSpent,
+                      color: adjustColorForScheme("#B6B6B6", colorScheme),
+                      type: "need",
+                    }}
+                    onPress={() => setSeeAll(true)}
+                    currency={currency ?? "USD"}
+                  />
+                )}
+
+                {useGrouping &&
+                  seeAll &&
+                  other.length > 0 &&
+                  other
+                    .slice()
+                    .sort(sortBySpendPercent)
+                    .map((category) => (
                       <CategoryBudgetPreview
                         key={category.id}
                         category={category}
@@ -145,50 +189,8 @@ export default function Budget() {
                         }
                         currency={currency ?? "USD"}
                       />
-                    );
-                  })}
-                {!seeAll && other.length > 0 && (
-                  <CategoryBudgetPreview
-                    key={-1}
-                    category={{
-                      id: "",
-                      name: "Other",
-                      budget: otherTotal,
-                      totalSpent: Number(otherTotalSpent),
-                      color: adjustColorForScheme("#B6B6B6", colorScheme),
-                      type: "need",
-                    }}
-                    onPress={() => setSeeAll(true)}
-                    currency={currency ?? "USD"}
-                  />
-                )}
-                {seeAll &&
-                  other.length > 0 &&
-                  other
-                    .slice()
-                    .sort((a, b) => {
-                      const aPercent = a.totalSpent / a.budget;
-                      const bPercent = b.totalSpent / b.budget;
-                      return bPercent - aPercent;
-                    })
-                    .map((category) => {
-                      return (
-                        <CategoryBudgetPreview
-                          key={category.id}
-                          category={category}
-                          onPress={() =>
-                            router.push({
-                              pathname: "/category-transactions",
-                              params: {
-                                category: JSON.stringify(category),
-                                date: JSON.stringify(selectedDate),
-                              },
-                            })
-                          }
-                          currency={currency ?? "USD"}
-                        />
-                      );
-                    })}
+                    ))}
+
                 <CapsuleButton
                   onPress={handleOpen}
                   text="ADD NEW CATEGORY"
@@ -197,20 +199,15 @@ export default function Budget() {
                   iconName="plus"
                 />
               </ThemedView>
-              {seeAll && other.length > 0 && (
+
+              {useGrouping && other.length > 0 && (
                 <Pressable
                   style={{ alignSelf: "center" }}
-                  onPress={() => setSeeAll(false)}
+                  onPress={() => setSeeAll((prev) => !prev)}
                 >
-                  <ThemedText type="link">See Less Categories</ThemedText>
-                </Pressable>
-              )}
-              {!seeAll && other.length > 0 && (
-                <Pressable
-                  style={{ alignSelf: "center" }}
-                  onPress={() => setSeeAll(true)}
-                >
-                  <ThemedText type="link">See More Categories</ThemedText>
+                  <ThemedText type="link">
+                    {seeAll ? "See Less Categories" : "See More Categories"}
+                  </ThemedText>
                 </Pressable>
               )}
             </ThemedView>
