@@ -5,6 +5,7 @@ import {
   font,
   foregroundStyle,
   multilineTextAlignment,
+  opacity,
   padding,
   widgetURL,
 } from "@expo/ui/swift-ui/modifiers";
@@ -32,6 +33,7 @@ const CategoryWidget = (props: CategoryWidgetProps, env: WidgetEnvironment) => {
 
   const scheme = env.colorScheme === "dark" ? "dark" : "light";
   const c = (props.colors ?? Colors)[scheme];
+  const isAccented = (env.widgetRenderingMode ?? "fullColor") !== "fullColor";
 
   const isSmall = env.widgetFamily === "systemSmall";
   const isOverBudget = props.isOverBudget ?? false;
@@ -41,10 +43,16 @@ const CategoryWidget = (props: CategoryWidgetProps, env: WidgetEnvironment) => {
   const monthName = props.monthName ?? "";
   const url = props.widgetUrl ?? "budgetapp:///(tabs)/(budget)";
 
-  const remainingColor = isOverBudget ? c.error : c.text;
-  const mutedColor = c.primary[700];
-  const dimmedColor = c.primary[500];
-  const accentColor = props.categoryColor || c.primary[500];
+  const remainingColor = isAccented
+    ? "#FFFFFF"
+    : isOverBudget
+      ? c.error
+      : c.text;
+  const mutedColor = isAccented ? "#FFFFFF" : c.primary[700];
+  const dimmedColor = isAccented ? "#FFFFFF" : c.primary[500];
+  const accentColor = isAccented
+    ? "#FFFFFF"
+    : props.categoryColor || c.primary[500];
 
   const heroFontSize = isSmall
     ? (props.heroFontSizeSmall ?? 20)
@@ -70,7 +78,14 @@ const CategoryWidget = (props: CategoryWidgetProps, env: WidgetEnvironment) => {
         .join(" ") + " Budget Left"
     : "Category Budget";
 
-  const gradientRect = (
+  const gradientRect = isAccented ? (
+    <Rectangle
+      modifiers={[
+        foregroundStyle({ type: "color", color: "#FFFFFF" }),
+        opacity(0.15),
+      ]}
+    />
+  ) : (
     <Rectangle
       modifiers={[
         foregroundStyle({
@@ -103,7 +118,7 @@ const CategoryWidget = (props: CategoryWidgetProps, env: WidgetEnvironment) => {
         <Text
           modifiers={[
             font({ size: 14, weight: "semibold" }),
-            foregroundStyle(c.text),
+            foregroundStyle(isAccented ? "#FFFFFF" : c.text),
           ]}
         >
           No category set
@@ -128,7 +143,7 @@ const CategoryWidget = (props: CategoryWidgetProps, env: WidgetEnvironment) => {
         <Text
           modifiers={[
             font({ size: 14, weight: "semibold" }),
-            foregroundStyle(c.text),
+            foregroundStyle(isAccented ? "#FFFFFF" : c.text),
           ]}
         >
           No budget set

@@ -8,6 +8,7 @@ import {
   font,
   foregroundStyle,
   multilineTextAlignment,
+  opacity,
   padding,
   widgetURL,
 } from "@expo/ui/swift-ui/modifiers";
@@ -32,14 +33,35 @@ const AddTransactionWidget = (
   "widget";
   const scheme = env.colorScheme === "dark" ? "dark" : "light";
   const c = (props.colors ?? Colors)[scheme];
+  const isAccented = (env.widgetRenderingMode ?? "fullColor") !== "fullColor";
 
   const transaction = props.lastTransaction ?? undefined;
 
-  const mutedColor = c.primary[700];
-  const dimmedColor = c.primary[400];
-  const accentColor = c.primary[500];
+  const mutedColor = isAccented ? "#FFFFFF" : c.primary[700];
+  const dimmedColor = isAccented ? "#FFFFFF" : c.primary[400];
+  const accentColor = isAccented ? "#FFFFFF" : c.primary[500];
 
   const url = props.widgetUrl ?? "budgetapp:///(tabs)/transaction?type=EXPENSE";
+
+  const gradientRect = isAccented ? (
+    <Rectangle
+      modifiers={[
+        foregroundStyle({ type: "color", color: "#FFFFFF" }),
+        opacity(0.15),
+      ]}
+    />
+  ) : (
+    <Rectangle
+      modifiers={[
+        foregroundStyle({
+          type: "linearGradient",
+          colors: [c.background, c.primary[200]],
+          startPoint: { x: 0.5, y: 0.5 },
+          endPoint: { x: 1, y: 1 },
+        }),
+      ]}
+    />
+  );
 
   if (!transaction) {
     return (
@@ -49,16 +71,7 @@ const AddTransactionWidget = (
           widgetURL(url),
         ]}
       >
-        <Rectangle
-          modifiers={[
-            foregroundStyle({
-              type: "linearGradient",
-              colors: [c.background, c.primary[200]],
-              startPoint: { x: 0.5, y: 0.5 },
-              endPoint: { x: 1, y: 1 },
-            }),
-          ]}
-        />
+        {gradientRect}
         <VStack modifiers={[padding({ all: 16 })]}>
           <Text
             modifiers={[
@@ -71,7 +84,7 @@ const AddTransactionWidget = (
           <Text
             modifiers={[
               font({ size: 14, weight: "semibold" }),
-              foregroundStyle(c.text),
+              foregroundStyle(isAccented ? "#FFFFFF" : c.text),
             ]}
           >
             No transactions yet
@@ -84,12 +97,18 @@ const AddTransactionWidget = (
     );
   }
 
-  const typeColor =
-    transaction.type === "income" ? c.income[500] : c.expense[500];
+  const typeColor = isAccented
+    ? "#FFFFFF"
+    : transaction.type === "income"
+      ? c.income[500]
+      : c.expense[500];
   const typeLabel = transaction.type === "income" ? "↑" : "↓";
 
-  const pillBackground =
-    scheme === "dark" ? props.pillBackgroundDark : props.pillBackgroundLight;
+  const pillBackground = isAccented
+    ? "#FFFFFF33"
+    : scheme === "dark"
+      ? props.pillBackgroundDark
+      : props.pillBackgroundLight;
 
   return (
     <ZStack
@@ -98,21 +117,12 @@ const AddTransactionWidget = (
         widgetURL(url),
       ]}
     >
-      <Rectangle
-        modifiers={[
-          foregroundStyle({
-            type: "linearGradient",
-            colors: [c.background, c.primary[200]],
-            startPoint: { x: 0.5, y: 0.5 },
-            endPoint: { x: 1, y: 1 },
-          }),
-        ]}
-      />
+      {gradientRect}
       <VStack spacing={12} modifiers={[padding({ all: 16 })]}>
         <Text
           modifiers={[
             font({ size: 10, weight: "semibold" }),
-            foregroundStyle(c.text),
+            foregroundStyle(isAccented ? "#FFFFFF" : c.text),
           ]}
         >
           LAST TRANSACTION
