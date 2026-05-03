@@ -147,6 +147,17 @@ export default function CategoryTransactions() {
     }
   }, [category, date]);
 
+  const renderItem = useCallback(
+    ({ item }: { item: TransactionType }) => (
+      <TransactionItem
+        currency={currency ?? "USD"}
+        transaction={item}
+        handleEdit={handleEditTransaction}
+      />
+    ),
+    [currency, handleEditTransaction],
+  );
+
   useEffect(() => {
     loadTransaction();
   }, [loadTransaction]);
@@ -231,13 +242,7 @@ export default function CategoryTransactions() {
                     onRefresh={loadTransaction}
                   />
                 }
-                renderItem={({ item }) => (
-                  <TransactionItem
-                    currency={currency ?? "USD"}
-                    transaction={item}
-                    handleEdit={handleEditTransaction}
-                  />
-                )}
+                renderItem={renderItem}
                 ListEmptyComponent={
                   <ThemedText>No transactions found</ThemedText>
                 }

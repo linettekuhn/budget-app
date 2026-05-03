@@ -2,12 +2,18 @@ import { Colors, getTheme } from "@/constants/theme";
 import { TransactionType } from "@/types";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
 import Octicons from "@expo/vector-icons/Octicons";
-import { Pressable, StyleSheet, useColorScheme } from "react-native";
+import { memo, useState } from "react";
+import {
+  LayoutChangeEvent,
+  Pressable,
+  StyleSheet,
+  useColorScheme,
+} from "react-native";
 import { ThemedText } from "../themed-text";
 import { ThemedView } from "../themed-view";
 import MoneyText from "./money-text";
 
-export default function TransactionItem({
+const TransactionItem = memo(function TransactionItem({
   currency,
   transaction,
   handleEdit,
@@ -27,6 +33,12 @@ export default function TransactionItem({
 
   const sign = transaction.type === "income" ? "positive" : "negative";
 
+  const [halfWidth, setHalfWidth] = useState<number | undefined>(undefined);
+
+  const onWrapperLayout = (e: LayoutChangeEvent) => {
+    setHalfWidth(e.nativeEvent.layout.width / 2);
+  };
+
   return (
     <ThemedView
       key={transaction.id}
@@ -34,6 +46,7 @@ export default function TransactionItem({
         styles.transactionWrapper,
         { backgroundColor: transactionBgColor },
       ]}
+      onLayout={onWrapperLayout}
     >
       <ThemedView
         style={{
@@ -42,12 +55,13 @@ export default function TransactionItem({
         }}
       >
         <ThemedText
+          numberOfLines={2}
+          ellipsizeMode="tail"
           style={{
             color: txtColor,
-            margin: 0,
-            lineHeight: 0,
+            flexWrap: "wrap",
+            maxWidth: halfWidth,
           }}
-          numberOfLines={1}
         >
           {transaction.name}
         </ThemedText>
@@ -55,8 +69,6 @@ export default function TransactionItem({
           type="captionSmall"
           style={{
             color: txtColor,
-            margin: 0,
-            lineHeight: 0,
           }}
         >
           {date.toLocaleDateString()}
@@ -82,7 +94,7 @@ export default function TransactionItem({
       </Pressable>
     </ThemedView>
   );
-}
+});
 
 const styles = StyleSheet.create({
   transactionWrapper: {
@@ -98,3 +110,5 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
 });
+
+export default TransactionItem;

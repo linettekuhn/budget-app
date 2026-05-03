@@ -15,7 +15,7 @@ import { TransactionType } from "@/types";
 import { getTotalIncomeForMonth } from "@/utils/incomeUtils";
 import Octicons from "@expo/vector-icons/Octicons";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   RefreshControl,
@@ -250,23 +250,37 @@ export default function MonthlyTransactions() {
     }
   };
 
-  const handleEditTransaction = (transaction: TransactionType) => {
-    openModal(
-      <EditTransaction
-        initialTransaction={transaction}
-        onCancel={() => {
-          loadTransaction();
-          closeModal();
-        }}
-        onSave={async (newTransaction: TransactionType) => {
-          await DatabaseService.updateTransaction(newTransaction);
-          await WidgetService.syncAll();
-          loadTransaction();
-          closeModal();
-        }}
-      />,
-    );
-  };
+  const handleEditTransaction = useCallback(
+    (transaction: TransactionType) => {
+      openModal(
+        <EditTransaction
+          initialTransaction={transaction}
+          onCancel={() => {
+            loadTransaction();
+            closeModal();
+          }}
+          onSave={async (newTransaction: TransactionType) => {
+            await DatabaseService.updateTransaction(newTransaction);
+            await WidgetService.syncAll();
+            loadTransaction();
+            closeModal();
+          }}
+        />,
+      );
+    },
+    [closeModal, openModal],
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: TransactionType }) => (
+      <TransactionItem
+        currency={currency ?? "USD"}
+        transaction={item}
+        handleEdit={handleEditTransaction}
+      />
+    ),
+    [currency, handleEditTransaction],
+  );
 
   useEffect(() => {
     loadTransaction();
@@ -320,13 +334,7 @@ export default function MonthlyTransactions() {
                 onRefresh={loadTransaction}
               />
             }
-            renderItem={({ item }) => (
-              <TransactionItem
-                currency={currency ?? "USD"}
-                transaction={item}
-                handleEdit={handleEditTransaction}
-              />
-            )}
+            renderItem={renderItem}
             renderSectionHeader={({
               section: { title, spent, income, net },
             }) => {
