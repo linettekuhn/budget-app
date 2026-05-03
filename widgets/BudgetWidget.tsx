@@ -1,10 +1,12 @@
 import { Colors } from "@/constants/theme";
-import { Text, VStack } from "@expo/ui/swift-ui";
+import { Rectangle, Text, VStack, ZStack } from "@expo/ui/swift-ui";
 import {
+  containerRelativeFrame,
   font,
   foregroundStyle,
   multilineTextAlignment,
   padding,
+  widgetURL,
 } from "@expo/ui/swift-ui/modifiers";
 import { createWidget, type WidgetEnvironment } from "expo-widgets";
 
@@ -19,6 +21,7 @@ type BudgetWidgetProps = {
   colors: typeof Colors;
   heroFontSizeSmall: number;
   heroFontSizeLarge: number;
+  widgetUrl: string;
 };
 
 const BudgetWidget = (props: BudgetWidgetProps, env: WidgetEnvironment) => {
@@ -32,6 +35,7 @@ const BudgetWidget = (props: BudgetWidgetProps, env: WidgetEnvironment) => {
   const noBudgetSet = props.noBudgetSet ?? false;
   const daysLeft = props.daysLeft ?? 0;
   const monthName = props.monthName ?? "";
+  const url = props.widgetUrl ?? "budgetapp:///(tabs)/(budget)";
 
   const remainingColor = isOverBudget ? c.error : c.text;
   const mutedColor = c.primary[700];
@@ -54,71 +58,100 @@ const BudgetWidget = (props: BudgetWidgetProps, env: WidgetEnvironment) => {
     daysLeft > 0 &&
     props.dailyRemainingFormatted !== "";
 
+  const gradientRect = (
+    <Rectangle
+      modifiers={[
+        foregroundStyle({
+          type: "linearGradient",
+          colors: [c.background, c.primary[200]],
+          startPoint: { x: 0.5, y: 0.5 },
+          endPoint: { x: 1, y: 1 },
+        }),
+      ]}
+    />
+  );
+
   return noBudgetSet ? (
-    <VStack modifiers={[padding({ all: 16 })]}>
-      <Text
-        modifiers={[
-          font({ size: 10, weight: "semibold" }),
-          foregroundStyle(mutedColor),
-        ]}
-      >
-        BUDGET LEFT
-      </Text>
-      <Text
-        modifiers={[
-          font({ size: 14, weight: "semibold" }),
-          foregroundStyle(c.text),
-        ]}
-      >
-        No budget set
-      </Text>
-      <Text modifiers={[font({ size: 11 }), foregroundStyle(dimmedColor)]}>
-        Open the app to get started
-      </Text>
-    </VStack>
-  ) : (
-    <VStack modifiers={[padding({ all: 8 })]}>
-      <Text
-        modifiers={[
-          font({ size: 10, weight: "semibold" }),
-          foregroundStyle(mutedColor),
-        ]}
-      >
-        BUDGET LEFT
-      </Text>
-      <Text
-        modifiers={[
-          font({ size: heroFontSize, weight: "bold" }),
-          foregroundStyle(remainingColor),
-        ]}
-      >
-        {isOverBudget ? "-" : ""}
-        {props.remainingFormatted}
-      </Text>
-      <Text
-        modifiers={[
-          font({ size: 12 }),
-          foregroundStyle(dimmedColor),
-          multilineTextAlignment("center"),
-        ]}
-      >
-        of {props.totalBudgetFormatted} total
-      </Text>
-      <Text modifiers={[font({ size: 11 }), foregroundStyle(mutedColor)]}>
-        {daysLabel}
-      </Text>
-      {showDaily && (
+    <ZStack
+      modifiers={[
+        containerRelativeFrame({ axes: "both", span: 1, count: 1 }),
+        widgetURL(url),
+      ]}
+    >
+      {gradientRect}
+      <VStack modifiers={[padding({ all: 16 })]}>
         <Text
           modifiers={[
-            font({ size: 11, weight: "medium" }),
+            font({ size: 10, weight: "semibold" }),
             foregroundStyle(mutedColor),
+          ]}
+        >
+          BUDGET LEFT
+        </Text>
+        <Text
+          modifiers={[
+            font({ size: 14, weight: "semibold" }),
+            foregroundStyle(c.text),
+          ]}
+        >
+          No budget set
+        </Text>
+        <Text modifiers={[font({ size: 11 }), foregroundStyle(dimmedColor)]}>
+          Open the app to get started
+        </Text>
+      </VStack>
+    </ZStack>
+  ) : (
+    <ZStack
+      modifiers={[
+        containerRelativeFrame({ axes: "both", span: 1, count: 1 }),
+        widgetURL(url),
+      ]}
+    >
+      {gradientRect}
+      <VStack modifiers={[padding({ all: 8 })]}>
+        <Text
+          modifiers={[
+            font({ size: 10, weight: "semibold" }),
+            foregroundStyle(mutedColor),
+          ]}
+        >
+          BUDGET LEFT
+        </Text>
+        <Text
+          modifiers={[
+            font({ size: heroFontSize, weight: "bold" }),
+            foregroundStyle(remainingColor),
+          ]}
+        >
+          {isOverBudget ? "-" : ""}
+          {props.remainingFormatted}
+        </Text>
+        <Text
+          modifiers={[
+            font({ size: 12 }),
+            foregroundStyle(dimmedColor),
             multilineTextAlignment("center"),
           ]}
         >
-          {props.dailyRemainingFormatted}/day
+          of {props.totalBudgetFormatted} total
         </Text>
-      )}
-    </VStack>
+        <Text modifiers={[font({ size: 11 }), foregroundStyle(mutedColor)]}>
+          {daysLabel}
+        </Text>
+        {showDaily && (
+          <Text
+            modifiers={[
+              font({ size: 11, weight: "medium" }),
+              foregroundStyle(mutedColor),
+              multilineTextAlignment("center"),
+            ]}
+          >
+            {props.dailyRemainingFormatted}/day
+          </Text>
+        )}
+      </VStack>
+    </ZStack>
   );
 };
 

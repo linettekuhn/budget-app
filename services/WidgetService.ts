@@ -80,6 +80,7 @@ export default class WidgetService {
         colors: Colors,
         heroFontSizeSmall: heroFontSize(formattedRemaining, true),
         heroFontSizeLarge: heroFontSize(formattedRemaining, false),
+        widgetUrl: "budgetapp:///(tabs)/(budget)",
       };
 
       await BudgetWidget.updateSnapshot(payload);
@@ -254,6 +255,7 @@ export default class WidgetService {
         streakColorStart: streakColors.start,
         streakColorEnd: streakColors.end,
         colors: Colors,
+        widgetUrl: "budgetapp:///(tabs)",
       };
 
       await StreakWidget.updateSnapshot(payload);

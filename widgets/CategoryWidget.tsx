@@ -1,6 +1,7 @@
 import { Colors } from "@/constants/theme";
-import { Text, VStack } from "@expo/ui/swift-ui";
+import { Rectangle, Text, VStack, ZStack } from "@expo/ui/swift-ui";
 import {
+  containerRelativeFrame,
   font,
   foregroundStyle,
   multilineTextAlignment,
@@ -69,94 +70,121 @@ const CategoryWidget = (props: CategoryWidgetProps, env: WidgetEnvironment) => {
         .join(" ") + " Budget Left"
     : "Category Budget";
 
+  const gradientRect = (
+    <Rectangle
+      modifiers={[
+        foregroundStyle({
+          type: "linearGradient",
+          colors: [c.background, c.primary[200]],
+          startPoint: { x: 0.5, y: 0.5 },
+          endPoint: { x: 1, y: 1 },
+        }),
+      ]}
+    />
+  );
+
+  const zstackModifiers = [
+    containerRelativeFrame({ axes: "both", span: 1, count: 1 }),
+    widgetURL(url),
+  ];
+
   return noCategorySet ? (
-    <VStack modifiers={[padding({ all: 16 }), widgetURL(url)]}>
-      <Text
-        modifiers={[
-          font({ size: 10, weight: "semibold" }),
-          foregroundStyle(mutedColor),
-        ]}
-      >
-        CATEGORY BUDGET
-      </Text>
-      <Text
-        modifiers={[
-          font({ size: 14, weight: "semibold" }),
-          foregroundStyle(c.text),
-        ]}
-      >
-        No category set
-      </Text>
-      <Text modifiers={[font({ size: 11 }), foregroundStyle(dimmedColor)]}>
-        Choose one in app settings
-      </Text>
-    </VStack>
-  ) : noBudgetSet ? (
-    <VStack modifiers={[padding({ all: 16 }), widgetURL(url)]}>
-      <Text
-        modifiers={[
-          font({ size: 10, weight: "semibold" }),
-          foregroundStyle(accentColor),
-        ]}
-      >
-        {categoryLabel.toUpperCase()}
-      </Text>
-      <Text
-        modifiers={[
-          font({ size: 14, weight: "semibold" }),
-          foregroundStyle(c.text),
-        ]}
-      >
-        No budget set
-      </Text>
-      <Text modifiers={[font({ size: 11 }), foregroundStyle(dimmedColor)]}>
-        Open the app to get started
-      </Text>
-    </VStack>
-  ) : (
-    <VStack modifiers={[padding({ all: 8 }), widgetURL(url)]}>
-      <Text
-        modifiers={[
-          font({ size: 10, weight: "semibold" }),
-          foregroundStyle(accentColor),
-          multilineTextAlignment("center"),
-        ]}
-      >
-        {categoryLabel.toUpperCase()}
-      </Text>
-      <Text
-        modifiers={[
-          font({ size: heroFontSize, weight: "bold" }),
-          foregroundStyle(remainingColor),
-        ]}
-      >
-        {isOverBudget ? "-" : ""}
-        {props.remainingFormatted}
-      </Text>
-      <Text
-        modifiers={[
-          font({ size: 12 }),
-          foregroundStyle(dimmedColor),
-          multilineTextAlignment("center"),
-        ]}
-      >
-        of {props.totalBudgetFormatted} total
-      </Text>
-      <Text modifiers={[font({ size: 11 }), foregroundStyle(mutedColor)]}>
-        {daysLabel}
-      </Text>
-      {showDaily && (
+    <ZStack modifiers={zstackModifiers}>
+      {gradientRect}
+      <VStack modifiers={[padding({ all: 16 })]}>
         <Text
           modifiers={[
-            font({ size: 11, weight: "medium" }),
+            font({ size: 10, weight: "semibold" }),
             foregroundStyle(mutedColor),
+          ]}
+        >
+          CATEGORY BUDGET
+        </Text>
+        <Text
+          modifiers={[
+            font({ size: 14, weight: "semibold" }),
+            foregroundStyle(c.text),
+          ]}
+        >
+          No category set
+        </Text>
+        <Text modifiers={[font({ size: 11 }), foregroundStyle(dimmedColor)]}>
+          Choose one in app settings
+        </Text>
+      </VStack>
+    </ZStack>
+  ) : noBudgetSet ? (
+    <ZStack modifiers={zstackModifiers}>
+      {gradientRect}
+      <VStack modifiers={[padding({ all: 16 })]}>
+        <Text
+          modifiers={[
+            font({ size: 10, weight: "semibold" }),
+            foregroundStyle(accentColor),
+          ]}
+        >
+          {categoryLabel.toUpperCase()}
+        </Text>
+        <Text
+          modifiers={[
+            font({ size: 14, weight: "semibold" }),
+            foregroundStyle(c.text),
+          ]}
+        >
+          No budget set
+        </Text>
+        <Text modifiers={[font({ size: 11 }), foregroundStyle(dimmedColor)]}>
+          Open the app to get started
+        </Text>
+      </VStack>
+    </ZStack>
+  ) : (
+    <ZStack modifiers={zstackModifiers}>
+      {gradientRect}
+      <VStack modifiers={[padding({ all: 8 })]}>
+        <Text
+          modifiers={[
+            font({ size: 10, weight: "semibold" }),
+            foregroundStyle(accentColor),
             multilineTextAlignment("center"),
           ]}
         >
-          {props.dailyRemainingFormatted}/day
+          {categoryLabel.toUpperCase()}
         </Text>
-      )}
-    </VStack>
+        <Text
+          modifiers={[
+            font({ size: heroFontSize, weight: "bold" }),
+            foregroundStyle(remainingColor),
+          ]}
+        >
+          {isOverBudget ? "-" : ""}
+          {props.remainingFormatted}
+        </Text>
+        <Text
+          modifiers={[
+            font({ size: 12 }),
+            foregroundStyle(dimmedColor),
+            multilineTextAlignment("center"),
+          ]}
+        >
+          of {props.totalBudgetFormatted} total
+        </Text>
+        <Text modifiers={[font({ size: 11 }), foregroundStyle(mutedColor)]}>
+          {daysLabel}
+        </Text>
+        {showDaily && (
+          <Text
+            modifiers={[
+              font({ size: 11, weight: "medium" }),
+              foregroundStyle(mutedColor),
+              multilineTextAlignment("center"),
+            ]}
+          >
+            {props.dailyRemainingFormatted}/day
+          </Text>
+        )}
+      </VStack>
+    </ZStack>
   );
 };
 

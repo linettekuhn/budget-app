@@ -52,24 +52,28 @@
           "widgets": [
             {
               "name": "BudgetWidget",
+              "contentMarginsDisabled": true,
               "displayName": "Budget Left",
               "description": "See your remaining monthly budget at a glance",
               "supportedFamilies": ["systemSmall", "systemMedium"]
             },
             {
               "name": "CategoryWidget",
+              "contentMarginsDisabled": true,
               "displayName": "Category Budget",
               "description": "Track spending for a specific category",
               "supportedFamilies": ["systemSmall", "systemMedium"]
             },
             {
               "name": "StreakWidget",
+              "contentMarginsDisabled": true,
               "displayName": "Savings Streak",
               "description": "Stay motivated with your current savings streak and badge count",
               "supportedFamilies": ["systemSmall"]
             },
             {
               "name": "AddTransactionWidget",
+              "contentMarginsDisabled": true,
               "displayName": "Add Transaction",
               "description": "Quickly jump to adding a new transaction",
               "supportedFamilies": ["systemSmall"]

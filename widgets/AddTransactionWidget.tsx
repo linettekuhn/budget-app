@@ -1,9 +1,10 @@
 import { Colors } from "@/constants/theme";
 import { TransactionType } from "@/types";
-import { HStack, Text, VStack } from "@expo/ui/swift-ui";
+import { HStack, Rectangle, Text, VStack, ZStack } from "@expo/ui/swift-ui";
 import {
   background,
   clipShape,
+  containerRelativeFrame,
   font,
   foregroundStyle,
   multilineTextAlignment,
@@ -42,27 +43,44 @@ const AddTransactionWidget = (
 
   if (!transaction) {
     return (
-      <VStack modifiers={[padding({ all: 16 }), widgetURL(url)]}>
-        <Text
+      <ZStack
+        modifiers={[
+          containerRelativeFrame({ axes: "both", span: 1, count: 1 }),
+          widgetURL(url),
+        ]}
+      >
+        <Rectangle
           modifiers={[
-            font({ size: 10, weight: "semibold" }),
-            foregroundStyle(mutedColor),
+            foregroundStyle({
+              type: "linearGradient",
+              colors: [c.background, c.primary[200]],
+              startPoint: { x: 0.5, y: 0.5 },
+              endPoint: { x: 1, y: 1 },
+            }),
           ]}
-        >
-          LAST TRANSACTION
-        </Text>
-        <Text
-          modifiers={[
-            font({ size: 14, weight: "semibold" }),
-            foregroundStyle(c.text),
-          ]}
-        >
-          No transactions yet
-        </Text>
-        <Text modifiers={[font({ size: 11 }), foregroundStyle(dimmedColor)]}>
-          Tap to add your first
-        </Text>
-      </VStack>
+        />
+        <VStack modifiers={[padding({ all: 16 })]}>
+          <Text
+            modifiers={[
+              font({ size: 10, weight: "semibold" }),
+              foregroundStyle(mutedColor),
+            ]}
+          >
+            LAST TRANSACTION
+          </Text>
+          <Text
+            modifiers={[
+              font({ size: 14, weight: "semibold" }),
+              foregroundStyle(c.text),
+            ]}
+          >
+            No transactions yet
+          </Text>
+          <Text modifiers={[font({ size: 11 }), foregroundStyle(dimmedColor)]}>
+            Tap to add your first
+          </Text>
+        </VStack>
+      </ZStack>
     );
   }
 
@@ -74,51 +92,68 @@ const AddTransactionWidget = (
     scheme === "dark" ? props.pillBackgroundDark : props.pillBackgroundLight;
 
   return (
-    <VStack spacing={12} modifiers={[widgetURL(url)]}>
-      <Text
+    <ZStack
+      modifiers={[
+        containerRelativeFrame({ axes: "both", span: 1, count: 1 }),
+        widgetURL(url),
+      ]}
+    >
+      <Rectangle
         modifiers={[
-          font({ size: 10, weight: "semibold" }),
-          foregroundStyle(c.text),
+          foregroundStyle({
+            type: "linearGradient",
+            colors: [c.background, c.primary[200]],
+            startPoint: { x: 0.5, y: 0.5 },
+            endPoint: { x: 1, y: 1 },
+          }),
         ]}
-      >
-        LAST TRANSACTION
-      </Text>
-      <VStack spacing={2}>
+      />
+      <VStack spacing={12} modifiers={[padding({ all: 16 })]}>
         <Text
           modifiers={[
-            font({ size: props.heroFontSize, weight: "bold" }),
-            foregroundStyle(typeColor),
+            font({ size: 10, weight: "semibold" }),
+            foregroundStyle(c.text),
           ]}
         >
-          {typeLabel} {props.formattedAmount}
+          LAST TRANSACTION
         </Text>
-        <Text
+        <VStack spacing={2}>
+          <Text
+            modifiers={[
+              font({ size: props.heroFontSize, weight: "bold" }),
+              foregroundStyle(typeColor),
+            ]}
+          >
+            {typeLabel} {props.formattedAmount}
+          </Text>
+          <Text
+            modifiers={[
+              font({ size: 12 }),
+              foregroundStyle(accentColor),
+              multilineTextAlignment("leading"),
+            ]}
+          >
+            {props.transactionName}
+          </Text>
+        </VStack>
+        <HStack
           modifiers={[
-            font({ size: 12 }),
-            foregroundStyle(accentColor),
-            multilineTextAlignment("leading"),
+            padding({ horizontal: 8, vertical: 4 }),
+            background(pillBackground),
+            clipShape("capsule"),
           ]}
         >
-          {props.transactionName}
-        </Text>
+          <Text
+            modifiers={[
+              font({ size: 11, weight: "medium" }),
+              foregroundStyle(mutedColor),
+            ]}
+          >
+            + Add New
+          </Text>
+        </HStack>
       </VStack>
-      <HStack
-        modifiers={[
-          padding({ horizontal: 8, vertical: 4 }),
-          background(pillBackground),
-          clipShape("capsule"),
-        ]}
-      >
-        <Text
-          modifiers={[
-            font({ size: 11, weight: "medium" }),
-            foregroundStyle(mutedColor),
-          ]}
-        >
-          + Add New
-        </Text>
-      </HStack>
-    </VStack>
+    </ZStack>
   );
 };
 
