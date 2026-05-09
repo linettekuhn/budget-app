@@ -163,7 +163,7 @@ export default class SyncService {
                 const remoteLastUpdated = new Date(
                   remote.updatedAt || 0,
                 ).getTime();
-                const localLastUpdated = new Date(local.updatedAt).getTime();
+                const localLastUpdated = parseDate(local.updatedAt).getTime();
 
                 // most recent record wins
                 if (remoteLastUpdated > localLastUpdated) {

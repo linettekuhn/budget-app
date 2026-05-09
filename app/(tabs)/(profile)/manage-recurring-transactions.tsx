@@ -21,6 +21,7 @@ import {
 } from "@/types";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
 import buildRRule from "@/utils/buildRRule";
+import { parseDate } from "@/utils/parseDate";
 import Octicons from "@expo/vector-icons/Octicons";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
@@ -56,7 +57,7 @@ function EditRecurringTransaction({
 
   let weekday = RRule.MO;
   let monthDay = 1;
-  let yearMonth = new Date(initialRecurring.date).getMonth() + 1;
+  let yearMonth = parseDate(initialRecurring.date).getMonth() + 1;
 
   if (frequency === RRule.WEEKLY && rrule.options.byweekday?.length) {
     weekday = new Weekday(rrule.options.byweekday[0]);
@@ -72,7 +73,7 @@ function EditRecurringTransaction({
     rawAmount: Math.round(initialRecurring.amount * 100).toString(),
     type: initialRecurring.type.toUpperCase() as "INCOME" | "EXPENSE",
     categoryId: initialRecurring.categoryId,
-    date: new Date(initialRecurring.date),
+    date: parseDate(initialRecurring.date),
     recurrence: {
       isRecurring: true,
       interval: interval,

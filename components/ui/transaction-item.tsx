@@ -1,6 +1,7 @@
 import { Colors, getTheme } from "@/constants/theme";
 import { TransactionType } from "@/types";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
+import { parseDate } from "@/utils/parseDate";
 import Octicons from "@expo/vector-icons/Octicons";
 import { memo, useState } from "react";
 import {
@@ -23,7 +24,7 @@ const TransactionItem = memo(function TransactionItem({
   handleEdit: (transaction: TransactionType) => void;
 }) {
   const colorScheme = useColorScheme();
-  const date = new Date(transaction.date);
+  const date = parseDate(transaction.date);
   const transactionBgColor = Colors[getTheme(colorScheme)].primary[50];
   const txtColor = Colors[getTheme(colorScheme)].text;
   const typeColor =

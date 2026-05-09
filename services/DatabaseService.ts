@@ -11,6 +11,7 @@ import {
   TransactionType,
 } from "@/types";
 import { buildPaydayRule, derivePayAmount } from "@/utils/incomeUtils";
+import { parseDate } from "@/utils/parseDate";
 import * as crypto from "expo-crypto";
 import * as SQLite from "expo-sqlite";
 import { rrulestr } from "rrule";
@@ -904,7 +905,7 @@ export default class DatabaseService {
     );
 
     for (const recurring of recurringTransactions) {
-      const last = new Date(recurring.lastGenerated);
+      const last = parseDate(recurring.lastGenerated);
       const now = new Date();
       const rrule = rrulestr(recurring.rrule);
       const datesMissed = rrule.between(last, now, false);
@@ -1329,7 +1330,7 @@ export default class DatabaseService {
     );
 
     if (row) {
-      const startDate = new Date(row.value);
+      const startDate = parseDate(row.value);
       const now = new Date();
 
       const yearsDiff = now.getFullYear() - startDate.getFullYear();
@@ -1359,7 +1360,7 @@ export default class DatabaseService {
     );
 
     if (row) {
-      return new Date(row.value);
+      return parseDate(row.value);
     }
   }
 
@@ -1371,7 +1372,7 @@ export default class DatabaseService {
     );
 
     if (row) {
-      return new Date(row.value);
+      return parseDate(row.value);
     }
   }
 
@@ -1545,7 +1546,7 @@ export default class DatabaseService {
     );
 
     if (row) {
-      return new Date(row.value);
+      return parseDate(row.value);
     }
 
     return undefined;

@@ -1,4 +1,5 @@
 import { IncomeOccurrence, IncomeSource, PayType } from "@/types";
+import { parseDate } from "@/utils/parseDate";
 import { rrulestr } from "rrule";
 
 // calculates per-ocurrence take home amount
@@ -56,8 +57,8 @@ export function getIncomeOccurrences(
   for (const source of sources) {
     if (!source.isActive) continue;
 
-    const sourceStart = new Date(source.startDate);
-    const sourceEnd = source.endDate ? new Date(source.endDate) : null;
+    const sourceStart = parseDate(source.startDate);
+    const sourceEnd = source.endDate ? parseDate(source.endDate) : null;
 
     const rangeStart = sourceStart > from ? sourceStart : from;
     const rangeEnd = sourceEnd && sourceEnd < to ? sourceEnd : to;

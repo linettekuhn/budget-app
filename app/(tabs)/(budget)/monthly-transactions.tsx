@@ -13,6 +13,7 @@ import DatabaseService from "@/services/DatabaseService";
 import WidgetService from "@/services/WidgetService";
 import { TransactionType } from "@/types";
 import { getTotalIncomeForMonth } from "@/utils/incomeUtils";
+import { parseDate } from "@/utils/parseDate";
 import Octicons from "@expo/vector-icons/Octicons";
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
@@ -174,7 +175,7 @@ export default function MonthlyTransactions() {
       // group transactions by month
       const grouped: Record<string, TransactionType[]> = {};
       savedTransactions.forEach((transaction) => {
-        const date = new Date(transaction.date);
+        const date = parseDate(transaction.date);
         const key = `${date.getFullYear()}-${String(
           date.getMonth() + 1,
         ).padStart(2, "0")}`;

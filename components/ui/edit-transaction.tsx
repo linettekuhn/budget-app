@@ -1,6 +1,7 @@
 import { Colors, getTheme } from "@/constants/theme";
 import DatabaseService from "@/services/DatabaseService";
 import WidgetService from "@/services/WidgetService";
+import { parseDate } from "@/utils/parseDate";
 import {
   TransactionFormData,
   TransactionFormInitial,
@@ -30,7 +31,7 @@ export default function EditTransaction({
     rawAmount: Math.round(initialTransaction.amount * 100).toString(),
     type: initialTransaction.type.toUpperCase() as "INCOME" | "EXPENSE",
     categoryId: initialTransaction.categoryId,
-    date: new Date(initialTransaction.date),
+    date: parseDate(initialTransaction.date),
     recurrence: {},
   };
 
