@@ -791,6 +791,12 @@ export default class DatabaseService {
     );
     if (alreadyMigrated) return;
 
+    // check if income sources already exist (prevents duplicate on logout/login cycle)
+    const existingSources = await db.getFirstAsync<{ id: string }>(
+      `SELECT id FROM income_sources WHERE deletedAt IS NULL LIMIT 1`,
+    );
+    if (existingSources) return;
+
     // check if there's anything to migrate
     const existingSalary = await this.getSalary();
     if (!existingSalary) return;
