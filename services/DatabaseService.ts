@@ -161,6 +161,7 @@ export default class DatabaseService {
   `);
 
     await this.migrateFromSalaryTable();
+    await this.fixIncomeSourcePayAmounts();
   }
 
   static async initializeDefaultData() {
@@ -829,6 +830,39 @@ export default class DatabaseService {
       `INSERT INTO salary_migration_log (id, migratedAt, originalSalaryId, newIncomeSourceId)
      VALUES (?, ?, ?, ?)`,
       [crypto.randomUUID(), today.toISOString(), existingSalary.id, newId],
+    );
+  }
+
+  static async fixIncomeSourcePayAmounts(): Promise<void> {
+    const db = await this.getDatabase();
+
+    const alreadyFixed = await db.getFirstAsync<{ value: string }>(
+      "SELECT value FROM app_meta WHERE id = 'income_pay_amount_fixed' AND deletedAt IS NULL",
+    );
+    if (alreadyFixed) return;
+
+    const sources = await db.getAllAsync<IncomeSource>(
+      "SELECT * FROM income_sources WHERE deletedAt IS NULL",
+    );
+
+    for (const source of sources) {
+      const corrected = derivePayAmount(
+        source.basisType,
+        source.basisAmount,
+        source.hoursPerWeek,
+      );
+      if (source.payAmount !== corrected) {
+        await db.runAsync(
+          "UPDATE income_sources SET payAmount = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?",
+          [corrected, source.id],
+        );
+      }
+    }
+
+    const now = new Date().toISOString();
+    await db.runAsync(
+      `INSERT OR REPLACE INTO app_meta (id, value, createdAt, updatedAt) VALUES ('income_pay_amount_fixed', ?, ?, ?)`,
+      [now, now, now],
     );
   }
 
