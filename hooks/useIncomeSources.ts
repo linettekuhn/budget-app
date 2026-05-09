@@ -48,16 +48,16 @@ export function useIncomeSources() {
       basisType: PayType;
       basisAmount: number;
       hoursPerWeek: number | null;
+      startDate: Date;
     }) => {
       try {
-        const today = new Date();
-        const startDate = toDateString(today);
+        const startDateStr = toDateString(input.startDate);
         const payAmount = derivePayAmount(
           input.basisType,
           input.basisAmount,
           input.hoursPerWeek,
         );
-        const paydayRule = buildPaydayRule(input.basisType, today);
+        const paydayRule = buildPaydayRule(input.basisType, input.startDate);
 
         await DatabaseService.saveIncomeSource({
           id: crypto.randomUUID(),
@@ -66,10 +66,10 @@ export function useIncomeSources() {
           basisAmount: input.basisAmount,
           payAmount,
           paydayRule,
-          startDate,
+          startDate: startDateStr,
           endDate: null,
           hoursPerWeek: input.hoursPerWeek,
-          effectiveFrom: startDate,
+          effectiveFrom: startDateStr,
           sourceVersion: 1,
         });
 
@@ -96,15 +96,17 @@ export function useIncomeSources() {
         basisType: PayType;
         basisAmount: number;
         hoursPerWeek: number | null;
+        startDate: Date;
       },
     ) => {
       try {
+        const startDateStr = toDateString(input.startDate);
         const payAmount = derivePayAmount(
           input.basisType,
           input.basisAmount,
           input.hoursPerWeek,
         );
-        const paydayRule = buildPaydayRule(input.basisType, new Date());
+        const paydayRule = buildPaydayRule(input.basisType, input.startDate);
 
         await DatabaseService.editIncomeSource(id, {
           name: input.name,
@@ -113,6 +115,7 @@ export function useIncomeSources() {
           payAmount,
           paydayRule,
           hoursPerWeek: input.hoursPerWeek,
+          startDate: startDateStr,
         });
 
         reload();

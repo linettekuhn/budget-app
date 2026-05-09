@@ -7,15 +7,18 @@ import { IncomeSource, PayType } from "@/types";
 import { formatAmountDisplay } from "@/utils/formatDisplay";
 import { formatMoney } from "@/utils/formatMoney";
 import { derivePayAmount } from "@/utils/incomeUtils";
+import { parseDate } from "@/utils/parseDate";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useEffect, useState } from "react";
 import {
   Alert,
   Keyboard,
+  Platform,
   StyleSheet,
   useColorScheme,
   View,
 } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { Toast } from "toastify-react-native";
 import { ThemedText } from "../themed-text";
 import { ThemedView } from "../themed-view";
@@ -32,6 +35,7 @@ function IncomeSourceForm({
   initialType = "Monthly",
   initialBasisAmount = 0,
   initialHoursPerWeek = 0,
+  initialStartDate,
   title,
   onSave,
   onCancel,
@@ -41,12 +45,14 @@ function IncomeSourceForm({
   initialType?: PayType;
   initialBasisAmount?: number;
   initialHoursPerWeek?: number;
+  initialStartDate?: Date;
   title: string;
   onSave: (data: {
     name: string;
     basisType: PayType;
     basisAmount: number;
     hoursPerWeek: number | null;
+    startDate: Date;
   }) => Promise<void>;
   onCancel: () => void;
   currency: string;
@@ -67,6 +73,7 @@ function IncomeSourceForm({
     formatAmountDisplay(hoursRaw),
   );
   const [previewMonthly, setPreviewMonthly] = useState(0);
+  const [startDate, setStartDate] = useState<Date>(initialStartDate ?? new Date());
 
   useEffect(() => {
     const amount = parseFloat((Number(rawAmount) / 100).toFixed(2));
@@ -99,6 +106,7 @@ function IncomeSourceForm({
       basisType: payType,
       basisAmount: amount,
       hoursPerWeek: payType === "Hourly" ? hours : null,
+      startDate,
     });
   };
 
@@ -196,6 +204,19 @@ function IncomeSourceForm({
         </ThemedView>
       )}
 
+      <ThemedView style={styles.quantityWrapper}>
+        <ThemedText type="h2">Start Date</ThemedText>
+        <DateTimePicker
+          value={startDate}
+          mode="date"
+          is24Hour={true}
+          display={Platform.OS === "ios" ? "compact" : "default"}
+          onChange={(event, selectedDate) => {
+            if (selectedDate) setStartDate(selectedDate);
+          }}
+        />
+      </ThemedView>
+
       <ThemedView
         style={{ flexDirection: "row", alignItems: "center", marginTop: 10 }}
       >
@@ -249,6 +270,7 @@ export default function ManageIncomeOption({
         initialType={source.basisType as PayType}
         initialBasisAmount={source.basisAmount}
         initialHoursPerWeek={source.hoursPerWeek ?? 0}
+        initialStartDate={parseDate(source.startDate)}
         onSave={async (data) => {
           await editIncomeSource(source.id, data);
           onChange?.();

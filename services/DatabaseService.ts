@@ -726,6 +726,7 @@ export default class DatabaseService {
       payAmount: number;
       paydayRule: string;
       hoursPerWeek: number | null;
+      startDate: string;
     },
   ): Promise<string> {
     const db = await this.getDatabase();
@@ -753,7 +754,7 @@ export default class DatabaseService {
       basisAmount: updates.basisAmount,
       payAmount: updates.payAmount,
       paydayRule: updates.paydayRule,
-      startDate: today,
+      startDate: updates.startDate,
       endDate: existing.endDate,
       hoursPerWeek: updates.hoursPerWeek,
       effectiveFrom: today,
