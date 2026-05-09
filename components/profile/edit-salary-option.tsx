@@ -287,7 +287,7 @@ export default function ManageIncomeOption({
           <View style={styles.sourceInfo}>
             <ThemedText type="bodyLarge">{source.name}</ThemedText>
             <ThemedText type="captionSmall">
-              {source.basisType} · ${source.payAmount.toFixed(2)}/mo
+              {source.basisType} · ${source.payAmount.toFixed(2)}
             </ThemedText>
           </View>
           <View style={styles.sourceActions}>

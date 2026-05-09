@@ -9,9 +9,9 @@ export function derivePayAmount(
 ): number {
   switch (basisType) {
     case "Hourly":
-      return Number(((basisAmount * (hoursPerWeek ?? 0) * 52) / 12).toFixed(2));
+      return Number(((basisAmount * (hoursPerWeek ?? 0) * 52) / 26).toFixed(2));
     case "Biweekly":
-      return Number((basisAmount * 2).toFixed(2));
+      return Number(basisAmount.toFixed(2));
     case "Monthly":
       return Number(basisAmount.toFixed(2));
     case "Yearly":
@@ -92,8 +92,8 @@ export function getTotalIncomeForMonth(
   year: number,
   month: number,
 ): number {
-  const from = new Date(year, month, 1);
-  const to = new Date(year, month + 1, 0, 23, 59, 59);
+  const from = new Date(year, month - 1, 1);
+  const to = new Date(year, month, 0, 23, 59, 59);
 
   const occurrences = getIncomeOccurrences(sources, from, to);
   const total = occurrences.reduce((sum, o) => sum + o.amount, 0);

@@ -86,7 +86,7 @@ export default function SalaryOnboarding() {
 
       switch (salaryType) {
         case "Hourly":
-          monthlySalary = amount * hours * 4.33;
+          monthlySalary = (amount * hours * 52) / 12;
           break;
         case "Biweekly":
           monthlySalary = amount * 2;

@@ -1,5 +1,6 @@
 import badgesJson from "@/assets/data/badges.json";
 import { BadgeCriteriaType, BadgeDefinition } from "@/types";
+import { getTotalIncomeForMonth } from "@/utils/incomeUtils";
 import { Toast } from "toastify-react-native";
 import DatabaseService from "./DatabaseService";
 
@@ -85,7 +86,8 @@ async function checkStayedUnderBudget(badge: BadgeDefinition) {
 
   // get budgets from last month
   const lastMonth = getLastMonthString();
-  const budgets = await DatabaseService.getCategoriesSpend(lastMonth);
+  const [y, m] = lastMonth.split("-").map(Number);
+  const budgets = await DatabaseService.getCategoriesSpend(y, m);
 
   // check sum of spend and total budget
   const totalSpent = budgets.reduce(
@@ -125,13 +127,12 @@ async function checkSavedOverPercent(badge: BadgeDefinition) {
 
   // get budgets from last month
   const lastMonth = getLastMonthString();
-  const budgets = await DatabaseService.getCategoriesSpend(lastMonth);
+  const [y, m] = lastMonth.split("-").map(Number);
+  const budgets = await DatabaseService.getCategoriesSpend(y, m);
 
-  // get salary
-  const salary = await DatabaseService.getSalary();
-  if (!salary) {
-    throw Error("No salary was found");
-  }
+  // get income sources for monthly total
+  const sources = await DatabaseService.getActiveIncomeSources();
+  const monthlyIncome = getTotalIncomeForMonth(sources, y, m);
 
   const totalSpent = budgets.reduce(
     (sum, budget) => sum + budget.totalSpent,
@@ -144,8 +145,8 @@ async function checkSavedOverPercent(badge: BadgeDefinition) {
   }
 
   // check sum of saved and total income
-  const totalSaved = salary.monthly - totalSpent;
-  const savedPercent = totalSaved / salary.monthly;
+  const totalSaved = monthlyIncome - totalSpent;
+  const savedPercent = totalSaved / monthlyIncome;
 
   // if sum > badge.criteria_value% of budget return true
   if (savedPercent > badge.criteria_value) {
@@ -177,13 +178,12 @@ async function checkSpentOverPercentWants(badge: BadgeDefinition) {
 
   // get budgets from last month
   const lastMonth = getLastMonthString();
-  const budgets = await DatabaseService.getCategoriesSpend(lastMonth);
+  const [y, m] = lastMonth.split("-").map(Number);
+  const budgets = await DatabaseService.getCategoriesSpend(y, m);
 
-  // get salary
-  const salary = await DatabaseService.getSalary();
-  if (!salary) {
-    throw Error("No salary was found");
-  }
+  // get income sources for monthly total
+  const sources = await DatabaseService.getActiveIncomeSources();
+  const monthlyIncome = getTotalIncomeForMonth(sources, y, m);
 
   // check sum of spent on 'want' categories
   const totalSpentWants = budgets.reduce((sum, budget) => {
@@ -195,7 +195,7 @@ async function checkSpentOverPercentWants(badge: BadgeDefinition) {
   }
 
   // check sum of total income for month
-  const spentPercent = totalSpentWants / salary.monthly;
+  const spentPercent = totalSpentWants / monthlyIncome;
 
   // if spent_on_wants / total_income > badge.criteria_value return true
   return spentPercent > badge.criteria_value;
@@ -235,7 +235,8 @@ async function checkConsecutiveMonths(badge: BadgeDefinition) {
   // for each month since badge.criteria_value, check if spent <= budget
   for (let offset = 1; offset <= badge.criteria_value; offset++) {
     const month = getLastMonthString(offset);
-    const budgets = await DatabaseService.getCategoriesSpend(month);
+    const [y, m] = month.split("-").map(Number);
+    const budgets = await DatabaseService.getCategoriesSpend(y, m);
 
     // check sum of spend and total budget
     const totalSpent = budgets.reduce(
@@ -279,7 +280,8 @@ async function checkTopCategory(badge: BadgeDefinition) {
 
   // get budgets from last month
   const lastMonth = getLastMonthString();
-  const budgets = await DatabaseService.getCategoriesSpend(lastMonth);
+  const [y, m] = lastMonth.split("-").map(Number);
+  const budgets = await DatabaseService.getCategoriesSpend(y, m);
 
   // determine top category by spending
   const budgetSorted = [...budgets].sort((a, b) => b.totalSpent - a.totalSpent);
@@ -308,7 +310,8 @@ async function checkNeedsOverWants(badge: BadgeDefinition) {
 
   // get budgets from last month
   const lastMonth = getLastMonthString();
-  const budgets = await DatabaseService.getCategoriesSpend(lastMonth);
+  const [y, m] = lastMonth.split("-").map(Number);
+  const budgets = await DatabaseService.getCategoriesSpend(y, m);
 
   // check sum of spent on 'want' categories
   const totalSpentWants = budgets.reduce((sum, budget) => {
@@ -343,7 +346,8 @@ async function checkExactBudgetMatch(badge: BadgeDefinition) {
 
   // get budgets from last month
   const lastMonth = getLastMonthString();
-  const budgets = await DatabaseService.getCategoriesSpend(lastMonth);
+  const [y, m] = lastMonth.split("-").map(Number);
+  const budgets = await DatabaseService.getCategoriesSpend(y, m);
 
   // loop through budgets
   for (const budget of budgets) {
@@ -376,7 +380,8 @@ async function checkZeroSpendInCategory(badge: BadgeDefinition) {
 
   // get budgets from last month
   const lastMonth = getLastMonthString();
-  const budgets = await DatabaseService.getCategoriesSpend(lastMonth);
+  const [y, m] = lastMonth.split("-").map(Number);
+  const budgets = await DatabaseService.getCategoriesSpend(y, m);
 
   // find spending in category specified in badge.criteria_value
   const foundCategory = budgets.find(

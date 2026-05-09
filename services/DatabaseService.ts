@@ -10,7 +10,7 @@ import {
   Salary,
   TransactionType,
 } from "@/types";
-import { buildPaydayRule } from "@/utils/incomeUtils";
+import { buildPaydayRule, derivePayAmount } from "@/utils/incomeUtils";
 import * as crypto from "expo-crypto";
 import * as SQLite from "expo-sqlite";
 import { rrulestr } from "rrule";
@@ -801,7 +801,11 @@ export default class DatabaseService {
 
     const basisType = existingSalary.type as PayType;
     const paydayRule = buildPaydayRule(basisType, today);
-    const payAmount = existingSalary.monthly;
+    const payAmount = derivePayAmount(
+      existingSalary.type as PayType,
+      existingSalary.amount,
+      existingSalary.hoursPerWeek ?? null,
+    );
 
     const newId = crypto.randomUUID();
 
