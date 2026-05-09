@@ -118,63 +118,81 @@ export default function HomeScreen() {
           {!loadingSalary &&
             !loadingBudgets &&
             !loadingCurrency &&
-            budgets &&
-            sources.length > 0 && (
+            budgets && (
               <ThemedView style={styles.main}>
-                <View>
-                  <ThemedText type="displayLarge">Monthly Report</ThemedText>
-                  <ThemedText type="h6">
-                    Here&apos;s a quick look at where your money went and what
-                    you kept!
-                  </ThemedText>
-                </View>
-                <View>
-                  <ThemedView style={styles.pieChartWrapper}>
-                    <SalaryBreakdownPieChart
-                      budgets={budgets}
-                      monthlyIncome={getMonthlyTotal(
-                        new Date().getFullYear(),
-                        new Date().getMonth() + 1,
-                      )}
-                    />
-                    <View style={styles.savedWrapper}>
-                      <MoneyText
-                        variant="hero"
-                        amount={difference}
-                        currency={currency ?? "USD"}
-                        type="displayMedium"
-                        style={styles.percent}
-                        minimumFontScale={0.4}
-                      />
-                      <ThemedText type="h5" style={styles.saved}>
-                        {overBudget ? "short!" : "saved!"}
-                      </ThemedText>
-                    </View>
-                  </ThemedView>
-                  {overBudget && (
+                {sources.length > 0 ? (
+                  <>
                     <View>
-                      <ThemedText
-                        type="overline"
-                        style={{
-                          color: Colors[getTheme(colorScheme)].error,
-                          textAlign: "center",
-                        }}
-                      >
-                        This budget exceeds your current salary!
-                      </ThemedText>
-                      <ThemedText
-                        type="captionSmall"
-                        style={{
-                          color: Colors[getTheme(colorScheme)].error,
-                          textAlign: "center",
-                        }}
-                      >
-                        Consider adjusting your budgets or salary to start
-                        saving.
+                      <ThemedText type="displayLarge">Monthly Report</ThemedText>
+                      <ThemedText type="h6">
+                        Here&apos;s a quick look at where your money went and
+                        what you kept!
                       </ThemedText>
                     </View>
-                  )}
-                </View>
+                    <View>
+                      <ThemedView style={styles.pieChartWrapper}>
+                        <SalaryBreakdownPieChart
+                          budgets={budgets}
+                          monthlyIncome={getMonthlyTotal(
+                            new Date().getFullYear(),
+                            new Date().getMonth() + 1,
+                          )}
+                        />
+                        <View style={styles.savedWrapper}>
+                          <MoneyText
+                            variant="hero"
+                            amount={difference}
+                            currency={currency ?? "USD"}
+                            type="displayMedium"
+                            style={styles.percent}
+                            minimumFontScale={0.4}
+                          />
+                          <ThemedText type="h5" style={styles.saved}>
+                            {overBudget ? "short!" : "saved!"}
+                          </ThemedText>
+                        </View>
+                      </ThemedView>
+                      {overBudget && (
+                        <View>
+                          <ThemedText
+                            type="overline"
+                            style={{
+                              color: Colors[getTheme(colorScheme)].error,
+                              textAlign: "center",
+                            }}
+                          >
+                            This budget exceeds your current salary!
+                          </ThemedText>
+                          <ThemedText
+                            type="captionSmall"
+                            style={{
+                              color: Colors[getTheme(colorScheme)].error,
+                              textAlign: "center",
+                            }}
+                          >
+                            Consider adjusting your budgets or salary to start
+                            saving.
+                          </ThemedText>
+                        </View>
+                      )}
+                    </View>
+                  </>
+                ) : (
+                  <View style={styles.emptyState}>
+                    <ThemedText type="displayLarge">Welcome!</ThemedText>
+                    <ThemedText type="h6">
+                      Add your income to see your monthly budget breakdown and
+                      how much you&apos;re saving.
+                    </ThemedText>
+                    <Pressable
+                      onPress={() => router.push("/(tabs)/(profile)")}
+                    >
+                      <ThemedText type="link">
+                        Add Income Source →
+                      </ThemedText>
+                    </Pressable>
+                  </View>
+                )}
                 <View
                   style={[
                     styles.spendingTrackerWrapper,
@@ -267,5 +285,13 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     gap: 20,
     padding: 16,
+  },
+
+  emptyState: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 60,
+    paddingHorizontal: 20,
+    gap: 16,
   },
 });
