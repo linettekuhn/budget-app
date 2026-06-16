@@ -1,4 +1,4 @@
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { auth } from "@/firebase/firebaseConfig";
 import { useModal } from "@/hooks/useModal";
 import { AccountService } from "@/services/AccountService";
@@ -14,7 +14,7 @@ import ProfileOption from "./profile-option";
 
 function ChangePasswordContent({ onComplete }: { onComplete: () => void }) {
   const colorScheme = useColorScheme();
-  const textColor = Colors[colorScheme ?? "light"].text;
+  const textColor = Colors[getTheme(colorScheme)].text;
 
   const [showOldPass, setShowOldPass] = useState(false);
   const [oldPassword, setOldPassword] = useState("");

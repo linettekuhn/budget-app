@@ -8,11 +8,13 @@ type OnboardingState = {
   categories: CategoryType[];
   budgets: Record<string, { raw: string; display: string }>;
   salary: {
+    name: string;
     type: "Hourly" | "Biweekly" | "Monthly" | "Yearly" | "Varies";
     amount: number;
     monthly: number;
     hoursPerWeek: number;
   };
+  currency: string;
 };
 
 // handles the onboarding state available to all children of context
@@ -25,33 +27,27 @@ type OnboardingContextType = {
 
 const OnboardingContext = createContext<OnboardingContextType | null>(null);
 
+const DEFAULT_STATE: OnboardingState = {
+  name: "",
+  categories: [],
+  budgets: {},
+  salary: {
+    name: "Primary Income",
+    type: "Hourly",
+    amount: 0,
+    monthly: 0,
+    hoursPerWeek: 0,
+  },
+  currency: "USD",
+};
+
 export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
 
-  const [state, setState] = useState<OnboardingState>({
-    name: "",
-    categories: [],
-    budgets: {},
-    salary: {
-      type: "Hourly",
-      amount: 0,
-      monthly: 0,
-      hoursPerWeek: 0,
-    },
-  });
+  const [state, setState] = useState<OnboardingState>(DEFAULT_STATE);
 
   const reset = () => {
-    setState({
-      name: "",
-      categories: [],
-      budgets: {},
-      salary: {
-        type: "Hourly",
-        amount: 0,
-        monthly: 0,
-        hoursPerWeek: 0,
-      },
-    });
+    setState(DEFAULT_STATE);
   };
 
   const resetOnboarding = async () => {

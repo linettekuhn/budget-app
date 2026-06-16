@@ -2,12 +2,11 @@
   "expo": {
     "name": "Piggy Stash",
     "slug": "budget-app",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "budgetapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.linettekuhn.budgetapp",
@@ -22,7 +21,6 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -46,7 +44,50 @@
       ],
       "expo-sqlite",
       "expo-web-browser",
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "expo-widgets",
+        {
+          "src": "widgets",
+          "widgets": [
+            {
+              "name": "BudgetWidget",
+              "contentMarginsDisabled": true,
+              "displayName": "Budget Left",
+              "description": "See your remaining monthly budget at a glance",
+              "supportedFamilies": ["systemSmall", "systemMedium"]
+            },
+            {
+              "name": "CategoryWidget",
+              "contentMarginsDisabled": true,
+              "displayName": "Category Budget",
+              "description": "Track spending for a specific category",
+              "supportedFamilies": ["systemSmall", "systemMedium"]
+            },
+            {
+              "name": "StreakWidget",
+              "contentMarginsDisabled": true,
+              "displayName": "Savings Streak",
+              "description": "Stay motivated with your current savings streak and badge count",
+              "supportedFamilies": ["systemSmall"]
+            },
+            {
+              "name": "AddTransactionWidget",
+              "contentMarginsDisabled": true,
+              "displayName": "Add Transaction",
+              "description": "Quickly jump to adding a new transaction",
+              "supportedFamilies": ["systemSmall"]
+            }
+          ]
+        }
+      ],
+      "expo-local-authentication",
+      [
+        "expo-background-fetch",
+        {
+          "backgroundFetchIntervalSeconds": 3600
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

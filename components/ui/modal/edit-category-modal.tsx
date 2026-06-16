@@ -1,8 +1,9 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { useCurrency } from "@/hooks/useCurrency";
 import DatabaseService from "@/services/DatabaseService";
+import WidgetService from "@/services/WidgetService";
 import { CategoryType } from "@/types";
 import { formatAmountDisplay } from "@/utils/formatDisplay";
 import { router } from "expo-router";
@@ -37,10 +38,10 @@ export default function EditCategory({ onComplete, category }: Props) {
   const [typeSelected, setType] = useState(category.type.toUpperCase());
   const [categoryColor, setCategoryColor] = useState(category.color);
   const [rawAmount, setRawAmount] = useState(
-    (category.budget * 100).toString()
+    (category.budget * 100).toString(),
   );
   const [displayAmount, setDisplayAmount] = useState(
-    category.budget.toFixed(2)
+    category.budget.toFixed(2),
   );
 
   useEffect(() => {
@@ -75,8 +76,10 @@ export default function EditCategory({ onComplete, category }: Props) {
         categoryColor,
         categoryType,
         budget,
-        category.id
+        category.id,
       );
+
+      await WidgetService.syncAll();
 
       Toast.show({
         type: "success",
@@ -118,6 +121,7 @@ export default function EditCategory({ onComplete, category }: Props) {
           onPress: async () => {
             try {
               await DatabaseService.deleteCategory(category.id);
+              await WidgetService.syncAll();
               onComplete();
               router.replace("/(tabs)/(budget)");
             } catch (error: unknown) {
@@ -136,7 +140,7 @@ export default function EditCategory({ onComplete, category }: Props) {
           },
         },
       ],
-      { cancelable: true }
+      { cancelable: true },
     );
   };
 
@@ -144,7 +148,7 @@ export default function EditCategory({ onComplete, category }: Props) {
     return (
       <View
         style={{
-          backgroundColor: Colors[colorScheme ?? "light"].background,
+          backgroundColor: Colors[getTheme(colorScheme)].background,
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
@@ -152,7 +156,7 @@ export default function EditCategory({ onComplete, category }: Props) {
       >
         <ActivityIndicator
           size="large"
-          color={Colors[colorScheme ?? "light"].text}
+          color={Colors[getTheme(colorScheme)].text}
         />
       </View>
     );
@@ -166,7 +170,7 @@ export default function EditCategory({ onComplete, category }: Props) {
 
       <CapsuleButton
         text="DELETE CATEGORY"
-        bgFocused={Colors[colorScheme ?? "light"].error}
+        bgFocused={Colors[getTheme(colorScheme)].error}
         onPress={deleteCategory}
       />
       <ThemedView style={styles.budgetPreview}>
@@ -189,7 +193,7 @@ export default function EditCategory({ onComplete, category }: Props) {
         <ThemedView style={styles.horizontalContainer}>
           <CapsuleToggle
             text="NEED"
-            bgFocused={Colors[colorScheme ?? "light"].primary[300]}
+            bgFocused={Colors[getTheme(colorScheme)].primary[300]}
             selected={typeSelected === "NEED"}
             onPress={() => {
               Keyboard.dismiss();
@@ -198,7 +202,7 @@ export default function EditCategory({ onComplete, category }: Props) {
           />
           <CapsuleToggle
             text="WANT"
-            bgFocused={Colors[colorScheme ?? "light"].primary[300]}
+            bgFocused={Colors[getTheme(colorScheme)].primary[300]}
             selected={typeSelected === "WANT"}
             onPress={() => {
               Keyboard.dismiss();

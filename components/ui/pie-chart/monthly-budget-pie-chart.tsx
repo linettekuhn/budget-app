@@ -1,4 +1,4 @@
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { CategorySpend } from "@/types";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
 import calculateSvgArcPath from "@/utils/calcuateSvgArcPath";
@@ -14,15 +14,15 @@ export default function MonthlyBudgetPieChart({ budgets }: Props) {
   const colorScheme = useColorScheme();
 
   const sortedBudgets = [...budgets].sort((a, b) => b.budget - a.budget);
-  const topThree = sortedBudgets.slice(0, 3);
-  const other = sortedBudgets.slice(3);
+
+  const useGrouping = sortedBudgets.length > 4;
+  const topThree = useGrouping ? sortedBudgets.slice(0, 3) : sortedBudgets;
+  const other = useGrouping ? sortedBudgets.slice(3) : [];
 
   const displayBudgets = [...topThree];
-  const otherTotal = other.reduce((sum, category) => sum + category.budget, 0);
-  const otherTotalSpent = other.reduce(
-    (sum, category) => sum + category.totalSpent,
-    0
-  );
+
+  const otherTotal = other.reduce((sum, c) => sum + c.budget, 0);
+  const otherTotalSpent = other.reduce((sum, c) => sum + c.totalSpent, 0);
 
   if (otherTotal > 0) {
     displayBudgets.push({
@@ -41,10 +41,8 @@ export default function MonthlyBudgetPieChart({ budgets }: Props) {
   const radius = (size - 50) / 2;
   const strokeWidth = 24;
   let startAngle = -(Math.PI / 2);
-  const total = displayBudgets.reduce(
-    (sum, category) => sum + category.budget,
-    0
-  );
+  const total = displayBudgets.reduce((sum, c) => sum + c.budget, 0);
+
   return (
     <Svg width={size} height={size}>
       <G>
@@ -52,9 +50,9 @@ export default function MonthlyBudgetPieChart({ budgets }: Props) {
           const categoryColor = adjustColorForScheme(
             category.color,
             colorScheme,
-            30
+            30,
           );
-          const screenBgColor = Colors[colorScheme ?? "light"].background;
+          const screenBgColor = Colors[getTheme(colorScheme)].background;
           const bgColor = tinycolor
             .mix(screenBgColor, categoryColor, 40)
             .toHexString();
@@ -83,7 +81,7 @@ export default function MonthlyBudgetPieChart({ budgets }: Props) {
             radius,
             drawableAngle,
             center,
-            center
+            center,
           );
 
           const currentStartAngle = startAngle;
@@ -91,7 +89,7 @@ export default function MonthlyBudgetPieChart({ budgets }: Props) {
 
           return (
             <AnimatedArc
-              key={category.id}
+              key={category.id || "other"}
               categoryColor={categoryColor}
               bgColor={bgColor}
               bgArcPath={bgArcPath}

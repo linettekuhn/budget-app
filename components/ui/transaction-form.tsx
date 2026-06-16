@@ -7,7 +7,7 @@ import CapsuleInput from "@/components/ui/capsule-input-box";
 import CapsuleNumberInteger from "@/components/ui/capsule-input-integer";
 import CapsuleToggle from "@/components/ui/capsule-toggle";
 import CustomCategory from "@/components/ui/modal/category-modal";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { useCategories } from "@/hooks/useCategories";
 import { useCategoriesSpend } from "@/hooks/useCategoriesSpend";
 import { useCurrency } from "@/hooks/useCurrency";
@@ -43,12 +43,12 @@ type Props = {
 
 export default function TransactionForm({ initial, onChange }: Props) {
   const colorScheme = useColorScheme();
-  const btnColor = Colors[colorScheme ?? "light"].secondary[500];
+  const btnColor = Colors[getTheme(colorScheme)].secondary[500];
   const now = new Date();
 
   const [rawAmount, setRawAmount] = useState(initial?.rawAmount ?? "0");
   const [displayAmount, setDisplayAmount] = useState(
-    formatAmountDisplay(initial?.rawAmount ?? "0")
+    formatAmountDisplay(initial?.rawAmount ?? "0"),
   );
   const [transactionName, setTransactionName] = useState(initial?.name ?? "");
   const [typeSelected, setType] = useState(initial?.type ?? "");
@@ -56,23 +56,23 @@ export default function TransactionForm({ initial, onChange }: Props) {
 
   const [startDate, setStartDate] = useState(initial?.date ?? now);
   const [isRecurring, setRecurring] = useState(
-    initial?.recurrence.isRecurring ?? false
+    initial?.recurrence.isRecurring ?? false,
   );
   const [intervalRaw, setIntervalRaw] = useState(
-    initial?.recurrence.interval ?? "1"
+    initial?.recurrence.interval ?? "1",
   );
   const [intervalDisplay, setIntervalDisplay] = useState(
-    formatIntegerDisplay(initial?.recurrence.interval ?? "1")
+    formatIntegerDisplay(initial?.recurrence.interval ?? "1"),
   );
   const [frequency, setFrequency] = useState(
-    initial?.recurrence.frequency ?? RRule.WEEKLY
+    initial?.recurrence.frequency ?? RRule.WEEKLY,
   );
   const [weekday, setWeekday] = useState<Weekday>(
-    initial?.recurrence.weekday ?? RRule.MO
+    initial?.recurrence.weekday ?? RRule.MO,
   );
   const [monthDay, setMonthDay] = useState(initial?.recurrence.monthDay ?? 1);
   const [yearMonth, setYearMonth] = useState(
-    initial?.recurrence.yearMonth ?? now.getMonth() + 1
+    initial?.recurrence.yearMonth ?? now.getMonth() + 1,
   );
   const [showAllCategories, setShowAllCategories] = useState(false);
 
@@ -92,7 +92,7 @@ export default function TransactionForm({ initial, onChange }: Props) {
   // sort categories by budget and show top 3 by default
   const sortedCategories = useMemo(() => {
     const categoryToBudgetMap = new Map(
-      budgets.map((budget) => [budget.id, budget.budget])
+      budgets.map((budget) => [budget.id, budget.budget]),
     );
 
     return [...categories].sort((a, b) => {
@@ -123,7 +123,7 @@ export default function TransactionForm({ initial, onChange }: Props) {
       { label: "Saturday", value: RRule.SA },
       { label: "Sunday", value: RRule.SU },
     ],
-    []
+    [],
   );
   const months = useMemo(
     () => [
@@ -140,7 +140,7 @@ export default function TransactionForm({ initial, onChange }: Props) {
       { label: "November", value: 11 },
       { label: "December", value: 12 },
     ],
-    []
+    [],
   );
 
   useEffect(() => {
@@ -191,14 +191,14 @@ export default function TransactionForm({ initial, onChange }: Props) {
 
   useEffect(() => {
     const weekdayOption = weekdays.find(
-      (weekday) => weekday.value.weekday === startDate.getDay()
+      (weekday) => weekday.value.weekday === startDate.getDay(),
     );
     if (weekdayOption) {
       setWeekday(weekdayOption.value);
     }
     setMonthDay(startDate.getDate());
     const monthOption = months.find(
-      (month) => month.value === startDate.getMonth() + 1
+      (month) => month.value === startDate.getMonth() + 1,
     );
     if (monthOption) {
       setYearMonth(monthOption.value);
@@ -213,7 +213,7 @@ export default function TransactionForm({ initial, onChange }: Props) {
           reloadCategories();
           reloadSpend();
         }}
-      />
+      />,
     );
   };
 
@@ -235,7 +235,7 @@ export default function TransactionForm({ initial, onChange }: Props) {
     return (
       <View
         style={{
-          backgroundColor: Colors[colorScheme ?? "light"].background,
+          backgroundColor: Colors[getTheme(colorScheme)].background,
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
@@ -243,7 +243,7 @@ export default function TransactionForm({ initial, onChange }: Props) {
       >
         <ActivityIndicator
           size="large"
-          color={Colors[colorScheme ?? "light"].text}
+          color={Colors[getTheme(colorScheme)].text}
         />
       </View>
     );
@@ -251,7 +251,9 @@ export default function TransactionForm({ initial, onChange }: Props) {
 
   return (
     <ThemedView style={styles.main}>
-      <ThemedView style={styles.options}>
+      <ThemedView
+        style={[styles.options, { position: "relative", marginBottom: 12 }]}
+      >
         <ThemedView style={styles.horizontalContainer}>
           <CapsuleToggle
             text="INCOME"
@@ -276,6 +278,17 @@ export default function TransactionForm({ initial, onChange }: Props) {
             }}
           />
         </ThemedView>
+        <ThemedText
+          type="captionSmall"
+          style={{
+            textAlign: "center",
+            opacity: typeSelected === "INCOME" ? 0.6 : 0,
+            position: "absolute",
+            bottom: -16,
+          }}
+        >
+          Salary is auto-tracked. Use this for one-time payments.
+        </ThemedText>
       </ThemedView>
       <ThemedView style={[styles.options, { alignItems: "stretch" }]}>
         <CapsuleInput
@@ -304,7 +317,7 @@ export default function TransactionForm({ initial, onChange }: Props) {
           {displayCategories.map((category) => {
             const categoryColor = adjustColorForScheme(
               category.color,
-              colorScheme
+              colorScheme,
             );
             return (
               <CapsuleToggle
@@ -327,7 +340,7 @@ export default function TransactionForm({ initial, onChange }: Props) {
               }}
               text="See More"
               bgFocused={btnColor}
-              bgDefault={Colors[colorScheme ?? "light"].primary[200]}
+              bgDefault={Colors[getTheme(colorScheme)].primary[200]}
               iconName="chevron-down"
               IconComponent={Octicons}
             />
@@ -340,7 +353,7 @@ export default function TransactionForm({ initial, onChange }: Props) {
               }}
               text="See Less"
               bgFocused={btnColor}
-              bgDefault={Colors[colorScheme ?? "light"].primary[200]}
+              bgDefault={Colors[getTheme(colorScheme)].primary[200]}
               iconName="chevron-up"
               IconComponent={Octicons}
             />
@@ -352,7 +365,7 @@ export default function TransactionForm({ initial, onChange }: Props) {
             }}
             text="New Category"
             bgFocused={btnColor}
-            bgDefault={Colors[colorScheme ?? "light"].primary[200]}
+            bgDefault={Colors[getTheme(colorScheme)].primary[200]}
             iconName="plus"
             IconComponent={Octicons}
           />
@@ -360,55 +373,56 @@ export default function TransactionForm({ initial, onChange }: Props) {
       </ThemedView>
 
       <ThemedView style={styles.options}>
-        <ThemedText style={styles.heading} type="h1">
-          Date
-        </ThemedText>
-        <DateTimePicker
-          value={startDate}
-          mode="date"
-          is24Hour={true}
-          display={Platform.OS === "ios" ? "compact" : "default"}
-          onChange={(event, selectedDate?: Date) => {
-            if (selectedDate) {
-              setStartDate(selectedDate);
-            }
-          }}
-          style={{
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 0,
-            marginLeft: -10,
-          }}
-        />
+        <View style={[styles.horizontalContainer, { gap: 24 }]}>
+          <DateTimePicker
+            value={startDate}
+            mode="date"
+            is24Hour={true}
+            display={Platform.OS === "ios" ? "compact" : "default"}
+            onChange={(event, selectedDate?: Date) => {
+              if (selectedDate) {
+                setStartDate(selectedDate);
+              }
+            }}
+            style={{
+              alignItems: "center",
+              justifyContent: "center",
+              padding: 0,
+              marginLeft: -10,
+            }}
+          />
+          <ThemedView
+            style={{
+              flexDirection: "row",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <Checkbox
+              value={isRecurring}
+              onValueChange={setRecurring}
+              color={
+                isRecurring ? btnColor : Colors[getTheme(colorScheme)].text
+              }
+            />
+            <ThemedText type="h5">Set recurring</ThemedText>
+          </ThemedView>
+        </View>
       </ThemedView>
 
-      <ThemedView
-        style={{
-          flexDirection: "row",
-          justifyContent: "center",
-          alignItems: "center",
-          gap: 16,
-        }}
-      >
-        <Checkbox
-          value={isRecurring}
-          onValueChange={setRecurring}
-          color={isRecurring ? btnColor : Colors[colorScheme ?? "light"].text}
-        />
-        <ThemedText type="h3">Mark as recurring</ThemedText>
-      </ThemedView>
       {isRecurring && (
         <ThemedView style={styles.options}>
           <ThemedView style={styles.horizontalContainer}>
-            <ThemedText style={styles.heading} type="h3">
+            <ThemedText style={styles.heading} type="h5">
               Repeat every
             </ThemedText>
             <CapsuleNumberInteger
               displayAmount={intervalDisplay}
               rawAmount={intervalRaw}
               min={1}
-              max={10000}
-              textType="bodyLarge"
+              max={100}
+              textType="body"
               onChangeText={handleIntervalChange}
             />
             <CapsuleDropdown
@@ -419,11 +433,11 @@ export default function TransactionForm({ initial, onChange }: Props) {
               }))}
               value={frequency}
               onChange={setFrequency}
-              textType="bodyLarge"
+              textType="body"
             />
           </ThemedView>
           <ThemedView style={styles.horizontalContainer}>
-            <ThemedText style={styles.heading} type="h3">
+            <ThemedText style={styles.heading} type="h5">
               on
             </ThemedText>
             {frequency === RRule.WEEKLY && (
@@ -431,11 +445,12 @@ export default function TransactionForm({ initial, onChange }: Props) {
                 options={weekdays}
                 value={weekday}
                 onChange={setWeekday}
+                textType="body"
               />
             )}
             {frequency === RRule.MONTHLY && (
               <>
-                <ThemedText style={styles.heading} type="h3">
+                <ThemedText style={styles.heading} type="h5">
                   the
                 </ThemedText>
                 <CapsuleNumberInteger
@@ -443,17 +458,17 @@ export default function TransactionForm({ initial, onChange }: Props) {
                   rawAmount={monthDay.toString()}
                   min={1}
                   max={31}
-                  textType="bodyLarge"
+                  textType="captionSmall"
                   onChangeText={(text) => setMonthDay(Number(text))}
                 />
-                <ThemedText style={styles.heading} type="h3">
+                <ThemedText style={styles.heading} type="h5">
                   of the month{" "}
                 </ThemedText>
               </>
             )}
             {frequency === RRule.YEARLY && (
               <View style={{ flexDirection: "row", gap: 8 }}>
-                <ThemedText style={styles.heading} type="h3">
+                <ThemedText style={styles.heading} type="h5">
                   the
                 </ThemedText>
                 <CapsuleNumberInteger
@@ -461,16 +476,17 @@ export default function TransactionForm({ initial, onChange }: Props) {
                   rawAmount={monthDay.toString()}
                   min={1}
                   max={31}
-                  textType="bodyLarge"
+                  textType="captionSmall"
                   onChangeText={(text) => setMonthDay(Number(text))}
                 />
-                <ThemedText style={styles.heading} type="h3">
+                <ThemedText style={styles.heading} type="h5">
                   of
                 </ThemedText>
                 <CapsuleDropdown
                   options={months}
                   value={yearMonth}
                   onChange={setYearMonth}
+                  textType="captionSmall"
                 />
               </View>
             )}

@@ -7,8 +7,9 @@ import CapsuleButton from "@/components/ui/capsule-button";
 import CapsuleNumberInput from "@/components/ui/capsule-input-number";
 import CapsuleToggle from "@/components/ui/capsule-toggle";
 import OnboardingControls from "@/components/ui/onboarding-controls";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { formatAmountDisplay } from "@/utils/formatDisplay";
+import { formatMoney } from "@/utils/formatMoney";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -26,27 +27,28 @@ import { Toast } from "toastify-react-native";
 
 export default function SalaryOnboarding() {
   const colorScheme = useColorScheme();
-  const btnColor = Colors[colorScheme ?? "light"].secondary[500];
+  const btnColor = Colors[getTheme(colorScheme)].secondary[500];
   const router = useRouter();
 
   // get onboarding state's budgets
   const { state, setState } = useOnboarding();
   const salary = state.salary;
+  const currency = state.currency;
 
   const [salaryType, setSalaryType] = useState<
     "Hourly" | "Biweekly" | "Monthly" | "Yearly" | "Varies"
   >(salary.type || "Hourly");
   const [hoursRaw, setHoursRaw] = useState(
-    Math.round((salary.hoursPerWeek || 0) * 100).toString()
+    Math.round((salary.hoursPerWeek || 0) * 100).toString(),
   );
   const [hoursDisplay, setHoursDisplay] = useState(
-    formatAmountDisplay(hoursRaw)
+    formatAmountDisplay(hoursRaw),
   );
   const [rawAmount, setRawAmount] = useState(
-    Math.round(salary.amount * 100).toString() || "0"
+    Math.round(salary.amount * 100).toString() || "0",
   );
   const [displayAmount, setDisplayAmount] = useState(
-    formatAmountDisplay(rawAmount)
+    formatAmountDisplay(rawAmount),
   );
 
   const handleAmountChange = (text: string) => {
@@ -66,7 +68,9 @@ export default function SalaryOnboarding() {
   const saveSalary = async () => {
     try {
       if (!rawAmount || parseFloat(rawAmount) < 1) {
-        throw new Error("Amount must be at least $1.00");
+        throw new Error(
+          `Amount must be at least ${formatMoney({ code: currency, amount: 1 })}`,
+        );
       }
 
       if (
@@ -82,7 +86,7 @@ export default function SalaryOnboarding() {
 
       switch (salaryType) {
         case "Hourly":
-          monthlySalary = amount * hours * 4.33;
+          monthlySalary = (amount * hours * 52) / 12;
           break;
         case "Biweekly":
           monthlySalary = amount * 2;
@@ -101,6 +105,7 @@ export default function SalaryOnboarding() {
       setState((prev) => ({
         ...prev,
         salary: {
+          name: "Primary Income",
           type: salaryType,
           amount,
           monthly: Number(monthlySalary.toFixed(2)),
@@ -128,7 +133,7 @@ export default function SalaryOnboarding() {
       <SafeAreaView
         style={[
           styles.safeArea,
-          { backgroundColor: Colors[colorScheme ?? "light"].background },
+          { backgroundColor: Colors[getTheme(colorScheme)].background },
         ]}
       >
         <OnboardingControls />
@@ -148,7 +153,7 @@ export default function SalaryOnboarding() {
               <ThemedView style={styles.horizontalContainer}>
                 <CapsuleToggle
                   text={"Hourly"}
-                  bgFocused={Colors[colorScheme ?? "light"].primary[500]}
+                  bgFocused={Colors[getTheme(colorScheme)].primary[500]}
                   selected={salaryType === "Hourly"}
                   onPress={() => {
                     Keyboard.dismiss();
@@ -157,7 +162,7 @@ export default function SalaryOnboarding() {
                 />
                 <CapsuleToggle
                   text={"Biweekly"}
-                  bgFocused={Colors[colorScheme ?? "light"].primary[500]}
+                  bgFocused={Colors[getTheme(colorScheme)].primary[500]}
                   selected={salaryType === "Biweekly"}
                   onPress={() => {
                     Keyboard.dismiss();
@@ -166,7 +171,7 @@ export default function SalaryOnboarding() {
                 />
                 <CapsuleToggle
                   text={"Monthly"}
-                  bgFocused={Colors[colorScheme ?? "light"].primary[500]}
+                  bgFocused={Colors[getTheme(colorScheme)].primary[500]}
                   selected={salaryType === "Monthly"}
                   onPress={() => {
                     Keyboard.dismiss();
@@ -175,7 +180,7 @@ export default function SalaryOnboarding() {
                 />
                 <CapsuleToggle
                   text={"Yearly"}
-                  bgFocused={Colors[colorScheme ?? "light"].primary[500]}
+                  bgFocused={Colors[getTheme(colorScheme)].primary[500]}
                   selected={salaryType === "Yearly"}
                   onPress={() => {
                     Keyboard.dismiss();
@@ -184,7 +189,7 @@ export default function SalaryOnboarding() {
                 />
                 <CapsuleToggle
                   text={"Varies"}
-                  bgFocused={Colors[colorScheme ?? "light"].primary[500]}
+                  bgFocused={Colors[getTheme(colorScheme)].primary[500]}
                   selected={salaryType === "Varies"}
                   onPress={() => {
                     Keyboard.dismiss();
@@ -202,6 +207,7 @@ export default function SalaryOnboarding() {
                         rawAmount={rawAmount}
                         onChangeText={handleAmountChange}
                         textType="h3"
+                        currency={currency}
                       />
                       <ThemedText type="h3"> per hour</ThemedText>
                     </ThemedView>
@@ -233,8 +239,9 @@ export default function SalaryOnboarding() {
                       rawAmount={rawAmount}
                       onChangeText={handleAmountChange}
                       textType="h3"
+                      currency={currency}
                     />
-                    <ThemedText type="h3"> every 2 weeks</ThemedText>
+                    <ThemedText type="h3"> per 2 weeks</ThemedText>
                   </ThemedView>
                 </ThemedView>
               )}
@@ -247,6 +254,7 @@ export default function SalaryOnboarding() {
                       rawAmount={rawAmount}
                       onChangeText={handleAmountChange}
                       textType="h3"
+                      currency={currency}
                     />
                     <ThemedText type="h3"> per month</ThemedText>
                   </ThemedView>
@@ -261,6 +269,7 @@ export default function SalaryOnboarding() {
                       rawAmount={rawAmount}
                       onChangeText={handleAmountChange}
                       textType="h3"
+                      currency={currency}
                     />
                     <ThemedText type="h3"> per year</ThemedText>
                   </ThemedView>
@@ -268,15 +277,16 @@ export default function SalaryOnboarding() {
               )}
               {salaryType === "Varies" && (
                 <ThemedView style={styles.quantityWrapper}>
-                  <ThemedText type="h2">How much?</ThemedText>
+                  <ThemedText type="h2">How much (estimated)?</ThemedText>
                   <ThemedView style={styles.salaryAmount}>
                     <AmountDisplay
                       displayAmount={displayAmount}
                       rawAmount={rawAmount}
                       onChangeText={handleAmountChange}
                       textType="h3"
+                      currency={currency}
                     />
-                    <ThemedText type="h3"> per month (estimated)</ThemedText>
+                    <ThemedText type="h3"> per month</ThemedText>
                   </ThemedView>
                 </ThemedView>
               )}

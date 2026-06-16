@@ -1,5 +1,5 @@
 import { Motion } from "@/constants/motion";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import Octicons from "@expo/vector-icons/Octicons";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, useColorScheme, View } from "react-native";
@@ -45,8 +45,8 @@ export default function CapsuleDropdown({
 }: Props) {
   const [open, setOpen] = useState(false);
   const colorScheme = useColorScheme();
-  const bgColor = Colors[colorScheme ?? "light"].primary[300];
-  const color = Colors[colorScheme ?? "light"].text;
+  const bgColor = Colors[getTheme(colorScheme)].primary[300];
+  const color = Colors[getTheme(colorScheme)].text;
 
   const selectedLabel =
     options.find((option) => option.value === value)?.label ?? "";
@@ -63,7 +63,7 @@ export default function CapsuleDropdown({
   useEffect(() => {
     baseScale.value = withTiming(
       open ? Motion.scale.focus : Motion.scale.default,
-      { duration: Motion.duration.fast }
+      { duration: Motion.duration.fast },
     );
     rotate.value = withTiming(open ? 180 : 0, {
       duration: Motion.duration.normal,
@@ -110,7 +110,7 @@ export default function CapsuleDropdown({
                 styles.option,
                 {
                   borderColor: bgColor,
-                  backgroundColor: Colors[colorScheme ?? "light"].background,
+                  backgroundColor: Colors[getTheme(colorScheme)].background,
                 },
               ]}
             >

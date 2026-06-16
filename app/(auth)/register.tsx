@@ -3,9 +3,10 @@ import { ThemedView } from "@/components/themed-view";
 import AnimatedScreen from "@/components/ui/animated-screen";
 import CapsuleButton from "@/components/ui/capsule-button";
 import CapsuleInput from "@/components/ui/capsule-input-box";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { firebaseErrorMessages } from "@/firebase/errorMessages";
 import { auth } from "@/firebase/firebaseConfig";
+import DatabaseService from "@/services/DatabaseService";
 import SyncService from "@/services/SyncService";
 import Octicons from "@expo/vector-icons/Octicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -31,9 +32,9 @@ export default function Register() {
   const colorScheme = useColorScheme();
   const router = useRouter();
 
-  const textColor = Colors[colorScheme ?? "light"].text;
-  const btnColor = Colors[colorScheme ?? "light"].secondary[500];
-  const bgColor = Colors[colorScheme ?? "light"].background;
+  const textColor = Colors[getTheme(colorScheme)].text;
+  const btnColor = Colors[getTheme(colorScheme)].secondary[500];
+  const bgColor = Colors[getTheme(colorScheme)].background;
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -42,39 +43,34 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
+    Keyboard.dismiss();
     if (loading) return;
-
     setLoading(true);
+
     try {
       const userCred = await createUserWithEmailAndPassword(
         auth,
         email,
-        password
+        password,
       );
-      const user = userCred.user;
+      await updateProfile(userCred.user, { displayName: name });
 
-      await updateProfile(user, { displayName: name });
-
-      // check if user has completed onboarding
+      // check if they have existing offline data worth migrating
       const hasCompleted = await AsyncStorage.getItem("completedOnboarding");
-      console.log("Onboarding complete:", hasCompleted);
 
-      // redirect to onboarding if necessary
-      if (hasCompleted !== "true") {
-        if (hasCompleted === null) {
-          await AsyncStorage.setItem("completedOnboarding", "false");
-        }
+      if (hasCompleted === "true") {
+        // migrate data
+        await DatabaseService.initializeSchema();
+        await SyncService.sync(); // pushes offline pending_changes to new account
+        router.replace("/(tabs)");
+      } else {
+        // start fresh
+        await DatabaseService.resetTables();
+        await AsyncStorage.clear();
+        await DatabaseService.initializeSchema();
+        await AsyncStorage.setItem("completedOnboarding", "false");
         router.replace("/(onboarding)/welcome");
-        return;
       }
-
-      await SyncService.sync();
-
-      Toast.show({
-        type: "success",
-        text1: "Account logged in!",
-      });
-      router.replace("/(tabs)");
     } catch (error: unknown) {
       if (error instanceof FirebaseError) {
         Toast.show({
@@ -177,7 +173,7 @@ export default function Register() {
           >
             <ActivityIndicator
               size="large"
-              color={Colors[colorScheme ?? "light"].text}
+              color={Colors[getTheme(colorScheme)].text}
             />
           </View>
         )}

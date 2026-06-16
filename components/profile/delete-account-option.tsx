@@ -1,4 +1,4 @@
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { auth } from "@/firebase/firebaseConfig";
 import { useModal } from "@/hooks/useModal";
 import { AccountService } from "@/services/AccountService";
@@ -24,7 +24,7 @@ import ProfileOption from "./profile-option";
 
 function DeleteAccountContent({ onComplete }: { onComplete: () => void }) {
   const colorScheme = useColorScheme();
-  const textColor = Colors[colorScheme ?? "light"].text;
+  const textColor = Colors[getTheme(colorScheme)].text;
 
   const [showPass, setShowPass] = useState(false);
   const [password, setPassword] = useState("");
@@ -57,7 +57,7 @@ function DeleteAccountContent({ onComplete }: { onComplete: () => void }) {
               if (user && user.email) {
                 const credential = EmailAuthProvider.credential(
                   user.email,
-                  password
+                  password,
                 );
 
                 await reauthenticateWithCredential(user, credential);
@@ -85,7 +85,7 @@ function DeleteAccountContent({ onComplete }: { onComplete: () => void }) {
           },
         },
       ],
-      { cancelable: true }
+      { cancelable: true },
     );
   };
 
@@ -133,7 +133,7 @@ function DeleteAccountContent({ onComplete }: { onComplete: () => void }) {
         >
           <ActivityIndicator
             size="large"
-            color={Colors[colorScheme ?? "light"].text}
+            color={Colors[getTheme(colorScheme)].text}
           />
         </View>
       )}

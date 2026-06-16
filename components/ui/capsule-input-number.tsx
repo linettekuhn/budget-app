@@ -1,6 +1,5 @@
-import { ThemedText } from "@/components/themed-text";
 import { Motion } from "@/constants/motion";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, TextInput, useColorScheme } from "react-native";
 import Animated, {
@@ -9,6 +8,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import tinycolor from "tinycolor2";
+import { FitText } from "./fit-text";
 
 type Props = {
   displayAmount: string;
@@ -33,6 +33,7 @@ type Props = {
     | "captionSmall"
     | "overline"
     | "link";
+  style?: object;
 };
 
 export default function CapsuleNumberInput({
@@ -42,10 +43,11 @@ export default function CapsuleNumberInput({
   min,
   max,
   textType,
+  style,
 }: Props) {
   const colorScheme = useColorScheme();
-  const textColor = Colors[colorScheme ?? "light"].text;
-  const bgColor = Colors[colorScheme ?? "light"].primary[300];
+  const textColor = Colors[getTheme(colorScheme)].text;
+  const bgColor = Colors[getTheme(colorScheme)].primary[300];
   const inputRef = useRef<TextInput>(null);
   const focusColor =
     colorScheme === "dark"
@@ -83,7 +85,7 @@ export default function CapsuleNumberInput({
   useEffect(() => {
     baseScale.value = withTiming(
       focused ? Motion.scale.focus : Motion.scale.default,
-      { duration: Motion.duration.fast }
+      { duration: Motion.duration.fast },
     );
   }, [focused, baseScale]);
 
@@ -100,6 +102,7 @@ export default function CapsuleNumberInput({
           backgroundColor: bgColor,
           borderColor: focused ? focusColor : bgColor,
         },
+        style,
       ]}
     >
       <Pressable
@@ -115,15 +118,12 @@ export default function CapsuleNumberInput({
           });
         }}
       >
-        <ThemedText
-          numberOfLines={1}
-          adjustsFontSizeToFit
-          minimumFontScale={0.4}
+        <FitText
+          text={displayAmount}
           type={textType}
-          style={[styles.amountInput, { color: textColor }]}
-        >
-          {displayAmount}
-        </ThemedText>
+          minFontSize={20}
+          style={{ textAlign: "center" }}
+        />
       </Pressable>
 
       <TextInput

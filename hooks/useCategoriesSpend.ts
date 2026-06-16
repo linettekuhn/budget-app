@@ -16,7 +16,6 @@ export function useCategoriesSpend(selectedDate?: string) {
       result = await DatabaseService.getCategoriesSpend();
     }
 
-    console.log(result);
     setBudgets(result);
     setLoading(false);
   }, [selectedDate]);

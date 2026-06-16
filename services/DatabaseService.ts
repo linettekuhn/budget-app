@@ -4,10 +4,14 @@ import {
   BadgeDefinition,
   CategorySpend,
   CategoryType,
+  IncomeSource,
+  PayType,
   RecurringTransaction,
   Salary,
   TransactionType,
 } from "@/types";
+import { buildPaydayRule, derivePayAmount } from "@/utils/incomeUtils";
+import { parseDate } from "@/utils/parseDate";
 import * as crypto from "expo-crypto";
 import * as SQLite from "expo-sqlite";
 import { rrulestr } from "rrule";
@@ -125,6 +129,39 @@ export default class DatabaseService {
         synced INTEGER DEFAULT 0
       )
     `);
+
+    await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS income_sources (
+      id TEXT PRIMARY KEY NOT NULL,
+      name TEXT NOT NULL,
+      basisType TEXT NOT NULL,
+      basisAmount DECIMAL(13, 2) NOT NULL,
+      payAmount DECIMAL(13, 2) NOT NULL,
+      paydayRule TEXT NOT NULL,
+      startDate TEXT NOT NULL,
+      endDate TEXT,
+      isActive INTEGER NOT NULL DEFAULT 1,
+      effectiveFrom TEXT NOT NULL,
+      effectiveTo TEXT,
+      sourceVersion INTEGER NOT NULL DEFAULT 1,
+      hoursPerWeek DECIMAL(5, 2),
+      createdAt TEXT DEFAULT (CURRENT_TIMESTAMP),
+      updatedAt TEXT DEFAULT (CURRENT_TIMESTAMP),
+      deletedAt TEXT
+    )
+  `);
+
+    await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS salary_migration_log (
+      id TEXT PRIMARY KEY NOT NULL,
+      migratedAt TEXT NOT NULL,
+      originalSalaryId TEXT NOT NULL,
+      newIncomeSourceId TEXT NOT NULL
+    )
+  `);
+
+    await this.migrateFromSalaryTable();
+    await this.fixIncomeSourcePayAmounts();
   }
 
   static async initializeDefaultData() {
@@ -132,7 +169,7 @@ export default class DatabaseService {
 
     // check if database has been initialized
     const initialized = await db.getFirstAsync<{ value: string }>(
-      "SELECT value FROM app_meta WHERE id = 'db_initalized'"
+      "SELECT value FROM app_meta WHERE id = 'db_initialized'",
     );
 
     if (initialized) {
@@ -145,7 +182,7 @@ export default class DatabaseService {
 
     // mark database as initialized
     await db.runAsync(
-      "INSERT INTO app_meta (id, value) VALUES ('db_initalized', 'true')"
+      "INSERT INTO app_meta (id, value) VALUES ('db_initialized', 'true')",
     );
   }
 
@@ -153,7 +190,7 @@ export default class DatabaseService {
     const db = await this.getDatabase();
 
     const existing = await db.getFirstAsync<{ value: string }>(
-      "SELECT value FROM app_meta WHERE id = 'app_start_date'"
+      "SELECT value FROM app_meta WHERE id = 'app_start_date'",
     );
 
     if (existing) return;
@@ -161,7 +198,7 @@ export default class DatabaseService {
     const now = new Date().toISOString();
     await db.runAsync(
       "INSERT INTO app_meta (id, value) VALUES ('app_start_date', ?)",
-      [now]
+      [now],
     );
     await this.logChange("app_meta", "app_start_date", "create", {
       id: "app_start_date",
@@ -169,7 +206,7 @@ export default class DatabaseService {
     });
 
     await db.runAsync(
-      "INSERT INTO app_meta (id, value) VALUES ('app_current_streak', 1)"
+      "INSERT INTO app_meta (id, value) VALUES ('app_current_streak', 1)",
     );
     await this.logChange("app_meta", "app_current_streak", "create", {
       id: "app_current_streak",
@@ -178,7 +215,7 @@ export default class DatabaseService {
 
     await db.runAsync(
       "INSERT INTO app_meta (id, value) VALUES ('app_last_active', ?)",
-      [now]
+      [now],
     );
     await this.logChange("app_meta", "app_last_active", "create", {
       id: "app_last_active",
@@ -187,7 +224,7 @@ export default class DatabaseService {
 
     await db.runAsync(
       "INSERT INTO app_meta (id, value) VALUES ('user_currency', ?)",
-      ["USD"]
+      ["USD"],
     );
     await this.logChange("app_meta", "user_currency", "create", {
       id: "user_currency",
@@ -195,7 +232,7 @@ export default class DatabaseService {
     });
 
     await db.runAsync(
-      "INSERT INTO app_meta (id, value) VALUES ('notif_daily', 'true')"
+      "INSERT INTO app_meta (id, value) VALUES ('notif_daily', 'true')",
     );
     await this.logChange("app_meta", "notif_daily", "create", {
       id: "notif_daily",
@@ -203,7 +240,7 @@ export default class DatabaseService {
     });
 
     await db.runAsync(
-      "INSERT INTO app_meta (id, value) VALUES ('notif_weekly', 'true')"
+      "INSERT INTO app_meta (id, value) VALUES ('notif_weekly', 'true')",
     );
     await this.logChange("app_meta", "notif_weekly", "create", {
       id: "notif_weekly",
@@ -211,7 +248,7 @@ export default class DatabaseService {
     });
 
     await db.runAsync(
-      "INSERT INTO app_meta (id, value) VALUES ('notif_mid_month', 'true')"
+      "INSERT INTO app_meta (id, value) VALUES ('notif_mid_month', 'true')",
     );
     await this.logChange("app_meta", "notif_mid_month", "create", {
       id: "notif_mid_month",
@@ -239,7 +276,7 @@ export default class DatabaseService {
     for (const cat of categories) {
       const existing = await db.getAllAsync<CategoryType>(
         "SELECT * FROM categories WHERE name = ?",
-        [cat.name]
+        [cat.name],
       );
 
       if (!existing.length) {
@@ -249,7 +286,7 @@ export default class DatabaseService {
             INSERT INTO categories (id, name, color, type, is_default)
             VALUES (?, ?, ?, ?, 1)
           `,
-          [id, cat.name, cat.color, cat.type]
+          [id, cat.name, cat.color, cat.type],
         );
       }
     }
@@ -259,7 +296,7 @@ export default class DatabaseService {
     const db = await this.getDatabase();
 
     const existing = await db.getAllAsync<CountResult>(
-      "SELECT COUNT(*) AS count FROM badges WHERE deletedAt IS NULL"
+      "SELECT COUNT(*) AS count FROM badges WHERE deletedAt IS NULL",
     );
 
     if (existing[0].count === 0) {
@@ -268,7 +305,7 @@ export default class DatabaseService {
       for (const badge of badges) {
         await db.runAsync(
           `INSERT INTO badges (id, unlocked, unlocked_at) VALUES (?, 0, NULL)`,
-          [badge.id]
+          [badge.id],
         );
         await this.logChange("badges", badge.id, "create", {
           id: badge.id,
@@ -296,6 +333,8 @@ export default class DatabaseService {
     await db.execAsync(`DROP TABLE IF EXISTS badges`);
     await db.execAsync(`DROP TABLE IF EXISTS app_meta`);
     await db.execAsync(`DROP TABLE IF EXISTS pending_changes`);
+    await db.execAsync(`DROP TABLE IF EXISTS income_sources`);
+    await db.execAsync(`DROP TABLE IF EXISTS salary_migration_log`);
   }
 
   // Pending Changes Table Integration
@@ -303,7 +342,7 @@ export default class DatabaseService {
     tableName: string,
     rowUUID: string,
     action: "create" | "update" | "delete",
-    payload: any
+    payload: any,
   ) {
     const db = await this.getDatabase();
     await db.runAsync(
@@ -311,7 +350,7 @@ export default class DatabaseService {
       INSERT INTO pending_changes (tableName, rowUUID, action, payload)
       VALUES (?, ?, ?, ?)
     `,
-      [tableName, rowUUID, action, JSON.stringify(payload)]
+      [tableName, rowUUID, action, JSON.stringify(payload)],
     );
   }
 
@@ -323,7 +362,7 @@ export default class DatabaseService {
     const values = keys.map((id) => data[id]);
     await db.runAsync(
       `INSERT INTO ${table} (${keys.join(", ")}) VALUES (${placeholders})`,
-      [...values]
+      [...values],
     );
   }
 
@@ -344,7 +383,7 @@ export default class DatabaseService {
     const db = await this.getDatabase();
     await db.runAsync(
       `UPDATE ${table} SET deletedAt = CURRENT_TIMESTAMP WHERE id = ?`,
-      [id]
+      [id],
     );
   }
 
@@ -352,13 +391,13 @@ export default class DatabaseService {
     const db = await this.getDatabase();
 
     return await db.getAllAsync(
-      `SELECT * FROM pending_changes WHERE tableName = "categories"`
+      `SELECT * FROM pending_changes WHERE tableName = "categories"`,
     );
   }
 
   // Categories Table Interaction
   static async updateCategoryBudgets(
-    categoryAmounts: Record<string, { raw: string }>
+    categoryAmounts: Record<string, { raw: string }>,
   ) {
     const db = await this.getDatabase();
     await db.execAsync("BEGIN TRANSACTION");
@@ -380,7 +419,7 @@ export default class DatabaseService {
             SET budget = ?, updatedAt = CURRENT_TIMESTAMP 
             WHERE id = ?
           `,
-          [budgetAmount, id]
+          [budgetAmount, id],
         );
 
         await this.logChange("categories", id, "update", {
@@ -397,12 +436,12 @@ export default class DatabaseService {
   }
   static async insertCategories(
     categories: CategoryType[],
-    budgets: Record<string, { raw: string; display: string }>
+    budgets: Record<string, { raw: string; display: string }>,
   ) {
     const db = await this.getDatabase();
 
     const ids = categories.map(
-      (cat) => `cat_${cat.name.toLowerCase().replace(" ", "_")}`
+      (cat) => `cat_${cat.name.toLowerCase().replace(" ", "_")}`,
     );
 
     // (?, ?) for each category
@@ -444,7 +483,7 @@ export default class DatabaseService {
   static async clearCategories() {
     const db = await this.getDatabase();
     await db.runAsync(
-      `UPDATE categories SET deletedAt = CURRENT_TIMESTAMP, updatedAt = CURRENT_TIMESTAMP`
+      `UPDATE categories SET deletedAt = CURRENT_TIMESTAMP, updatedAt = CURRENT_TIMESTAMP`,
     );
     await db.runAsync(`DELETE FROM categories`);
   }
@@ -453,7 +492,7 @@ export default class DatabaseService {
     name: string,
     categoryColor: string,
     categoryType: "need" | "want",
-    budget: number
+    budget: number,
   ) {
     const db = await this.getDatabase();
 
@@ -465,7 +504,7 @@ export default class DatabaseService {
     const id = `cat_${name.toLowerCase().replace(" ", "_")}`;
     await db.runAsync(
       `INSERT INTO categories (id, name, color, type, budget, is_default) VALUES (?, ?, ?, ?, ?, 0)`,
-      [id, name, categoryColor, categoryType, budget]
+      [id, name, categoryColor, categoryType, budget],
     );
 
     await this.logChange("categories", id, "create", {
@@ -485,7 +524,7 @@ export default class DatabaseService {
       SET deletedAt = CURRENT_TIMESTAMP, updatedAt = CURRENT_TIMESTAMP
       WHERE id = ?
       `,
-      [id]
+      [id],
     );
 
     await this.logChange("categories", id, "delete", {});
@@ -496,7 +535,7 @@ export default class DatabaseService {
 
     const existing = await db.getAllAsync<CountResult>(
       "SELECT COUNT(*) as count FROM categories WHERE name = ? AND deletedAt IS NULL",
-      [name]
+      [name],
     );
 
     if (existing[0].count !== 0) {
@@ -510,7 +549,7 @@ export default class DatabaseService {
     color: string,
     categoryType: "need" | "want",
     budget: number,
-    id: string
+    id: string,
   ) {
     const db = await this.getDatabase();
 
@@ -520,7 +559,7 @@ export default class DatabaseService {
       SET color = ?, type = ?, budget = ?, updatedAt = CURRENT_TIMESTAMP 
       WHERE id = ?
       `,
-      [color, categoryType, budget, id]
+      [color, categoryType, budget, id],
     );
 
     await this.logChange("categories", id, "update", {
@@ -534,7 +573,7 @@ export default class DatabaseService {
     const db = await this.getDatabase();
 
     return await db.getAllAsync<CategoryType>(
-      "SELECT * FROM categories WHERE deletedAt IS NULL"
+      "SELECT * FROM categories WHERE deletedAt IS NULL",
     );
   }
 
@@ -542,7 +581,7 @@ export default class DatabaseService {
     const db = await this.getDatabase();
 
     const existing = await db.getAllAsync<CountResult>(
-      "SELECT COUNT(*) as count FROM categories WHERE is_default = 0 AND deletedAt IS NULL"
+      "SELECT COUNT(*) as count FROM categories WHERE is_default = 0 AND deletedAt IS NULL",
     );
 
     if (existing[0].count > 0) {
@@ -557,15 +596,22 @@ export default class DatabaseService {
     type: string,
     amount: number,
     monthly: number,
-    hoursPerWeek: number | null
+    hoursPerWeek: number | null,
   ) {
     const db = await this.getDatabase();
 
     const id = "primary_salary";
 
     await db.runAsync(
-      `INSERT INTO salary (id, type, amount, monthly, hoursPerWeek) VALUES (?, ?, ?, ?, ?)`,
-      [id, type, amount, monthly, hoursPerWeek]
+      `INSERT INTO salary (id, type, amount, monthly, hoursPerWeek)
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+          type = excluded.type,
+          amount = excluded.amount,
+          monthly = excluded.monthly,
+          hoursPerWeek = excluded.hoursPerWeek,
+          updatedAt = CURRENT_TIMESTAMP`,
+      [id, type, amount, monthly, hoursPerWeek],
     );
 
     await this.logChange("salary", id, "create", {
@@ -579,7 +625,7 @@ export default class DatabaseService {
   static async getSalary() {
     const db = await this.getDatabase();
     return db.getFirstAsync<Salary>(
-      "SELECT * FROM salary WHERE deletedAt IS NULL"
+      "SELECT * FROM salary WHERE deletedAt IS NULL",
     );
   }
 
@@ -587,7 +633,7 @@ export default class DatabaseService {
     type: string,
     amount: number,
     monthly: number,
-    hoursPerWeek: number | null
+    hoursPerWeek: number | null,
   ) {
     const db = await this.getDatabase();
 
@@ -599,7 +645,7 @@ export default class DatabaseService {
       SET type = ?, amount = ?, monthly = ?, hoursPerWeek = ?
       WHERE id = ?
       `,
-      [type, amount, monthly, hoursPerWeek, id]
+      [type, amount, monthly, hoursPerWeek, id],
     );
 
     await this.logChange("salary", id, "update", {
@@ -610,11 +656,228 @@ export default class DatabaseService {
     });
   }
 
+  // Income Sources Table Interaction
+  static async getActiveIncomeSources(): Promise<IncomeSource[]> {
+    const db = await this.getDatabase();
+    return await db.getAllAsync<IncomeSource>(
+      `SELECT * FROM income_sources 
+     WHERE isActive = 1 
+       AND deletedAt IS NULL 
+       AND effectiveTo IS NULL
+     ORDER BY createdAt ASC`,
+    );
+  }
+
+  static async getIncomeSourceById(id: string): Promise<IncomeSource | null> {
+    const db = await this.getDatabase();
+    return (
+      (await db.getFirstAsync<IncomeSource>(
+        `SELECT * FROM income_sources WHERE id = ? AND deletedAt IS NULL`,
+        [id],
+      )) ?? null
+    );
+  }
+
+  static async saveIncomeSource(source: {
+    id: string;
+    name: string;
+    basisType: string;
+    basisAmount: number;
+    payAmount: number;
+    paydayRule: string;
+    startDate: string;
+    endDate: string | null;
+    hoursPerWeek: number | null;
+    effectiveFrom: string;
+    sourceVersion: number;
+  }): Promise<void> {
+    const db = await this.getDatabase();
+
+    await db.runAsync(
+      `INSERT INTO income_sources (
+      id, name, basisType, basisAmount, payAmount, paydayRule,
+      startDate, endDate, isActive, effectiveFrom, effectiveTo,
+      sourceVersion, hoursPerWeek
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, NULL, ?, ?)`,
+      [
+        source.id,
+        source.name,
+        source.basisType,
+        source.basisAmount,
+        source.payAmount,
+        source.paydayRule,
+        source.startDate,
+        source.endDate,
+        source.effectiveFrom,
+        source.sourceVersion,
+        source.hoursPerWeek,
+      ],
+    );
+
+    await this.logChange("income_sources", source.id, "create", source);
+  }
+
+  static async editIncomeSource(
+    id: string,
+    updates: {
+      name: string;
+      basisType: string;
+      basisAmount: number;
+      payAmount: number;
+      paydayRule: string;
+      hoursPerWeek: number | null;
+      startDate: string;
+    },
+  ): Promise<string> {
+    const db = await this.getDatabase();
+    const today = new Date().toISOString();
+    const existing = await this.getIncomeSourceById(id);
+
+    if (!existing) throw new Error("Income source not found");
+
+    // close the current version
+    await db.runAsync(
+      `UPDATE income_sources SET effectiveTo = ?, deletedAt = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?`,
+      [today, today, id],
+    );
+    await this.logChange("income_sources", id, "delete", {
+      effectiveTo: today,
+      deletedAt: today,
+    });
+
+    // insert the new version with a fresh ID
+    const newId = crypto.randomUUID();
+    await this.saveIncomeSource({
+      id: newId,
+      name: updates.name,
+      basisType: updates.basisType,
+      basisAmount: updates.basisAmount,
+      payAmount: updates.payAmount,
+      paydayRule: updates.paydayRule,
+      startDate: updates.startDate,
+      endDate: existing.endDate,
+      hoursPerWeek: updates.hoursPerWeek,
+      effectiveFrom: today,
+      sourceVersion: existing.sourceVersion + 1,
+    });
+
+    return newId;
+  }
+
+  static async deactivateIncomeSource(id: string): Promise<void> {
+    const db = await this.getDatabase();
+    const today = new Date().toISOString();
+
+    await db.runAsync(
+      `UPDATE income_sources 
+     SET isActive = 0, endDate = ?, deletedAt = ?, updatedAt = CURRENT_TIMESTAMP 
+     WHERE id = ?`,
+      [today, today, id],
+    );
+
+    await this.logChange("income_sources", id, "delete", {
+      isActive: 0,
+      endDate: today,
+      deletedAt: today,
+    });
+  }
+
+  static async migrateFromSalaryTable(): Promise<void> {
+    const db = await this.getDatabase();
+
+    // check if already migrated
+    const alreadyMigrated = await db.getFirstAsync<{ id: string }>(
+      `SELECT id FROM salary_migration_log LIMIT 1`,
+    );
+    if (alreadyMigrated) return;
+
+    // check if income sources already exist (prevents duplicate on logout/login cycle)
+    const existingSources = await db.getFirstAsync<{ id: string }>(
+      `SELECT id FROM income_sources WHERE deletedAt IS NULL LIMIT 1`,
+    );
+    if (existingSources) return;
+
+    // check if there's anything to migrate
+    const existingSalary = await this.getSalary();
+    if (!existingSalary) return;
+
+    const today = new Date();
+    const startDate = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      1,
+    ).toISOString();
+
+    const basisType = existingSalary.type as PayType;
+    const paydayRule = buildPaydayRule(basisType, today);
+    const payAmount = derivePayAmount(
+      existingSalary.type as PayType,
+      existingSalary.amount,
+      existingSalary.hoursPerWeek ?? null,
+    );
+
+    const newId = crypto.randomUUID();
+
+    await this.saveIncomeSource({
+      id: newId,
+      name: "Primary Income",
+      basisType,
+      basisAmount: existingSalary.amount,
+      payAmount,
+      paydayRule,
+      startDate,
+      endDate: null,
+      hoursPerWeek: existingSalary.hoursPerWeek ?? null,
+      effectiveFrom: startDate,
+      sourceVersion: 1,
+    });
+
+    // Log the migration
+    await db.runAsync(
+      `INSERT INTO salary_migration_log (id, migratedAt, originalSalaryId, newIncomeSourceId)
+     VALUES (?, ?, ?, ?)`,
+      [crypto.randomUUID(), today.toISOString(), existingSalary.id, newId],
+    );
+  }
+
+  static async fixIncomeSourcePayAmounts(): Promise<void> {
+    const db = await this.getDatabase();
+
+    const alreadyFixed = await db.getFirstAsync<{ value: string }>(
+      "SELECT value FROM app_meta WHERE id = 'income_pay_amount_fixed' AND deletedAt IS NULL",
+    );
+    if (alreadyFixed) return;
+
+    const sources = await db.getAllAsync<IncomeSource>(
+      "SELECT * FROM income_sources WHERE deletedAt IS NULL",
+    );
+
+    for (const source of sources) {
+      const corrected = derivePayAmount(
+        source.basisType,
+        source.basisAmount,
+        source.hoursPerWeek,
+      );
+      if (source.payAmount !== corrected) {
+        await db.runAsync(
+          "UPDATE income_sources SET payAmount = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?",
+          [corrected, source.id],
+        );
+      }
+    }
+
+    const now = new Date().toISOString();
+    await db.runAsync(
+      `INSERT OR REPLACE INTO app_meta (id, value, createdAt, updatedAt) VALUES ('income_pay_amount_fixed', ?, ?, ?)`,
+      [now, now, now],
+    );
+  }
+
   // Transactions Table Interaction
   static async clearTransactions() {
     const db = await this.getDatabase();
     const transactions = await db.getAllAsync<{ id: string }>(
-      "SELECT id FROM transactions WHERE deletedAt IS NULL"
+      "SELECT id FROM transactions WHERE deletedAt IS NULL",
     );
     await db.runAsync(`DELETE FROM transactions`);
     for (const transaction of transactions) {
@@ -641,7 +904,7 @@ export default class DatabaseService {
         transaction.type,
         transaction.categoryId,
         transaction.date,
-      ]
+      ],
     );
     await this.logChange("transactions", id, "create", transaction);
   }
@@ -670,21 +933,20 @@ export default class DatabaseService {
         transactionData.date,
         rrule,
         transactionData.date,
-      ]
+      ],
     );
     await this.logChange("recurring_transactions", id, "create", transaction);
-    await this.addTransaction(transactionData);
   }
 
   static async addMissedRecurringTransactions() {
     const db = await this.getDatabase();
 
     const recurringTransactions = await db.getAllAsync<RecurringTransaction>(
-      "SELECT * FROM recurring_transactions WHERE deletedAt IS NULL"
+      "SELECT * FROM recurring_transactions WHERE deletedAt IS NULL",
     );
 
     for (const recurring of recurringTransactions) {
-      const last = new Date(recurring.lastGenerated);
+      const last = parseDate(recurring.lastGenerated);
       const now = new Date();
       const rrule = rrulestr(recurring.rrule);
       const datesMissed = rrule.between(last, now, false);
@@ -692,6 +954,13 @@ export default class DatabaseService {
       // add a transaction on each missed date
       if (!datesMissed.length) continue;
       for (const occurrenceDate of datesMissed) {
+        const existing = await db.getFirstAsync(
+          `SELECT id FROM transactions WHERE date = ? AND categoryId = ? AND name = ?`,
+          [occurrenceDate.toISOString(), recurring.categoryId, recurring.name],
+        );
+
+        if (existing) continue;
+
         this.addTransaction({
           name: recurring.name,
           amount: recurring.amount,
@@ -709,7 +978,7 @@ export default class DatabaseService {
         SET lastGenerated = ?, updatedAt = CURRENT_TIMESTAMP
         WHERE id = ?
       `,
-        [lastGenerated.toISOString(), recurring.id]
+        [lastGenerated.toISOString(), recurring.id],
       );
 
       await this.logChange("recurring_transactions", recurring.id, "update", {
@@ -740,7 +1009,7 @@ export default class DatabaseService {
         transaction.categoryId,
         transaction.date,
         transaction.id,
-      ]
+      ],
     );
     await this.logChange("transactions", transaction.id, "update", transaction);
   }
@@ -771,13 +1040,13 @@ export default class DatabaseService {
         transactionData.date,
         rrule,
         transaction.id,
-      ]
+      ],
     );
     await this.logChange(
       "recurring_transactions",
       transaction.id,
       "update",
-      transaction
+      transaction,
     );
   }
 
@@ -790,7 +1059,7 @@ export default class DatabaseService {
       SET deletedAt = CURRENT_TIMESTAMP, updatedAt = CURRENT_TIMESTAMP
       WHERE id = ?
       `,
-      [id]
+      [id],
     );
 
     await this.logChange("transactions", id, "delete", {});
@@ -805,7 +1074,7 @@ export default class DatabaseService {
       SET deletedAt = CURRENT_TIMESTAMP, updatedAt = CURRENT_TIMESTAMP
       WHERE id = ?
       `,
-      [id]
+      [id],
     );
 
     await this.logChange("recurring_transactions", id, "delete", {});
@@ -818,21 +1087,24 @@ export default class DatabaseService {
       SELECT * FROM recurring_transactions 
       WHERE deletedAt IS NULL
       ORDER BY date DESC
-      `
+      `,
     );
   }
 
   static async getCategoryTransactions(
     categoryId: string,
     year: number,
-    month: number
+    month: number,
   ) {
     const db = await this.getDatabase();
 
     const monthStr = month.toString().padStart(2, "0");
 
     const startDate = `${year}-${monthStr}-01`;
-    const endDate = `${year}-${monthStr}-31`;
+    const nextMonth = month === 12 ? 1 : month + 1;
+    const nextYear = month === 12 ? year + 1 : year;
+    const nextMonthStr = String(nextMonth).padStart(2, "0");
+    const endDate = `${nextYear}-${nextMonthStr}-01`;
 
     return await db.getAllAsync<TransactionType>(
       `
@@ -848,29 +1120,32 @@ export default class DatabaseService {
       FROM transactions t
       INNER JOIN categories c ON t.categoryId = c.id
       WHERE t.categoryId = ? AND t.deletedAt IS NULL
-      AND t.date BETWEEN ? AND ?
+      AND t.date >= ? AND t.date < ?
       ORDER BY t.date DESC
     `,
-      [categoryId, startDate, endDate]
+      [categoryId, startDate, endDate],
     );
   }
 
-  static async getTransactionsByMonth(year: number, month: number) {
+  static async sByMonth(year: number, month: number) {
     const db = await this.getDatabase();
 
     const monthStr = month.toString().padStart(2, "0");
 
     const startDate = `${year}-${monthStr}-01`;
-    const endDate = `${year}-${monthStr}-31`;
+    const nextMonth = month === 12 ? 1 : month + 1;
+    const nextYear = month === 12 ? year + 1 : year;
+    const nextMonthStr = String(nextMonth).padStart(2, "0");
+    const endDate = `${nextYear}-${nextMonthStr}-01`;
 
     return await db.getAllAsync<TransactionType>(
       `
       SELECT id, name, amount, type, categoryId, date
       FROM transactions
-      WHERE deletedAt IS NULL AND date BETWEEN ? AND ? 
+      WHERE deletedAt IS NULL AND date >= ? AND date < ? 
       ORDER BY date DESC
       `,
-      [startDate, endDate]
+      [startDate, endDate],
     );
   }
 
@@ -884,7 +1159,7 @@ export default class DatabaseService {
       WHERE deletedAt IS NULL
       ORDER BY date DESC
       `,
-      []
+      [],
     );
   }
 
@@ -898,7 +1173,10 @@ export default class DatabaseService {
     const monthStr = m.toString().padStart(2, "0");
 
     const startDate = `${y}-${monthStr}-01`;
-    const endDate = `${y}-${monthStr}-31`;
+    const nextMonth = m === 12 ? 1 : m + 1;
+    const nextYear = m === 12 ? y + 1 : y;
+    const nextMonthStr = String(nextMonth).padStart(2, "0");
+    const endDate = `${nextYear}-${nextMonthStr}-01`;
 
     return await db.getAllAsync<CategorySpend>(
       `
@@ -918,19 +1196,19 @@ export default class DatabaseService {
       FROM categories c
       LEFT JOIN transactions t 
           ON c.id = t.categoryId
-          AND t.date BETWEEN ? AND ?
+          AND t.date >= ? AND t.date < ?
           AND t.deletedAt IS NULL
       WHERE c.deletedAt IS NULL
       GROUP BY c.id
     `,
-      [startDate, endDate]
+      [startDate, endDate],
     );
   }
 
   static async getCategorySpend(
     categoryId: string,
     year?: number,
-    month?: number
+    month?: number,
   ) {
     const db = await this.getDatabase();
 
@@ -940,7 +1218,10 @@ export default class DatabaseService {
     const monthStr = m.toString().padStart(2, "0");
 
     const startDate = `${y}-${monthStr}-01`;
-    const endDate = `${y}-${monthStr}-31`;
+    const nextMonth = m === 12 ? 1 : m + 1;
+    const nextYear = m === 12 ? y + 1 : y;
+    const nextMonthStr = String(nextMonth).padStart(2, "0");
+    const endDate = `${nextYear}-${nextMonthStr}-01`;
 
     return await db.getFirstAsync<CategorySpend>(
       `
@@ -960,12 +1241,12 @@ export default class DatabaseService {
       FROM categories c
       LEFT JOIN transactions t 
           ON c.id = t.categoryId
-          AND t.date BETWEEN ? AND ?
+          AND t.date >= ? AND t.date < ?
           AND t.deletedAt IS NULL
       WHERE c.id = ? AND c.deletedAt IS NULL
       GROUP BY c.id
     `,
-      [startDate, endDate, categoryId]
+      [startDate, endDate, categoryId],
     );
   }
 
@@ -977,7 +1258,7 @@ export default class DatabaseService {
     const month = String(now.getMonth() + 1).padStart(2, "0");
 
     const start = `${year}-${month}-01`;
-    const mid = `${year}-${month}-15`;
+    const mid = `${year}-${month}-16`;
 
     const row = await db.getFirstAsync<{ spent: number; budget: number }>(
       `
@@ -988,10 +1269,10 @@ export default class DatabaseService {
       LEFT JOIN transactions t
         ON c.id = t.categoryId
         AND t.deletedAt IS NULL
-        AND t.date BETWEEN ? AND ?
+        AND t.date >= ? AND t.date < ?
       WHERE c.deletedAt IS NULL
     `,
-      [start, mid]
+      [start, mid],
     );
 
     if (!row || row.budget === 0) return 0;
@@ -1004,12 +1285,12 @@ export default class DatabaseService {
 
     const now = new Date();
     const day = now.getDay(); // 0 = Sunday
-    const diff = now.getDate() - day;
+    const diff = now.getDate() - (day === 0 ? 6 : day - 1);
     const startOfWeek = new Date(now.setDate(diff));
     startOfWeek.setHours(0, 0, 0, 0);
 
-    const endOfWeek = new Date();
-    endOfWeek.setHours(23, 59, 59, 999);
+    const startOfNextWeek = new Date(startOfWeek);
+    startOfNextWeek.setDate(startOfWeek.getDate() + 7);
 
     const row = await db.getFirstAsync<{ spent: number }>(
       `
@@ -1017,9 +1298,9 @@ export default class DatabaseService {
       FROM transactions
       WHERE deletedAt IS NULL
         AND type = 'expense'
-        AND date BETWEEN ? AND ?
+        AND date >= ? AND date < ?
     `,
-      [startOfWeek.toISOString(), endOfWeek.toISOString()]
+      [startOfWeek.toISOString(), startOfNextWeek.toISOString()],
     );
 
     return Number(row?.spent?.toFixed(2) || 0);
@@ -1036,7 +1317,7 @@ export default class DatabaseService {
     };
     const row = await db.getFirstAsync<BadgeDatabaseRow>(
       "SELECT id, unlocked, unlocked_at FROM badges WHERE id = ? AND deletedAt IS NULL",
-      [badgeKey]
+      [badgeKey],
     );
 
     if (row && row.unlocked !== 0) {
@@ -1058,7 +1339,7 @@ export default class DatabaseService {
             updatedAt = CURRENT_TIMESTAMP
         WHERE id = ?
       `,
-      [now, badgeKey]
+      [now, badgeKey],
     );
 
     await this.logChange("badges", badgeKey, "update", {
@@ -1077,7 +1358,7 @@ export default class DatabaseService {
       SELECT id, unlocked, unlocked_at
       FROM badges
       WHERE deletedAt IS NULL
-      `
+      `,
     );
   }
 
@@ -1086,11 +1367,11 @@ export default class DatabaseService {
     const db = await this.getDatabase();
 
     const row = await db.getFirstAsync<{ value: string }>(
-      "SELECT value FROM app_meta WHERE id = 'app_start_date' AND deletedAt IS NULL"
+      "SELECT value FROM app_meta WHERE id = 'app_start_date' AND deletedAt IS NULL",
     );
 
     if (row) {
-      const startDate = new Date(row.value);
+      const startDate = parseDate(row.value);
       const now = new Date();
 
       const yearsDiff = now.getFullYear() - startDate.getFullYear();
@@ -1106,7 +1387,7 @@ export default class DatabaseService {
     const db = await this.getDatabase();
 
     const row = await db.getFirstAsync<{ value: string }>(
-      "SELECT value FROM app_meta WHERE id = 'app_current_streak' AND deletedAt IS NULL"
+      "SELECT value FROM app_meta WHERE id = 'app_current_streak' AND deletedAt IS NULL",
     );
 
     return Number(row?.value || 0);
@@ -1116,11 +1397,11 @@ export default class DatabaseService {
     const db = await this.getDatabase();
 
     const row = await db.getFirstAsync<{ value: string }>(
-      "SELECT value FROM app_meta WHERE id = 'app_last_active' AND deletedAt IS NULL"
+      "SELECT value FROM app_meta WHERE id = 'app_last_active' AND deletedAt IS NULL",
     );
 
     if (row) {
-      return new Date(row.value);
+      return parseDate(row.value);
     }
   }
 
@@ -1128,11 +1409,11 @@ export default class DatabaseService {
     const db = await this.getDatabase();
 
     const row = await db.getFirstAsync<{ value: string }>(
-      "SELECT value FROM app_meta WHERE id = 'app_start_date' AND deletedAt IS NULL"
+      "SELECT value FROM app_meta WHERE id = 'app_start_date' AND deletedAt IS NULL",
     );
 
     if (row) {
-      return new Date(row.value);
+      return parseDate(row.value);
     }
   }
 
@@ -1141,7 +1422,7 @@ export default class DatabaseService {
 
     await db.runAsync(
       "UPDATE app_meta SET value = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = 'app_last_active'",
-      [date]
+      [date],
     );
     await this.logChange("app_meta", "app_last_active", "update", {
       value: date,
@@ -1149,7 +1430,7 @@ export default class DatabaseService {
 
     await db.runAsync(
       "UPDATE app_meta SET value = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = 'app_current_streak'",
-      [String(currentStreak)]
+      [String(currentStreak)],
     );
     await this.logChange("app_meta", "app_current_streak", "update", {
       value: String(currentStreak),
@@ -1161,7 +1442,7 @@ export default class DatabaseService {
 
     await db.runAsync(
       "INSERT INTO app_meta (id, value) VALUES ('user_name', ?)",
-      [name]
+      [name],
     );
 
     await this.logChange("app_meta", "user_name", "create", {
@@ -1174,7 +1455,7 @@ export default class DatabaseService {
     const db = await this.getDatabase();
 
     const row = await db.getFirstAsync<{ value: string }>(
-      "SELECT value FROM app_meta WHERE id = 'user_name' AND deletedAt IS NULL"
+      "SELECT value FROM app_meta WHERE id = 'user_name' AND deletedAt IS NULL",
     );
 
     if (row) {
@@ -1187,7 +1468,7 @@ export default class DatabaseService {
 
     await db.runAsync(
       "UPDATE app_meta SET value = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = 'user_name'",
-      [name]
+      [name],
     );
 
     await this.logChange("app_meta", "user_name", "update", {
@@ -1199,13 +1480,13 @@ export default class DatabaseService {
     const db = await this.getDatabase();
 
     const dailyRow = await db.getFirstAsync<{ value: string }>(
-      "SELECT value FROM app_meta WHERE id = 'notif_daily' AND deletedAt IS NULL"
+      "SELECT value FROM app_meta WHERE id = 'notif_daily' AND deletedAt IS NULL",
     );
     const weeklyRow = await db.getFirstAsync<{ value: string }>(
-      "SELECT value FROM app_meta WHERE id = 'notif_weekly' AND deletedAt IS NULL"
+      "SELECT value FROM app_meta WHERE id = 'notif_weekly' AND deletedAt IS NULL",
     );
     const midMonthRow = await db.getFirstAsync<{ value: string }>(
-      "SELECT value FROM app_meta WHERE id = 'notif_mid_month' AND deletedAt IS NULL"
+      "SELECT value FROM app_meta WHERE id = 'notif_mid_month' AND deletedAt IS NULL",
     );
 
     return {
@@ -1220,17 +1501,17 @@ export default class DatabaseService {
 
     await db.runAsync(
       "UPDATE app_meta SET value = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = 'notif_daily'",
-      [String(settings.daily)]
+      [String(settings.daily)],
     );
 
     await db.runAsync(
       "UPDATE app_meta SET value = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = 'notif_weekly'",
-      [String(settings.weekly)]
+      [String(settings.weekly)],
     );
 
     await db.runAsync(
       "UPDATE app_meta SET value = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = 'notif_mid_month'",
-      [String(settings.midMonth)]
+      [String(settings.midMonth)],
     );
 
     await this.logChange("app_meta", "notif_daily", "update", {
@@ -1250,7 +1531,7 @@ export default class DatabaseService {
     const db = await this.getDatabase();
 
     const row = await db.getFirstAsync<{ value: string }>(
-      "SELECT value FROM app_meta WHERE id = 'user_currency' AND deletedAt IS NULL"
+      "SELECT value FROM app_meta WHERE id = 'user_currency' AND deletedAt IS NULL",
     );
 
     if (row) {
@@ -1263,7 +1544,7 @@ export default class DatabaseService {
 
     await db.runAsync(
       "UPDATE app_meta SET value = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = 'user_currency'",
-      [currency]
+      [currency],
     );
 
     await this.logChange("app_meta", "user_currency", "update", {
@@ -1271,15 +1552,42 @@ export default class DatabaseService {
     });
   }
 
+  static async getWidgetCategoryId(): Promise<string | undefined> {
+    const db = await this.getDatabase();
+    const row = await db.getFirstAsync<{ value: string }>(
+      "SELECT value FROM app_meta WHERE id = 'widget_category_id' AND deletedAt IS NULL",
+    );
+    return row?.value;
+  }
+
+  static async setWidgetCategoryId(categoryId: string): Promise<void> {
+    const db = await this.getDatabase();
+    const existing = await this.getWidgetCategoryId();
+    if (existing) {
+      await db.runAsync(
+        "UPDATE app_meta SET value = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = 'widget_category_id'",
+        [categoryId],
+      );
+    } else {
+      await db.runAsync(
+        "INSERT INTO app_meta (id, value) VALUES ('widget_category_id', ?)",
+        [categoryId],
+      );
+    }
+    await this.logChange("app_meta", "widget_category_id", "update", {
+      value: categoryId,
+    });
+  }
+
   static async getLastSyncDate() {
     const db = await this.getDatabase();
 
     const row = await db.getFirstAsync<{ value: string }>(
-      "SELECT value FROM app_meta WHERE id = 'app_last_sync' AND deletedAt IS NULL"
+      "SELECT value FROM app_meta WHERE id = 'app_last_sync' AND deletedAt IS NULL",
     );
 
     if (row) {
-      return new Date(row.value);
+      return parseDate(row.value);
     }
 
     return undefined;
@@ -1290,7 +1598,7 @@ export default class DatabaseService {
 
     await db.runAsync(
       "UPDATE app_meta SET value = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = 'app_last_sync'",
-      [date]
+      [date],
     );
   }
 }

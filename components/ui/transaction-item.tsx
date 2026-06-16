@@ -1,13 +1,20 @@
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { TransactionType } from "@/types";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
-import { formatMoney } from "@/utils/formatMoney";
+import { parseDate } from "@/utils/parseDate";
 import Octicons from "@expo/vector-icons/Octicons";
-import { Pressable, StyleSheet, useColorScheme, View } from "react-native";
+import { memo, useState } from "react";
+import {
+  LayoutChangeEvent,
+  Pressable,
+  StyleSheet,
+  useColorScheme,
+} from "react-native";
 import { ThemedText } from "../themed-text";
 import { ThemedView } from "../themed-view";
+import MoneyText from "./money-text";
 
-export default function TransactionItem({
+const TransactionItem = memo(function TransactionItem({
   currency,
   transaction,
   handleEdit,
@@ -17,13 +24,21 @@ export default function TransactionItem({
   handleEdit: (transaction: TransactionType) => void;
 }) {
   const colorScheme = useColorScheme();
-  const date = new Date(transaction.date);
-  const transactionBgColor = Colors[colorScheme ?? "light"].primary[700];
-  const bgColor = Colors[colorScheme ?? "light"].background;
+  const date = parseDate(transaction.date);
+  const transactionBgColor = Colors[getTheme(colorScheme)].primary[50];
+  const txtColor = Colors[getTheme(colorScheme)].text;
   const typeColor =
     transaction.type === "income"
       ? adjustColorForScheme("#2EA64E", colorScheme)
       : adjustColorForScheme("#CF3D3D", colorScheme);
+
+  const sign = transaction.type === "income" ? "positive" : "negative";
+
+  const [halfWidth, setHalfWidth] = useState<number | undefined>(undefined);
+
+  const onWrapperLayout = (e: LayoutChangeEvent) => {
+    setHalfWidth(e.nativeEvent.layout.width / 2);
+  };
 
   return (
     <ThemedView
@@ -32,17 +47,21 @@ export default function TransactionItem({
         styles.transactionWrapper,
         { backgroundColor: transactionBgColor },
       ]}
+      onLayout={onWrapperLayout}
     >
       <ThemedView
         style={{
           backgroundColor: transactionBgColor,
+          flexGrow: 1,
         }}
       >
         <ThemedText
+          numberOfLines={2}
+          ellipsizeMode="tail"
           style={{
-            color: bgColor,
-            margin: 0,
-            lineHeight: 0,
+            color: txtColor,
+            flexWrap: "wrap",
+            maxWidth: halfWidth,
           }}
         >
           {transaction.name}
@@ -50,39 +69,47 @@ export default function TransactionItem({
         <ThemedText
           type="captionSmall"
           style={{
-            color: bgColor,
-            margin: 0,
-            lineHeight: 0,
+            color: txtColor,
           }}
         >
           {date.toLocaleDateString()}
         </ThemedText>
       </ThemedView>
-      <View style={{ flexDirection: "row", gap: 4 }}>
-        <ThemedText style={{ color: typeColor }} type="h6">
-          {formatMoney({ code: currency, amount: transaction.amount })}
-        </ThemedText>
-        <Pressable
-          onPress={() => handleEdit(transaction)}
-          style={{ transform: [{ rotate: "90deg" }] }}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Octicons name="kebab-horizontal" size={20} color={bgColor} />
-        </Pressable>
-      </View>
+      <MoneyText
+        variant="block"
+        amount={Number(transaction.amount.toFixed(2))}
+        currency={currency}
+        type="h4"
+        align="right"
+        decimals
+        sign={sign}
+        darkColor={typeColor}
+        lightColor={typeColor}
+      />
+      <Pressable
+        onPress={() => handleEdit(transaction)}
+        style={{ transform: [{ rotate: "90deg" }] }}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      >
+        <Octicons name="kebab-horizontal" size={20} color={txtColor} />
+      </Pressable>
     </ThemedView>
   );
-}
+});
 
 const styles = StyleSheet.create({
   transactionWrapper: {
     flexDirection: "row",
-    width: "100%",
-    justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 25,
     paddingVertical: 10,
+    paddingHorizontal: 25,
     borderRadius: 25,
-    marginVertical: 10,
+    marginBottom: 12,
+    width: "100%",
+    alignSelf: "stretch",
+    gap: 12,
+    overflow: "hidden",
   },
 });
+
+export default TransactionItem;

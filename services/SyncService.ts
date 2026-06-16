@@ -42,14 +42,14 @@ export default class SyncService {
         const userId = user.uid;
         // get pending changes
         const pending = await db.getAllAsync<Change>(
-          "SELECT * FROM pending_changes WHERE synced = 0 ORDER BY createdAt ASC"
+          "SELECT * FROM pending_changes WHERE synced = 0 ORDER BY createdAt ASC",
         );
 
         for (const change of pending) {
           const { tableName, rowUUID, action, payload } = change;
           const ref = doc(
             firestoreDb,
-            `users/${userId}/${tableName}/${rowUUID}`
+            `users/${userId}/${tableName}/${rowUUID}`,
           );
 
           // save if change created or updated
@@ -61,7 +61,7 @@ export default class SyncService {
               await setDoc(
                 ref,
                 { id: rowUUID, ...payloadData },
-                { merge: true }
+                { merge: true },
               );
             } else {
               await setDoc(
@@ -71,7 +71,7 @@ export default class SyncService {
                   ...payloadData,
                   updatedAt: new Date().toISOString(),
                 },
-                { merge: true }
+                { merge: true },
               );
             }
           }
@@ -84,14 +84,14 @@ export default class SyncService {
                 id: rowUUID,
                 deletedAt: new Date().toISOString(),
               },
-              { merge: true }
+              { merge: true },
             );
           }
 
           // update sync flag in pending_changes table
           await db.runAsync(
             "UPDATE pending_changes SET synced = 1 WHERE id = ?",
-            [change.id]
+            [change.id],
           );
         }
         await db.execAsync("COMMIT");
@@ -115,6 +115,7 @@ export default class SyncService {
       "transactions",
       "recurring_transactions",
       "salary",
+      "income_sources",
     ];
 
     interface LocalRow {
@@ -131,11 +132,10 @@ export default class SyncService {
 
         // for each table get firestore snapshot
         for (const table of tables) {
-          // TODO: HERES THE ERROR
           // filter out docs updated before last synced
           const collectionRef = query(
             collection(firestoreDb, `users/${userId}/${table}`),
-            where("updatedAt", ">", lastSyncedAt ?? "1970-01-01T00:00:00.000Z")
+            where("updatedAt", ">", lastSyncedAt ?? new Date(0).toISOString()),
           );
           const snapshot = await getDocs(collectionRef);
 
@@ -148,7 +148,7 @@ export default class SyncService {
             // get local data
             const local = await db.getFirstAsync<LocalRow>(
               `SELECT * FROM ${table} WHERE id = ?`,
-              [id]
+              [id],
             );
 
             if (!local) {
@@ -161,9 +161,9 @@ export default class SyncService {
               if (lastSyncedAt) {
                 // compare updatedAt times for local and remote doc
                 const remoteLastUpdated = new Date(
-                  remote.updatedAt || 0
+                  remote.updatedAt || 0,
                 ).getTime();
-                const localLastUpdated = new Date(local.updatedAt).getTime();
+                const localLastUpdated = parseDate(local.updatedAt).getTime();
 
                 // most recent record wins
                 if (remoteLastUpdated > localLastUpdated) {

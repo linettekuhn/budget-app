@@ -3,7 +3,7 @@ import { StyleSheet, TouchableOpacity, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { Motion } from "@/constants/motion";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import Octicons from "@expo/vector-icons/Octicons";
 import Animated, {
@@ -26,7 +26,7 @@ export function Collapsible({
   iconName,
 }: PropsWithChildren & Props) {
   const colorScheme = useColorScheme();
-  const color = Colors[colorScheme ?? "light"].text;
+  const color = Colors[getTheme(colorScheme)].text;
 
   const isExpanded = useSharedValue(false);
   const contentHeight = useSharedValue(0);
@@ -34,13 +34,13 @@ export function Collapsible({
   const rotation = useDerivedValue(() =>
     withTiming(isExpanded.value ? 90 : 0, {
       duration: Motion.duration.normal,
-    })
+    }),
   );
 
   const animatedHeight = useDerivedValue(() =>
     withTiming(contentHeight.value * Number(isExpanded.value), {
       duration: Motion.duration.normal,
-    })
+    }),
   );
 
   const animatedContentStyle = useAnimatedStyle(() => ({
@@ -53,7 +53,7 @@ export function Collapsible({
   return (
     <View
       style={{
-        backgroundColor: Colors[colorScheme ?? "light"].primary[200],
+        backgroundColor: Colors[getTheme(colorScheme)].primary[200],
         borderRadius: 20,
         paddingVertical: 8,
         paddingHorizontal: 16,

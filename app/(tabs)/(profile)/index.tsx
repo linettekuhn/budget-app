@@ -3,14 +3,15 @@ import ChangeNameOption from "@/components/profile/change-name-option";
 import ChangePasswordOption from "@/components/profile/change-password-option";
 import DeleteAccountOption from "@/components/profile/delete-account-option";
 import EditNotificationSettingsOption from "@/components/profile/edit-notification-settings-option";
-import EditSalaryOption from "@/components/profile/edit-salary-option";
+import ManageIncomeOption from "@/components/profile/edit-salary-option";
 import ProfileOption from "@/components/profile/profile-option";
+import WidgetCategoryOption from "@/components/profile/widget-category-option";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import AnimatedScreen from "@/components/ui/animated-screen";
 import Avatar from "@/components/ui/avatar";
 import { Collapsible } from "@/components/ui/collapsible";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { auth } from "@/firebase/firebaseConfig";
 import { useName } from "@/hooks/useName";
 import DatabaseService from "@/services/DatabaseService";
@@ -35,14 +36,15 @@ import { Toast } from "toastify-react-native";
 
 export default function Profile() {
   const colorScheme = useColorScheme();
-  const bgColor = Colors[colorScheme ?? "light"].background;
-  const btnColor = Colors[colorScheme ?? "light"].secondary[500];
-  const color = Colors[colorScheme ?? "light"].text;
+  const bgColor = Colors[getTheme(colorScheme)].background;
+  const btnColor = Colors[getTheme(colorScheme)].secondary[500];
+  const color = Colors[getTheme(colorScheme)].text;
   const user = auth.currentUser;
   const email = user?.email ?? null;
 
   const { name, loading, reload } = useName();
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     const loadStartDate = async () => {
@@ -103,11 +105,17 @@ export default function Profile() {
 
   const logout = async () => {
     try {
+      setLoggingOut(true);
+
+      // push any unsynced changes BEFORE wiping
+      await SyncService.sync();
+
+      // wipe to avoid data from this session bleeding into the next account on this device
+      await DatabaseService.resetTables();
+      await AsyncStorage.clear();
+
       // sign out from firebase
       await signOut(auth);
-
-      // clear offline mode
-      await AsyncStorage.removeItem("offlineMode");
 
       // navigate to login
       router.replace("/(auth)/login");
@@ -122,6 +130,8 @@ export default function Profile() {
         type: "error",
         text1: "Failed to log out",
       });
+    } finally {
+      setLoggingOut(false);
     }
   };
 
@@ -151,7 +161,7 @@ export default function Profile() {
           },
         },
       ],
-      { cancelable: true }
+      { cancelable: true },
     );
   };
 
@@ -159,7 +169,7 @@ export default function Profile() {
     return (
       <View
         style={{
-          backgroundColor: Colors[colorScheme ?? "light"].background,
+          backgroundColor: Colors[getTheme(colorScheme)].background,
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
@@ -167,7 +177,7 @@ export default function Profile() {
       >
         <ActivityIndicator
           size="large"
-          color={Colors[colorScheme ?? "light"].text}
+          color={Colors[getTheme(colorScheme)].text}
         />
       </View>
     );
@@ -183,8 +193,7 @@ export default function Profile() {
                 style={[
                   styles.settingsWrapper,
                   {
-                    backgroundColor:
-                      Colors[colorScheme ?? "light"].primary[300],
+                    backgroundColor: Colors[getTheme(colorScheme)].primary[300],
                   },
                 ]}
               >
@@ -193,7 +202,7 @@ export default function Profile() {
                     styles.profileWrapper,
                     {
                       backgroundColor:
-                        Colors[colorScheme ?? "light"].primary[200],
+                        Colors[getTheme(colorScheme)].primary[200],
                     },
                   ]}
                 >
@@ -242,15 +251,16 @@ export default function Profile() {
                     iconName="gear"
                   >
                     <View>
-                      <EditSalaryOption />
+                      <ManageIncomeOption />
                       <ProfileOption
                         text="Manage recurring transactions"
                         onPress={() => {
                           router.push(
-                            "/(tabs)/(profile)/manage-recurring-transactions"
+                            "/(tabs)/(profile)/manage-recurring-transactions",
                           );
                         }}
                       />
+                      <WidgetCategoryOption />
                     </View>
                   </Collapsible>
                   {user && (
@@ -281,7 +291,7 @@ export default function Profile() {
                         styles.wrapper,
                         {
                           backgroundColor:
-                            Colors[colorScheme ?? "light"].primary[200],
+                            Colors[getTheme(colorScheme)].primary[200],
                         },
                       ]}
                     >
@@ -311,6 +321,22 @@ export default function Profile() {
             </ThemedView>
           )}
         </ScrollView>
+        {loggingOut && (
+          <View
+            style={{
+              ...StyleSheet.absoluteFill,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: "rgba(0,0,0,0.4)",
+              zIndex: 999,
+            }}
+          >
+            <ActivityIndicator
+              size="large"
+              color={Colors[getTheme(colorScheme)].text}
+            />
+          </View>
+        )}
       </SafeAreaView>
     </AnimatedScreen>
   );

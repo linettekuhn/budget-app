@@ -2,15 +2,16 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import AnimatedScreen from "@/components/ui/animated-screen";
 import CategoryBudgetPreview from "@/components/ui/category-budget-preview";
+import MoneyText from "@/components/ui/money-text";
 import SalaryBreakdownPieChart from "@/components/ui/pie-chart/salary-breakdown-pie-chart";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { auth } from "@/firebase/firebaseConfig";
 import { useCategoriesSpend } from "@/hooks/useCategoriesSpend";
 import { useCurrency } from "@/hooks/useCurrency";
-import { useSalary } from "@/hooks/useSalary";
+import { useIncomeSources } from "@/hooks/useIncomeSources";
 import DatabaseService from "@/services/DatabaseService";
 import { pingBackend, registerPushToken } from "@/services/NotificationService";
-import { formatMoney } from "@/utils/formatMoney";
+import WidgetService from "@/services/WidgetService";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -25,8 +26,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function HomeScreen() {
   const colorScheme = useColorScheme();
   const router = useRouter();
-  const bgColor = Colors[colorScheme ?? "light"].background;
-  const { salary, loading: loadingSalary, reload: reloadSalary } = useSalary();
+  const bgColor = Colors[getTheme(colorScheme)].background;
+  const {
+    sources,
+    loading: loadingSalary,
+    reload: reloadSalary,
+    getMonthlyTotal,
+  } = useIncomeSources();
   const {
     budgets,
     loading: loadingBudgets,
@@ -50,10 +56,13 @@ export default function HomeScreen() {
 
       const user = auth.currentUser;
       if (!user) {
+        console.log("no user");
         return;
       }
 
       const ping = async () => {
+        await WidgetService.syncAll();
+
         const spentPercent = await DatabaseService.getSpentPercentFirstHalf();
 
         const weeklySpent = await DatabaseService.getWeeklySpent();
@@ -63,7 +72,7 @@ export default function HomeScreen() {
       };
 
       ping();
-    }, [reloadSpend, reloadSalary, reloadCurrency])
+    }, [reloadSpend, reloadSalary, reloadCurrency]),
   );
 
   useEffect(() => {
@@ -78,21 +87,29 @@ export default function HomeScreen() {
   useEffect(() => {
     const spent = [...budgets].reduce(
       (sum, budget) => sum + budget.totalSpent,
-      0
+      0,
     );
     const budget = [...budgets].reduce((sum, budget) => sum + budget.budget, 0);
     setTotalSpent(Number(spent.toFixed(2)));
     setTotalBudget(Number(budget.toFixed(2)));
 
-    if (salary) {
-      const difference = salary.monthly - totalBudget;
-      const isOverBudget = difference < 0;
-      setOverBudget(isOverBudget);
-      const saved = Math.max(0, difference);
-      const deficit = Math.abs(Math.min(0, difference));
-      setDifference(isOverBudget ? deficit : saved);
+    const now = new Date();
+    const monthlyIncome = getMonthlyTotal(
+      now.getFullYear(),
+      now.getMonth() + 1,
+    );
+
+    if (monthlyIncome > 0) {
+      const diff = monthlyIncome - budget;
+      const isOver = diff < 0;
+      setOverBudget(isOver);
+      setDifference(
+        isOver
+          ? Number(Math.abs(diff).toFixed(2))
+          : Number(Math.max(0, diff).toFixed(2)),
+      );
     }
-  }, [salary, budgets, totalBudget]);
+  }, [sources, getMonthlyTotal, budgets, totalBudget]);
 
   return (
     <AnimatedScreen>
@@ -101,61 +118,87 @@ export default function HomeScreen() {
           {!loadingSalary &&
             !loadingBudgets &&
             !loadingCurrency &&
-            budgets &&
-            salary && (
+            budgets && (
               <ThemedView style={styles.main}>
-                <View>
-                  <ThemedText type="displayLarge">Monthly Report</ThemedText>
-                  <ThemedText type="h6">
-                    Here&apos;s a quick look at where your money went and what
-                    you kept!
-                  </ThemedText>
-                </View>
-                <View>
-                  <ThemedView style={styles.pieChartWrapper}>
-                    <SalaryBreakdownPieChart
-                      budgets={budgets}
-                      salary={salary}
-                    />
-                    <View style={styles.savedWrapper}>
-                      <ThemedText type="displayMedium" style={styles.percent}>
-                        {formatMoney({ code: currency, amount: difference })}
-                      </ThemedText>
-                      <ThemedText type="h5" style={styles.saved}>
-                        {overBudget ? "short!" : "saved!"}
-                      </ThemedText>
-                    </View>
-                  </ThemedView>
-                  {overBudget && (
+                {sources.length > 0 ? (
+                  <>
                     <View>
-                      <ThemedText
-                        type="overline"
-                        style={{
-                          color: Colors[colorScheme ?? "light"].error,
-                          textAlign: "center",
-                        }}
-                      >
-                        This budget exceeds your current salary!
-                      </ThemedText>
-                      <ThemedText
-                        type="captionSmall"
-                        style={{
-                          color: Colors[colorScheme ?? "light"].error,
-                          textAlign: "center",
-                        }}
-                      >
-                        Consider adjusting your budgets or salary to start
-                        saving.
+                      <ThemedText type="displayLarge">Monthly Report</ThemedText>
+                      <ThemedText type="h6">
+                        Here&apos;s a quick look at where your money went and
+                        what you kept!
                       </ThemedText>
                     </View>
-                  )}
-                </View>
+                    <View>
+                      <ThemedView style={styles.pieChartWrapper}>
+                        <SalaryBreakdownPieChart
+                          budgets={budgets}
+                          monthlyIncome={getMonthlyTotal(
+                            new Date().getFullYear(),
+                            new Date().getMonth() + 1,
+                          )}
+                        />
+                        <View style={styles.savedWrapper}>
+                          <MoneyText
+                            variant="hero"
+                            amount={difference}
+                            currency={currency ?? "USD"}
+                            type="displayMedium"
+                            style={styles.percent}
+                            minimumFontScale={0.4}
+                          />
+                          <ThemedText type="h5" style={styles.saved}>
+                            {overBudget ? "short!" : "saved!"}
+                          </ThemedText>
+                        </View>
+                      </ThemedView>
+                      {overBudget && (
+                        <View>
+                          <ThemedText
+                            type="overline"
+                            style={{
+                              color: Colors[getTheme(colorScheme)].error,
+                              textAlign: "center",
+                            }}
+                          >
+                            This budget exceeds your current salary!
+                          </ThemedText>
+                          <ThemedText
+                            type="captionSmall"
+                            style={{
+                              color: Colors[getTheme(colorScheme)].error,
+                              textAlign: "center",
+                            }}
+                          >
+                            Consider adjusting your budgets or salary to start
+                            saving.
+                          </ThemedText>
+                        </View>
+                      )}
+                    </View>
+                  </>
+                ) : (
+                  <View style={styles.emptyState}>
+                    <ThemedText type="displayLarge">Welcome!</ThemedText>
+                    <ThemedText type="h6">
+                      Add your income to see your monthly budget breakdown and
+                      how much you&apos;re saving.
+                    </ThemedText>
+                    <Pressable
+                      onPress={() => router.push("/(tabs)/(profile)")}
+                    >
+                      <ThemedText type="link">
+                        Add Income Source →
+                      </ThemedText>
+                    </Pressable>
+                  </View>
+                )}
                 <View
                   style={[
                     styles.spendingTrackerWrapper,
                     {
                       backgroundColor:
-                        Colors[colorScheme ?? "light"].primary[200],
+                        Colors[getTheme(colorScheme)].primary[200],
                     },
                   ]}
                 >
@@ -169,7 +212,7 @@ export default function HomeScreen() {
                       name: "Total Spent",
                       budget: totalBudget,
                       totalSpent: totalSpent,
-                      color: Colors[colorScheme ?? "light"].primary[500],
+                      color: Colors[getTheme(colorScheme)].primary[500],
                       type: "need",
                     }}
                     currency={currency ?? "USD"}
@@ -215,6 +258,7 @@ const styles = StyleSheet.create({
   savedWrapper: {
     position: "absolute",
     alignItems: "center",
+    width: 150,
   },
 
   percent: {
@@ -241,5 +285,13 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     gap: 20,
     padding: 16,
+  },
+
+  emptyState: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 60,
+    paddingHorizontal: 20,
+    gap: 16,
   },
 });

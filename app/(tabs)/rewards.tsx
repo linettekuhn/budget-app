@@ -1,5 +1,5 @@
 import { ThemedView } from "@/components/themed-view";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import {
   Image,
   ImageSourcePropType,
@@ -37,7 +37,7 @@ import Svg, { Text } from "react-native-svg";
 
 export default function Rewards() {
   const colorScheme = useColorScheme();
-  const bgColor = Colors[colorScheme ?? "light"].background;
+  const bgColor = Colors[getTheme(colorScheme)].background;
 
   const iconMap: Record<string, ImageSourcePropType> = {
     first_transaction: FirstTransactionIcon,
@@ -68,7 +68,7 @@ export default function Rewards() {
     useCallback(() => {
       reloadBadges();
       reloadStreak();
-    }, [reloadBadges, reloadStreak])
+    }, [reloadBadges, reloadStreak]),
   );
 
   const openBadgeModal = (badge: BadgeType) => {
@@ -124,7 +124,7 @@ export default function Rewards() {
                       {String(currentStreak)}
                     </Text>
                     <Text
-                      fill={Colors[colorScheme ?? "light"].text}
+                      fill={Colors[getTheme(colorScheme)].text}
                       stroke={"none"}
                       fontSize={streakFontSize}
                       fontFamily="Onest-Black"
@@ -142,8 +142,7 @@ export default function Rewards() {
               <ThemedView
                 style={[
                   {
-                    backgroundColor:
-                      Colors[colorScheme ?? "light"].primary[200],
+                    backgroundColor: Colors[getTheme(colorScheme)].primary[200],
                     gap: 12,
                     borderRadius: 24,
                     paddingVertical: 8,

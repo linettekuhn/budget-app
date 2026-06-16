@@ -1,9 +1,10 @@
 import AnimatedScreen from "@/components/ui/animated-screen";
 import CapsuleButton from "@/components/ui/capsule-button";
 import TransactionForm from "@/components/ui/transaction-form";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { useBadgeCheck } from "@/hooks/useBadgeCheck";
 import DatabaseService from "@/services/DatabaseService";
+import WidgetService from "@/services/WidgetService";
 import { TransactionFormData } from "@/types";
 import buildRRule from "@/utils/buildRRule";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -17,6 +18,7 @@ import {
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { RRule } from "rrule";
 import { Toast } from "toastify-react-native";
 
 export default function Transaction() {
@@ -30,7 +32,7 @@ export default function Transaction() {
   const [formData, setFormData] = useState<TransactionFormData | null>(null);
   const [resetKey, setResetKey] = useState(0);
 
-  const btnColor = Colors[colorScheme ?? "light"].secondary[500];
+  const btnColor = Colors[getTheme(colorScheme)].secondary[500];
 
   const handleTransaction = async () => {
     if (!formData) return;
@@ -55,23 +57,37 @@ export default function Transaction() {
       };
 
       if (formData.isRecurring) {
-        if (!formData.interval || Number(formData.interval) < 1) {
+        const interval = Number(formData.interval);
+
+        if (!interval || interval < 1) {
           throw new Error("Interval must be at least 1");
         }
 
-        const rrule = buildRRule(formData);
-
-        // compute most recent recurrence date
-        const lastDate = rrule.before(new Date(), true);
-
-        if (lastDate) {
-          transaction.date = lastDate.toISOString();
+        if (formData.frequency === RRule.MONTHLY) {
+          if (formData.monthDay < 1 || formData.monthDay > 31) {
+            throw new Error("Invalid day of month");
+          }
         }
+
+        if (formData.frequency === RRule.YEARLY) {
+          if (formData.monthDay < 1 || formData.monthDay > 31) {
+            throw new Error("Invalid day");
+          }
+          if (formData.yearMonth < 1 || formData.yearMonth > 12) {
+            throw new Error("Invalid month");
+          }
+        }
+        const rrule = buildRRule(formData);
 
         await DatabaseService.addRecurringTransaction({
           ...transaction,
+          date: formData.date.toISOString(),
           rrule: rrule.toString(),
         });
+
+        // generate occurrences
+        await DatabaseService.addMissedRecurringTransactions();
+
         Toast.show({
           type: "success",
           text1: "Recurring transaction added!",
@@ -85,6 +101,7 @@ export default function Transaction() {
       }
 
       await checkBadges();
+      await WidgetService.syncAll();
 
       router.setParams({});
       setFormData(null);
@@ -115,7 +132,7 @@ export default function Transaction() {
       <SafeAreaView
         style={[
           styles.safeArea,
-          { backgroundColor: Colors[colorScheme ?? "light"].background },
+          { backgroundColor: Colors[getTheme(colorScheme)].background },
         ]}
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>

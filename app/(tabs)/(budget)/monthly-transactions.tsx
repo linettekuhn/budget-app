@@ -2,16 +2,21 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import AnimatedScreen from "@/components/ui/animated-screen";
 import EditTransaction from "@/components/ui/edit-transaction";
+import MoneyText from "@/components/ui/money-text";
 import TextButton from "@/components/ui/text-button";
 import TransactionItem from "@/components/ui/transaction-item";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useModal } from "@/hooks/useModal";
+import { useTabBarPadding } from "@/hooks/useTabBarPadding";
 import DatabaseService from "@/services/DatabaseService";
+import WidgetService from "@/services/WidgetService";
 import { TransactionType } from "@/types";
+import { getTotalIncomeForMonth } from "@/utils/incomeUtils";
+import { parseDate } from "@/utils/parseDate";
 import Octicons from "@expo/vector-icons/Octicons";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   RefreshControl,
@@ -25,18 +30,132 @@ import { Toast } from "toastify-react-native";
 
 type SectionType = {
   title: string;
+  spent: number;
+  income: number;
+  net: number;
   data: TransactionType[];
 };
+
+type MonthHeaderProps = {
+  title: string;
+  spent: number;
+  income: number;
+  net: number;
+  currency: string | undefined;
+  inColor: string;
+  outColor: string;
+  background: string;
+  pillBackground: string;
+};
+
+function MonthHeader({
+  title,
+  spent,
+  net,
+  income,
+  currency,
+  inColor,
+  outColor,
+  background,
+  pillBackground,
+}: MonthHeaderProps) {
+  return (
+    <View style={[styles.monthHeader, { backgroundColor: background }]}>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          width: "100%",
+        }}
+      >
+        <View
+          style={{
+            alignSelf: "flex-start",
+            paddingVertical: 4,
+            paddingHorizontal: 16,
+            backgroundColor: pillBackground,
+            borderRadius: 100,
+          }}
+        >
+          <ThemedText type="overline" style={{ fontFamily: "Onest-Bold" }}>
+            {title}
+          </ThemedText>
+        </View>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "flex-end",
+            alignItems: "center",
+            flex: 1,
+          }}
+        >
+          <ThemedText
+            type="caption"
+            style={[
+              styles.label,
+              {
+                fontFamily: "Onest-SemiBold",
+                color: net > 0 ? inColor : outColor,
+              },
+            ]}
+          >
+            Net: {net > 0 ? "+" : "-"}
+          </ThemedText>
+          <MoneyText
+            align="left"
+            variant="block"
+            type="caption"
+            amount={net}
+            currency={currency ?? "USD"}
+            decimals
+            style={{
+              fontFamily: "Onest-SemiBold",
+              color: net > 0 ? inColor : outColor,
+            }}
+          />
+        </View>
+      </View>
+      <View style={styles.summaryRow}>
+        <View style={[styles.summaryItem, { justifyContent: "flex-start" }]}>
+          <ThemedText type="caption" style={styles.label}>
+            Income:
+          </ThemedText>
+          <MoneyText
+            variant="block"
+            type="caption"
+            amount={income}
+            currency={currency ?? "USD"}
+            decimals
+          />
+        </View>
+
+        <View style={[styles.summaryItem, { justifyContent: "flex-end" }]}>
+          <ThemedText type="caption" style={styles.label}>
+            Spent:
+          </ThemedText>
+          <MoneyText
+            variant="block"
+            type="caption"
+            amount={spent}
+            currency={currency ?? "USD"}
+            decimals
+          />
+        </View>
+      </View>
+    </View>
+  );
+}
 
 export default function MonthlyTransactions() {
   const colorScheme = useColorScheme();
 
-  const bgColor = Colors[colorScheme ?? "light"].background;
+  const bgColor = Colors[getTheme(colorScheme)].background;
 
   const [loading, setLoading] = useState(true);
   const [sections, setSections] = useState<SectionType[]>([]);
   const { openModal, closeModal } = useModal();
   const { currency, loading: loadingCurrency } = useCurrency();
+  const tabBarPadding = useTabBarPadding();
 
   const loadTransaction = async () => {
     try {
@@ -56,9 +175,9 @@ export default function MonthlyTransactions() {
       // group transactions by month
       const grouped: Record<string, TransactionType[]> = {};
       savedTransactions.forEach((transaction) => {
-        const date = new Date(transaction.date);
+        const date = parseDate(transaction.date);
         const key = `${date.getFullYear()}-${String(
-          date.getMonth() + 1
+          date.getMonth() + 1,
         ).padStart(2, "0")}`;
         if (!grouped[key]) {
           grouped[key] = [];
@@ -69,14 +188,49 @@ export default function MonthlyTransactions() {
       // sort keys descending (selected month first)
       const orderedKeys = Object.keys(grouped).sort().reverse();
 
+      const incomeSources = await DatabaseService.getActiveIncomeSources();
+
       // build sections for each month
       const sections: SectionType[] = orderedKeys.map((key) => {
-        const [year, month] = key.split("-");
-        const monthName = new Date(
-          parseInt(year),
-          parseInt(month) - 1
-        ).toLocaleString("en-US", { month: "long", year: "numeric" });
-        return { title: monthName, data: grouped[key] };
+        const [yearStr, monthStr] = key.split("-");
+        const year = parseInt(yearStr);
+        const month = parseInt(monthStr);
+
+        const monthName = new Date(year, month - 1).toLocaleString("en-US", {
+          month: "long",
+          year: "numeric",
+        });
+
+        const transactions = grouped[key];
+
+        let spent = 0;
+        let income = 0;
+
+        transactions.forEach((transaction) => {
+          if (transaction.type === "expense") {
+            spent += transaction.amount;
+          } else if (transaction.type === "income") {
+            income += transaction.amount;
+          }
+        });
+
+        const recurringIncome = getTotalIncomeForMonth(
+          incomeSources,
+          year,
+          month,
+        );
+
+        income += recurringIncome;
+
+        const net = income - spent;
+
+        return {
+          title: monthName,
+          spent: spent,
+          income: income,
+          net: net,
+          data: grouped[key],
+        };
       });
 
       setSections(sections);
@@ -97,22 +251,37 @@ export default function MonthlyTransactions() {
     }
   };
 
-  const handleEditTransaction = (transaction: TransactionType) => {
-    openModal(
-      <EditTransaction
-        initialTransaction={transaction}
-        onCancel={() => {
-          loadTransaction();
-          closeModal();
-        }}
-        onSave={async (newTransaction: TransactionType) => {
-          await DatabaseService.updateTransaction(newTransaction);
-          loadTransaction();
-          closeModal();
-        }}
+  const handleEditTransaction = useCallback(
+    (transaction: TransactionType) => {
+      openModal(
+        <EditTransaction
+          initialTransaction={transaction}
+          onCancel={() => {
+            loadTransaction();
+            closeModal();
+          }}
+          onSave={async (newTransaction: TransactionType) => {
+            await DatabaseService.updateTransaction(newTransaction);
+            await WidgetService.syncAll();
+            loadTransaction();
+            closeModal();
+          }}
+        />,
+      );
+    },
+    [closeModal, openModal],
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: TransactionType }) => (
+      <TransactionItem
+        currency={currency ?? "USD"}
+        transaction={item}
+        handleEdit={handleEditTransaction}
       />
-    );
-  };
+    ),
+    [currency, handleEditTransaction],
+  );
 
   useEffect(() => {
     loadTransaction();
@@ -122,7 +291,7 @@ export default function MonthlyTransactions() {
     return (
       <View
         style={{
-          backgroundColor: Colors[colorScheme ?? "light"].background,
+          backgroundColor: bgColor,
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
@@ -130,7 +299,7 @@ export default function MonthlyTransactions() {
       >
         <ActivityIndicator
           size="large"
-          color={Colors[colorScheme ?? "light"].text}
+          color={Colors[getTheme(colorScheme)].text}
         />
       </View>
     );
@@ -138,7 +307,12 @@ export default function MonthlyTransactions() {
 
   return (
     <AnimatedScreen>
-      <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
+      <SafeAreaView
+        style={[
+          styles.safeArea,
+          { backgroundColor: bgColor, paddingBottom: tabBarPadding },
+        ]}
+      >
         <ThemedView style={styles.container}>
           <TextButton
             text="Back"
@@ -146,6 +320,12 @@ export default function MonthlyTransactions() {
             IconComponent={Octicons}
             onPress={() => router.back()}
           />
+          <ThemedText
+            type="displayMedium"
+            style={{ marginVertical: 16, textAlign: "left" }}
+          >
+            Transactions
+          </ThemedText>
           <SectionList
             sections={sections}
             keyExtractor={(item) => item.id}
@@ -155,18 +335,99 @@ export default function MonthlyTransactions() {
                 onRefresh={loadTransaction}
               />
             }
-            renderItem={({ item }) => (
-              <TransactionItem
-                currency={currency ?? "USD"}
-                transaction={item}
-                handleEdit={handleEditTransaction}
-              />
-            )}
-            renderSectionHeader={({ section: { title } }) => (
-              <View style={styles.monthHeader}>
-                <ThemedText type="overline">{title}</ThemedText>
-              </View>
-            )}
+            renderItem={renderItem}
+            renderSectionHeader={({
+              section: { title, spent, income, net },
+            }) => {
+              const isFirst = sections[0]?.title === title;
+              const current = sections[0];
+              const theme = getTheme(colorScheme);
+              const inColor = Colors[theme].income[600];
+              const outColor = Colors[theme].expense[600];
+              const netColor = current.net >= 0 ? inColor : outColor;
+
+              if (isFirst)
+                return (
+                  <View
+                    style={[
+                      styles.summaryCard,
+                      { backgroundColor: Colors[theme].primary[200] },
+                    ]}
+                  >
+                    <ThemedText
+                      type="overline"
+                      style={{ fontFamily: "Onest-Medium" }}
+                    >
+                      This Month&apos;s Spending
+                    </ThemedText>
+                    <MoneyText
+                      variant="block"
+                      type="displayMedium"
+                      amount={current.spent}
+                      currency={currency ?? "USD"}
+                      decimals
+                      style={{ textAlign: "left" }}
+                    />
+                    <View
+                      style={[
+                        styles.summaryPill,
+                        { backgroundColor: Colors[theme].primary[300] },
+                      ]}
+                    >
+                      <View style={[styles.summaryItem, { opacity: 1 }]}>
+                        <ThemedText type="caption" style={styles.label}>
+                          Income
+                        </ThemedText>
+                        <MoneyText
+                          variant="block"
+                          type="caption"
+                          amount={current.income}
+                          currency={currency ?? "USD"}
+                          decimals
+                        />
+                      </View>
+                      <View
+                        style={[
+                          styles.pillDivider,
+                          {
+                            backgroundColor: Colors[theme].primary[600],
+                          },
+                        ]}
+                      />
+                      <View style={[styles.summaryItem, { opacity: 1 }]}>
+                        <ThemedText type="caption" style={styles.label}>
+                          Left Over
+                        </ThemedText>
+                        <MoneyText
+                          variant="block"
+                          type="caption"
+                          amount={current.net}
+                          currency={currency ?? "USD"}
+                          decimals
+                          style={{
+                            color: netColor,
+                            fontFamily: "Onest-SemiBold",
+                          }}
+                        />
+                      </View>
+                    </View>
+                  </View>
+                );
+
+              return (
+                <MonthHeader
+                  title={title}
+                  spent={spent}
+                  income={income}
+                  net={net}
+                  currency={currency}
+                  inColor={Colors[getTheme(colorScheme)].income[600]}
+                  outColor={Colors[getTheme(colorScheme)].expense[600]}
+                  background={Colors[getTheme(colorScheme)].primary[200]}
+                  pillBackground={Colors[getTheme(colorScheme)].primary[300]}
+                />
+              );
+            }}
             ListEmptyComponent={<ThemedText>No transactions found</ThemedText>}
           />
         </ThemedView>
@@ -186,9 +447,54 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
 
-  header: {
-    marginBottom: 20,
+  monthHeader: {
+    marginBottom: 12,
+    width: "100%",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
   },
 
-  monthHeader: { marginTop: 16, marginBottom: 4 },
+  summaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+    marginTop: 8,
+  },
+
+  summaryItem: {
+    opacity: 0.6,
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    gap: 4,
+  },
+
+  label: {
+    flexShrink: 0,
+  },
+
+  summaryCard: {
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 12,
+    gap: 4,
+  },
+
+  summaryPill: {
+    flexDirection: "row",
+    borderRadius: 100,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    marginTop: 8,
+    alignItems: "center",
+  },
+
+  pillDivider: {
+    width: 1,
+    height: "100%",
+    opacity: 0.5,
+    marginHorizontal: 16,
+  },
 });

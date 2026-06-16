@@ -37,7 +37,7 @@ export async function registerPushToken(userId: string) {
   }
   if (finalStatus !== "granted") {
     console.warn(
-      "Permission not granted to get push token for push notification!"
+      "Permission not granted to get push token for push notification!",
     );
     return;
   }
@@ -76,7 +76,7 @@ export async function pingBackend(
   userId: string,
   spentPercent: number,
   weeklySpent: number,
-  currentStreak: number
+  currentStreak: number,
 ) {
   try {
     await fetch(`${BACKEND_URL}/ping`, {
@@ -102,7 +102,7 @@ export async function updateRemoteNotificationSettings(
     daily: boolean;
     weekly: boolean;
     midMonth: boolean;
-  }
+  },
 ) {
   try {
     await fetch(`${BACKEND_URL}/update-notification-settings`, {

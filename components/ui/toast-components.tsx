@@ -1,4 +1,4 @@
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { StyleSheet, useColorScheme, View } from "react-native";
 import { ToastConfigParams } from "toastify-react-native/utils/interfaces";
 import { ThemedText } from "../themed-text";
@@ -9,7 +9,7 @@ export const BadgeToast = ({ text1, hide }: ToastConfigParams) => {
     <View
       style={[
         styles.container,
-        { backgroundColor: Colors[colorScheme ?? "light"].primary[700] },
+        { backgroundColor: Colors[getTheme(colorScheme)].primary[700] },
       ]}
     >
       <ThemedText type="bodyLarge">🏆</ThemedText>
@@ -33,7 +33,7 @@ export const SuccessToast = ({ text1, hide }: ToastConfigParams) => {
     <View
       style={[
         styles.container,
-        { backgroundColor: Colors[colorScheme ?? "light"].primary[700] },
+        { backgroundColor: Colors[getTheme(colorScheme)].primary[700] },
       ]}
     >
       <ThemedText type="bodyLarge">✅</ThemedText>
@@ -57,7 +57,7 @@ export const ErrorToast = ({ text1, hide }: ToastConfigParams) => {
     <View
       style={[
         styles.container,
-        { backgroundColor: Colors[colorScheme ?? "light"].primary[700] },
+        { backgroundColor: Colors[getTheme(colorScheme)].primary[700] },
       ]}
     >
       <ThemedText type="bodyLarge">⚠️</ThemedText>

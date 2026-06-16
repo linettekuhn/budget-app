@@ -1,5 +1,5 @@
-import { Colors } from "@/constants/theme";
-import { CategorySpend, Salary } from "@/types";
+import { Colors, getTheme } from "@/constants/theme";
+import { CategorySpend } from "@/types";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
 import calculateArcData from "@/utils/calculateArcData";
 import { useColorScheme, View } from "react-native";
@@ -13,41 +13,44 @@ import {
 
 type Props = {
   budgets: CategorySpend[];
-  salary: Salary;
+  monthlyIncome: number;
 };
-export default function SalaryBreakdownPieChart({ budgets, salary }: Props) {
+export default function SalaryBreakdownPieChart({
+  budgets,
+  monthlyIncome,
+}: Props) {
   const colorScheme = useColorScheme();
 
   const wantsBudgets = [...budgets].filter((budget) => budget.type === "want");
   const needsBudgets = [...budgets].filter((budget) => budget.type === "need");
   const totalBudget = [...budgets].reduce(
     (sum, budget) => sum + budget.budget,
-    0
+    0,
   );
-  const difference = salary.monthly - totalBudget;
+  const difference = monthlyIncome - totalBudget;
   const isOverBudget = difference < 0;
   const saved = Math.max(0, difference);
 
   const wantsSpent = [...wantsBudgets].reduce(
     (sum, budget) => sum + budget.totalSpent,
-    0
+    0,
   );
   const wantsTotal = [...wantsBudgets].reduce(
     (sum, budget) => sum + budget.budget,
-    0
+    0,
   );
   const needsSpent = [...needsBudgets].reduce(
     (sum, budget) => sum + budget.totalSpent,
-    0
+    0,
   );
   const needsTotal = [...needsBudgets].reduce(
     (sum, budget) => sum + budget.budget,
-    0
+    0,
   );
 
-  const totalAmount = isOverBudget ? totalBudget : salary.monthly;
+  const totalAmount = isOverBudget ? totalBudget : monthlyIncome;
 
-  const screenBgColor = Colors[colorScheme ?? "light"].background;
+  const screenBgColor = Colors[getTheme(colorScheme)].background;
   const gap = 0.3;
   const size = 240;
   const radius = (size - 50) / 2;
@@ -73,7 +76,7 @@ export default function SalaryBreakdownPieChart({ budgets, salary }: Props) {
 
   // calculate extra space needed
   const boostCount = [needsBoost, wantsBoost, savedBoost].filter(
-    Boolean
+    Boolean,
   ).length;
   const totalBoost = boostCount * MINIMUM_PERCENT;
 

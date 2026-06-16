@@ -1,14 +1,18 @@
+// app/(tabs)/(profile)/manage-recurring-transactions.tsx
+
 import { ThemedView } from "@/components/themed-view";
 import AnimatedScreen from "@/components/ui/animated-screen";
 import CapsuleButton from "@/components/ui/capsule-button";
 import SettingsModal from "@/components/ui/modal/settings-modal";
+import MoneyText from "@/components/ui/money-text";
 import TextButton from "@/components/ui/text-button";
 import TransactionForm from "@/components/ui/transaction-form";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { useCategories } from "@/hooks/useCategories";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useModal } from "@/hooks/useModal";
 import { useRecurringTransactions } from "@/hooks/useRecurringTransactions";
+import { useTabBarPadding } from "@/hooks/useTabBarPadding";
 import DatabaseService from "@/services/DatabaseService";
 import {
   RecurringTransaction,
@@ -17,7 +21,7 @@ import {
 } from "@/types";
 import adjustColorForScheme from "@/utils/adjustColorForScheme";
 import buildRRule from "@/utils/buildRRule";
-import { formatMoney } from "@/utils/formatMoney";
+import { parseDate } from "@/utils/parseDate";
 import Octicons from "@expo/vector-icons/Octicons";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
@@ -53,7 +57,7 @@ function EditRecurringTransaction({
 
   let weekday = RRule.MO;
   let monthDay = 1;
-  let yearMonth = new Date(initialRecurring.date).getMonth() + 1;
+  let yearMonth = parseDate(initialRecurring.date).getMonth() + 1;
 
   if (frequency === RRule.WEEKLY && rrule.options.byweekday?.length) {
     weekday = new Weekday(rrule.options.byweekday[0]);
@@ -69,7 +73,7 @@ function EditRecurringTransaction({
     rawAmount: Math.round(initialRecurring.amount * 100).toString(),
     type: initialRecurring.type.toUpperCase() as "INCOME" | "EXPENSE",
     categoryId: initialRecurring.categoryId,
-    date: new Date(initialRecurring.date),
+    date: parseDate(initialRecurring.date),
     recurrence: {
       isRecurring: true,
       interval: interval,
@@ -79,6 +83,7 @@ function EditRecurringTransaction({
       yearMonth: yearMonth,
     },
   };
+
   const saveRecurring = async () => {
     if (!formData) return;
     try {
@@ -104,10 +109,7 @@ function EditRecurringTransaction({
         };
 
         const rrule = buildRRule(formData);
-
-        // compute most recent recurrence date
         const lastDate = rrule.before(new Date(), true);
-
         if (lastDate) {
           transaction.date = lastDate.toISOString();
         }
@@ -122,10 +124,7 @@ function EditRecurringTransaction({
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
-        Toast.show({
-          type: "error",
-          text1: error.message,
-        });
+        Toast.show({ type: "error", text1: error.message });
       } else {
         Toast.show({
           type: "error",
@@ -147,15 +146,12 @@ function EditRecurringTransaction({
           onPress: async () => {
             try {
               await DatabaseService.deleteRecurringTransaction(
-                initialRecurring.id
+                initialRecurring.id,
               );
               onCancel();
             } catch (error: unknown) {
               if (error instanceof Error) {
-                Toast.show({
-                  type: "error",
-                  text1: error.message,
-                });
+                Toast.show({ type: "error", text1: error.message });
               } else {
                 Toast.show({
                   type: "error",
@@ -166,7 +162,7 @@ function EditRecurringTransaction({
           },
         },
       ],
-      { cancelable: true }
+      { cancelable: true },
     );
   };
 
@@ -178,7 +174,7 @@ function EditRecurringTransaction({
     >
       <CapsuleButton
         text="DELETE TRANSACTION"
-        bgFocused={Colors[colorScheme ?? "light"].error}
+        bgFocused={Colors[getTheme(colorScheme)].error}
         onPress={deleteRecurring}
       />
       <TransactionForm initial={initialFormData} onChange={setFormData} />
@@ -194,7 +190,7 @@ export default function ManageRecurringTransactions() {
     loading: loadingTransactions,
   } = useRecurringTransactions();
   const colorScheme = useColorScheme();
-  const bgColor = Colors[colorScheme ?? "light"].background;
+  const bgColor = Colors[getTheme(colorScheme)].background;
   const {
     categories,
     reload: reloadCategories,
@@ -211,31 +207,87 @@ export default function ManageRecurringTransactions() {
       reloadCategories();
       reloadTransactions();
       reloadCurrency();
-    }, [reloadCategories, reloadTransactions, reloadCurrency])
+    }, [reloadCategories, reloadTransactions, reloadCurrency]),
   );
 
-  const handleOpen = (recurring: RecurringTransaction) => {
-    openModal(
-      <EditRecurringTransaction
-        initialRecurring={recurring}
-        onCancel={() => {
-          reloadTransactions();
-          closeModal();
-        }}
-        onSave={async (newRecurring: RecurringTransaction) => {
-          await DatabaseService.updateRecurringTransaction(newRecurring);
-          reloadTransactions();
-          closeModal();
-        }}
-      />
-    );
-  };
+  const tabBarPadding = useTabBarPadding();
+
+  const handleOpen = useCallback(
+    (recurring: RecurringTransaction) => {
+      openModal(
+        <EditRecurringTransaction
+          initialRecurring={recurring}
+          onCancel={() => {
+            reloadTransactions();
+            closeModal();
+          }}
+          onSave={async (newRecurring: RecurringTransaction) => {
+            await DatabaseService.updateRecurringTransaction(newRecurring);
+            reloadTransactions();
+            closeModal();
+          }}
+        />,
+      );
+    },
+    [closeModal, openModal, reloadTransactions],
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: RecurringTransaction }) => {
+      const rruleObj = rrulestr(item.rrule);
+      const category = categories.find((cat) => cat.id === item.categoryId);
+      return (
+        <ThemedView
+          key={item.id}
+          style={[
+            styles.recurringWrapper,
+            {
+              backgroundColor: adjustColorForScheme(
+                category
+                  ? category.color
+                  : Colors[getTheme(colorScheme)].primary[500],
+                colorScheme,
+              ),
+            },
+          ]}
+        >
+          <View style={{ flexGrow: 1 }}>
+            <ThemedText type="bodyLarge" numberOfLines={1}>
+              {item.name}
+            </ThemedText>
+            <ThemedText type="captionSmall">{rruleObj.toText()}</ThemedText>
+          </View>
+
+          <MoneyText
+            variant="block"
+            amount={item.amount}
+            currency={currency ?? "USD"}
+            type="h3"
+            align="right"
+            decimals
+          />
+          <Pressable
+            onPress={() => handleOpen(item)}
+            style={{ transform: [{ rotate: "90deg" }] }}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Octicons
+              name="kebab-horizontal"
+              size={20}
+              color={Colors[getTheme(colorScheme)].text}
+            />
+          </Pressable>
+        </ThemedView>
+      );
+    },
+    [categories, colorScheme, currency, handleOpen],
+  );
 
   if (loadingCategories || loadingCurrency || loadingTransactions) {
     return (
       <View
         style={{
-          backgroundColor: Colors[colorScheme ?? "light"].background,
+          backgroundColor: Colors[getTheme(colorScheme)].background,
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
@@ -243,7 +295,7 @@ export default function ManageRecurringTransactions() {
       >
         <ActivityIndicator
           size="large"
-          color={Colors[colorScheme ?? "light"].text}
+          color={Colors[getTheme(colorScheme)].text}
         />
       </View>
     );
@@ -251,7 +303,12 @@ export default function ManageRecurringTransactions() {
 
   return (
     <AnimatedScreen entering="slideRight">
-      <SafeAreaView style={[styles.safeArea, { backgroundColor: bgColor }]}>
+      <SafeAreaView
+        style={[
+          styles.safeArea,
+          { backgroundColor: bgColor, paddingBottom: tabBarPadding },
+        ]}
+      >
         <ThemedView style={styles.container}>
           <ThemedView style={styles.main}>
             <TextButton
@@ -263,70 +320,31 @@ export default function ManageRecurringTransactions() {
             <ThemedText type="h1">
               Manage your recurring transactions
             </ThemedText>
-            <FlatList
-              contentContainerStyle={[
-                styles.recurringList,
+
+            <View
+              style={[
+                styles.recurringListWrapper,
                 {
-                  backgroundColor: Colors[colorScheme ?? "light"].primary[200],
+                  backgroundColor: Colors[getTheme(colorScheme)].primary[200],
                 },
               ]}
-              data={recurringTransactions}
-              keyExtractor={(item) => item.id}
-              refreshControl={
-                <RefreshControl
-                  refreshing={loadingTransactions}
-                  onRefresh={reloadTransactions}
-                />
-              }
-              renderItem={({ item }) => {
-                const rruleObj = rrulestr(item.rrule);
-                const category = categories.find(
-                  (cat) => cat.id === item.categoryId
-                );
-                return (
-                  <ThemedView
-                    key={item.id}
-                    style={[
-                      styles.recurringWrapper,
-                      {
-                        backgroundColor: adjustColorForScheme(
-                          category
-                            ? category.color
-                            : Colors[colorScheme ?? "light"].primary[500],
-                          colorScheme
-                        ),
-                      },
-                    ]}
-                  >
-                    <View>
-                      <ThemedText type="bodyLarge">{item.name}</ThemedText>
-                      <ThemedText type="captionSmall">
-                        {rruleObj.toText()}
-                      </ThemedText>
-                    </View>
-                    <View style={{ flexDirection: "row", gap: 8 }}>
-                      <ThemedText type="h3">
-                        {formatMoney({ amount: item.amount, code: currency })}
-                      </ThemedText>
-                      <Pressable
-                        onPress={() => handleOpen(item)}
-                        style={{ transform: [{ rotate: "90deg" }] }}
-                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                      >
-                        <Octicons
-                          name="kebab-horizontal"
-                          size={20}
-                          color={Colors[colorScheme ?? "light"].text}
-                        />
-                      </Pressable>
-                    </View>
-                  </ThemedView>
-                );
-              }}
-              ListEmptyComponent={
-                <ThemedText>No recurring transactions found.</ThemedText>
-              }
-            />
+            >
+              <FlatList
+                contentContainerStyle={styles.recurringList}
+                data={recurringTransactions}
+                keyExtractor={(item) => item.id}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={loadingTransactions}
+                    onRefresh={reloadTransactions}
+                  />
+                }
+                renderItem={renderItem}
+                ListEmptyComponent={
+                  <ThemedText>No recurring transactions found.</ThemedText>
+                }
+              />
+            </View>
           </ThemedView>
         </ThemedView>
       </SafeAreaView>
@@ -346,26 +364,29 @@ const styles = StyleSheet.create({
   },
 
   main: {
-    paddingVertical: 30,
     flex: 1,
-    gap: 20,
+    gap: 30,
   },
 
   recurringWrapper: {
     flexDirection: "row",
+    width: "100%",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-    width: "100%",
+    paddingHorizontal: 25,
+    paddingVertical: 10,
+    borderRadius: 25,
   },
 
   recurringList: {
+    gap: 8,
+    alignItems: "stretch",
+  },
+
+  recurringListWrapper: {
     borderRadius: 20,
-    gap: 20,
     padding: 16,
-    alignItems: "center",
+    alignItems: "stretch",
     flex: 1,
   },
 });

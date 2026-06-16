@@ -10,29 +10,35 @@ import { useBadgeCheck } from "@/hooks/useBadgeCheck";
 import DatabaseService from "@/services/DatabaseService";
 import StreakService from "@/services/StreakService";
 import SyncService from "@/services/SyncService";
+import WidgetService from "@/services/WidgetService";
+import { isVersionLessThan } from "@/utils/updateUtils";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   DarkTheme,
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
+import Constants from "expo-constants";
 import { useFonts } from "expo-font";
 import { Stack, router } from "expo-router";
 import { SQLiteDatabase, SQLiteProvider } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
+import { fetchAndActivate, getString } from "firebase/remote-config";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Alert, AppState, Linking, Platform } from "react-native";
 import "react-native-reanimated";
 import ToastManager from "toastify-react-native";
 import {
   ToastConfig,
   ToastConfigParams,
 } from "toastify-react-native/utils/interfaces";
+import { remoteConfig } from "../firebase/firebaseConfig"; // adjust path
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const theme = useMemo(
     () => (colorScheme === "dark" ? DarkTheme : DefaultTheme),
-    [colorScheme]
+    [colorScheme],
   );
   const [fontsLoaded] = useFonts({
     "Onest-ExtraBold": require("../assets/fonts/Onest-ExtraBold.ttf"),
@@ -48,6 +54,47 @@ export default function RootLayout() {
   const { checkBadges } = useBadgeCheck();
   const [dbReady, setDbReady] = useState<boolean>(false);
   const initialCheckDone = useRef(false);
+
+  const showForceUpdateAlert = () => {
+    const openStore = () => {
+      const url =
+        Platform.OS === "ios"
+          ? "https://apps.apple.com/us/app/piggystash/id6757825917"
+          : ""; // TODO: add Play Store URL
+      if (url) Linking.openURL(url);
+      // re-show alert after returning from store so they can't just dismiss
+      setTimeout(showForceUpdateAlert, 500);
+    };
+
+    Alert.alert(
+      "Update Required",
+      "A new version of Piggy Stash is required to continue. Please update the app.",
+      [{ text: "Update Now", onPress: openStore }],
+      { cancelable: false },
+    );
+  };
+
+  useEffect(() => {
+    const checkUpdate = async () => {
+      try {
+        // fetch the minimum version from Firebase
+        await fetchAndActivate(remoteConfig);
+        const minVersion = getString(remoteConfig, "min_required_version");
+
+        // get current app version
+        const currentVersion = Constants.expoConfig?.version || "1.0.0";
+
+        // simple version comparison (e.g., "1.0.1" < "1.1.0")
+        if (minVersion && isVersionLessThan(currentVersion, minVersion)) {
+          showForceUpdateAlert();
+        }
+      } catch (error) {
+        console.error("Remote Config failed", error);
+      }
+    };
+
+    checkUpdate();
+  }, []);
 
   const createDatabase = useCallback(async (db: SQLiteDatabase) => {
     try {
@@ -120,6 +167,15 @@ export default function RootLayout() {
 
     routeUser();
   }, [fontsLoaded, authLoading, user, dbReady, checkBadges]);
+
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", async (state) => {
+      if (state === "active") {
+        await WidgetService.syncAll();
+      }
+    });
+    return () => sub.remove();
+  }, []);
 
   const toastConfig: ToastConfig = {
     badge: (props: ToastConfigParams) => <BadgeToast {...props} />,

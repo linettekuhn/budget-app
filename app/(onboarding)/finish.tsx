@@ -4,11 +4,19 @@ import { ThemedView } from "@/components/themed-view";
 import AnimatedScreen from "@/components/ui/animated-screen";
 import CapsuleButton from "@/components/ui/capsule-button";
 import OnboardingControls from "@/components/ui/onboarding-controls";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import DatabaseService from "@/services/DatabaseService";
 import SyncService from "@/services/SyncService";
+import WidgetService from "@/services/WidgetService";
+import { formatMoney } from "@/utils/formatMoney";
+import {
+  buildPaydayRule,
+  derivePayAmount,
+  toDateString,
+} from "@/utils/incomeUtils";
 import Octicons from "@expo/vector-icons/Octicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as crypto from "expo-crypto";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -23,13 +31,13 @@ import { Toast } from "toastify-react-native";
 
 export default function FinishOnboarding() {
   const colorScheme = useColorScheme();
-  const btnColor = Colors[colorScheme ?? "light"].secondary[500];
+  const btnColor = Colors[getTheme(colorScheme)].secondary[500];
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   // get onboarding state's budgets
   const { state, reset } = useOnboarding();
-  const { name, categories, budgets, salary } = state;
+  const { name, categories, budgets, salary, currency } = state;
   const total = Object.values(state.budgets).reduce((sum, { raw }) => {
     const value = parseFloat((Number(raw) / 100).toFixed(2));
     return sum + value;
@@ -41,20 +49,35 @@ export default function FinishOnboarding() {
       // save name
       await DatabaseService.insertName(name);
 
-      // TODO: FIX THIS GARGBAGE
-      // save categories
-      //const defaultCategories = await DatabaseService.getCategories();
-      //console.log(defaultCategories);
       await DatabaseService.clearCategories();
       await DatabaseService.insertCategories(categories, budgets);
 
-      // save salary
-      await DatabaseService.saveSalary(
+      // save income source
+      const today = new Date();
+      const startDate = toDateString(today);
+      const payAmount = derivePayAmount(
         salary.type,
         salary.amount,
-        salary.monthly,
-        salary.hoursPerWeek
+        salary.hoursPerWeek,
       );
+      const paydayRule = buildPaydayRule(salary.type, today);
+
+      await DatabaseService.saveIncomeSource({
+        id: crypto.randomUUID(),
+        name: salary.name,
+        basisType: salary.type,
+        basisAmount: salary.amount,
+        payAmount,
+        paydayRule,
+        startDate,
+        endDate: null,
+        hoursPerWeek: salary.hoursPerWeek ?? null,
+        effectiveFrom: startDate,
+        sourceVersion: 1,
+      });
+
+      // save currency
+      await DatabaseService.updateCurrency(state.currency);
 
       // mark onboarding as completed
       await AsyncStorage.setItem("completedOnboarding", "true");
@@ -64,7 +87,7 @@ export default function FinishOnboarding() {
 
       // sync changes after onboarding
       await SyncService.sync();
-
+      await WidgetService.syncAll();
       setLoading(false);
 
       // access app
@@ -91,7 +114,7 @@ export default function FinishOnboarding() {
       <SafeAreaView
         style={[
           styles.safeArea,
-          { backgroundColor: Colors[colorScheme ?? "light"].background },
+          { backgroundColor: Colors[getTheme(colorScheme)].background },
         ]}
       >
         <OnboardingControls />
@@ -105,20 +128,38 @@ export default function FinishOnboarding() {
               <View>
                 <ThemedText type="h3">Category Budgets</ThemedText>
                 {categories.map((cat) => {
-                  const amount = budgets[cat.id]?.display ?? "0.00";
+                  const amount =
+                    Number(state.budgets[cat.id]?.raw || "0") / 100;
                   return (
                     <ThemedText type="h6" key={cat.id}>
                       <Octicons name="dot-fill" color={cat.color} size={20} />{" "}
-                      {cat.name} - ${amount}
+                      {cat.name} -{" "}
+                      {formatMoney({
+                        amount,
+                        code: currency,
+                        decimals: true,
+                      })}
                     </ThemedText>
                   );
                 })}
               </View>
               <View>
                 <ThemedText type="h3">Monthly Summary</ThemedText>
-                <ThemedText type="h6">Budget: ${total.toFixed(2)}</ThemedText>
                 <ThemedText type="h6">
-                  Salary: ${salary.monthly.toFixed(2)}
+                  Budget:{" "}
+                  {formatMoney({
+                    amount: total,
+                    code: currency,
+                    decimals: true,
+                  })}
+                </ThemedText>
+                <ThemedText type="h6">
+                  Salary:{" "}
+                  {formatMoney({
+                    amount: salary.monthly,
+                    code: currency,
+                    decimals: true,
+                  })}
                 </ThemedText>
               </View>
             </ThemedView>
@@ -127,7 +168,7 @@ export default function FinishOnboarding() {
                 <ThemedText
                   type="overline"
                   style={{
-                    color: Colors[colorScheme ?? "light"].error,
+                    color: Colors[getTheme(colorScheme)].error,
                     textAlign: "center",
                   }}
                 >
@@ -136,7 +177,7 @@ export default function FinishOnboarding() {
                 <ThemedText
                   type="captionSmall"
                   style={{
-                    color: Colors[colorScheme ?? "light"].error,
+                    color: Colors[getTheme(colorScheme)].error,
                     textAlign: "center",
                   }}
                 >
@@ -169,7 +210,7 @@ export default function FinishOnboarding() {
           >
             <ActivityIndicator
               size="large"
-              color={Colors[colorScheme ?? "light"].text}
+              color={Colors[getTheme(colorScheme)].text}
             />
           </View>
         )}

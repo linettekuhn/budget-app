@@ -1,5 +1,7 @@
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import DatabaseService from "@/services/DatabaseService";
+import WidgetService from "@/services/WidgetService";
+import { parseDate } from "@/utils/parseDate";
 import {
   TransactionFormData,
   TransactionFormInitial,
@@ -29,7 +31,7 @@ export default function EditTransaction({
     rawAmount: Math.round(initialTransaction.amount * 100).toString(),
     type: initialTransaction.type.toUpperCase() as "INCOME" | "EXPENSE",
     categoryId: initialTransaction.categoryId,
-    date: new Date(initialTransaction.date),
+    date: parseDate(initialTransaction.date),
     recurrence: {},
   };
 
@@ -87,6 +89,7 @@ export default function EditTransaction({
           onPress: async () => {
             try {
               await DatabaseService.deleteTransaction(initialTransaction.id);
+              await WidgetService.syncAll();
               onCancel();
             } catch (error: unknown) {
               if (error instanceof Error) {
@@ -104,7 +107,7 @@ export default function EditTransaction({
           },
         },
       ],
-      { cancelable: true }
+      { cancelable: true },
     );
   };
 
@@ -116,7 +119,7 @@ export default function EditTransaction({
     >
       <CapsuleButton
         text="DELETE TRANSACTION"
-        bgFocused={Colors[colorScheme ?? "light"].error}
+        bgFocused={Colors[getTheme(colorScheme)].error}
         onPress={deleteTransaction}
       />
       <TransactionForm initial={initialFormData} onChange={setFormData} />

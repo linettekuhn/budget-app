@@ -1,5 +1,5 @@
 import { Motion } from "@/constants/motion";
-import { Colors } from "@/constants/theme";
+import { Colors, getTheme } from "@/constants/theme";
 import { ComponentType, ReactNode, useEffect, useRef, useState } from "react";
 import {
   Pressable,
@@ -40,8 +40,8 @@ export default function CapsuleInput({
   ...rest
 }: Props) {
   const colorScheme = useColorScheme();
-  const bgDefault = Colors[colorScheme ?? "light"].primary[300];
-  const color = Colors[colorScheme ?? "light"].text;
+  const bgDefault = Colors[getTheme(colorScheme)].primary[300];
+  const color = Colors[getTheme(colorScheme)].text;
   const inputRef = useRef<TextInput>(null);
 
   const focusColor =
@@ -57,7 +57,7 @@ export default function CapsuleInput({
   useEffect(() => {
     baseScale.value = withTiming(
       focused ? Motion.scale.focus : Motion.scale.default,
-      { duration: Motion.duration.fast }
+      { duration: Motion.duration.fast },
     );
   }, [focused, baseScale]);
 
